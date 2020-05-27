@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::IoT::ProvisioningTemplate",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.provisioningtemplate.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.provisioningtemplate.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "provisioningtemplate"
+        ]
+    }
+}
