@@ -19,39 +19,45 @@
     "TemplateArn": {
       "type": "string"
     },
-
     "TemplateName": {
       "type": "string",
       "pattern": "^[0-9A-Za-z_-]+$",
       "minLength": 1,
       "maxLength": 36
     },
-
     "Description": {
       "type": "string",
       "maxLength": 500
     },
-
-    "Enabled": { "type": "boolean" },
-
-    "ProvisioningRoleArn": { "type": "string" },
-
-    "TemplateBody": { "type": "string" },
-
+    "Enabled": {
+      "type": "boolean"
+    },
+    "ProvisioningRoleArn": {
+      "type": "string"
+    },
+    "TemplateBody": {
+      "type": "string"
+    },
     "PreProvisioningHook": {
       "$ref": "#/definitions/ProvisioningHook"
     },
-
     "Tags": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "Key": { "type": "string" },
-          "Value": { "type": "string" }
+          "Key": {
+            "type": "string"
+          },
+          "Value": {
+            "type": "string"
+          }
         },
         "additionalProperties": false,
-        "required": ["Key", "Value"]
+        "required": [
+          "Key",
+          "Value"
+        ]
       }
     }
   },

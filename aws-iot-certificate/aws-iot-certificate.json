@@ -9,17 +9,14 @@
       "minLength": 1,
       "maxLength": 65536
     },
-
     "CertificatePem": {
       "type": "string",
       "minLength": 1,
       "maxLength": 65536
     },
-
     "CertificateSigningRequest": {
       "type": "string"
     },
-
     "CertificateMode": {
       "type": "string",
       "enum": [
@@ -27,7 +24,6 @@
         "SNI_ONLY"
       ]
     },
-
     "Status": {
       "type": "string",
       "enum": [
@@ -38,7 +34,6 @@
         "PENDING_ACTIVATION"
       ]
     },
-
     "Id": {
       "type": "string"
     },
