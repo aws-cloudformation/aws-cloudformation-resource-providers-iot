@@ -1,0 +1,15 @@
+{
+    "typeName": "AWS::IoT::Certificate",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.certificate.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.certificate.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "certificate"
+        ]
+    }
+}
