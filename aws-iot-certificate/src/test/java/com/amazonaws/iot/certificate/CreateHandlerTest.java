@@ -77,6 +77,7 @@ public class CreateHandlerTest extends CertificateTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getId()).isEqualTo(CERT_ID);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(CERT_ARN);
     }
 
     @Test
@@ -107,6 +108,7 @@ public class CreateHandlerTest extends CertificateTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getId()).isEqualTo(CERT_ID);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(CERT_ARN);
     }
 
     @Test
@@ -136,6 +138,7 @@ public class CreateHandlerTest extends CertificateTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getId()).isEqualTo(CERT_ID);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(CERT_ARN);
     }
 
     @Test

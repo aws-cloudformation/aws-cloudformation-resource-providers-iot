@@ -48,7 +48,9 @@ public class ReadHandlerTest extends CertificateTestBase {
     @Test
     public void handleRequest_SimpleSuccess() {
         final ResourceModel model = defaultModelBuilder().build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
+                .previousResourceState(null)
+                .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenReturn(DescribeCertificateResponse.builder()
                 .certificateDescription(CertificateDescription.builder()
@@ -72,6 +74,7 @@ public class ReadHandlerTest extends CertificateTestBase {
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(CERT_ARN);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();

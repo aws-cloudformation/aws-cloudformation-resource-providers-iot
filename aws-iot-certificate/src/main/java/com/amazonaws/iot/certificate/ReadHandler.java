@@ -41,7 +41,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             final Logger logger) {
 
         final DescribeCertificateRequest describeRequest = DescribeCertificateRequest.builder()
-                .certificateId(request.getPreviousResourceState().getId())
+                .certificateId(request.getDesiredResourceState().getId())
                 .build();
 
         try {
