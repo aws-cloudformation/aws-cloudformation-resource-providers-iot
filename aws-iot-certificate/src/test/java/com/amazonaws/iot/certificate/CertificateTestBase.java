@@ -16,7 +16,8 @@ public class CertificateTestBase {
     protected final static String CERT_CSR = "CSR";
     protected final static String CERT_PEM = "PEM";
     protected final static String CERT_CA_PEM = "CA_PEM";
-    protected final static String CERT_STATUS = "ACTIVE";
+    protected final static String CERT_STATUS_ACTIVE = "ACTIVE";
+    protected final static String CERT_STATUS_INACTIVE = "INACTIVE";
     protected final static String REQUEST_TOKEN = "REQUEST_TOKEN";
     protected final static String LOGICAL_ID = "MyCertificate";
     private static final String CERTIFICATE_MODE_DEFAULT = "Default";
@@ -25,7 +26,7 @@ public class CertificateTestBase {
     protected ResourceModel.ResourceModelBuilder defaultModelBuilder() {
         return ResourceModel.builder()
                 .certificateSigningRequest(CERT_CSR)
-                .status(CERT_STATUS);
+                .status(CERT_STATUS_INACTIVE);
 
     }
 

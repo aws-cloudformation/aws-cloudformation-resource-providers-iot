@@ -9,7 +9,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.CertificateDescription;
 import software.amazon.awssdk.services.iot.model.DescribeCertificateResponse;
-import software.amazon.awssdk.services.iot.model.DescribeProvisioningTemplateResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -56,7 +55,7 @@ public class ReadHandlerTest extends CertificateTestBase {
                 .certificateDescription(CertificateDescription.builder()
                         .certificateArn(CERT_ARN)
                         .certificateId(CERT_ID)
-                        .status(CERT_STATUS)
+                        .status(CERT_STATUS_ACTIVE)
                         .build())
                 .build());
 
@@ -66,7 +65,7 @@ public class ReadHandlerTest extends CertificateTestBase {
         final ResourceModel expectedModel = ResourceModel.builder()
                 .id(CERT_ID)
                 .arn(CERT_ARN)
-                .status(CERT_STATUS)
+                .status(CERT_STATUS_ACTIVE)
                 .build();
 
         assertThat(response).isNotNull();
