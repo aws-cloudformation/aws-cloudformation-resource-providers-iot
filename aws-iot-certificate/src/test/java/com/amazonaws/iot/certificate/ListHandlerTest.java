@@ -60,7 +60,7 @@ public class ListHandlerTest extends CertificateTestBase {
                 .nextMarker(null)
                 .certificates(Certificate.builder()
                         .certificateId(CERT_ID)
-                        .status(CERT_STATUS)
+                        .status(CERT_STATUS_ACTIVE)
                         .certificateArn(CERT_ARN)
                         .build())
                 .build());
@@ -82,7 +82,7 @@ public class ListHandlerTest extends CertificateTestBase {
 
         ResourceModel model = models.get(0);
         assertThat(model.getId()).isEqualTo(CERT_ID);
-        assertThat(model.getStatus()).isEqualTo(CERT_STATUS);
+        assertThat(model.getStatus()).isEqualTo(CERT_STATUS_ACTIVE);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class ListHandlerTest extends CertificateTestBase {
                 .nextMarker(null)
                 .certificates(Certificate.builder()
                         .certificateId(CERT_ID)
-                        .status(CERT_STATUS)
+                        .status(CERT_STATUS_ACTIVE)
                         .certificateArn(CERT_ARN)
                         .build())
                 .build());

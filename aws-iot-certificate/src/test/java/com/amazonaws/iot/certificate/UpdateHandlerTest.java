@@ -51,8 +51,12 @@ public class UpdateHandlerTest extends CertificateTestBase {
 
     @Test
     public void handleRequest_updatesStatus() {
-        final ResourceModel prevModel = defaultModelBuilder().build();
-        final ResourceModel newModel = defaultModelBuilder().build();
+        final ResourceModel prevModel = defaultModelBuilder()
+                .status(CERT_STATUS_ACTIVE)
+                .build();
+        final ResourceModel newModel = defaultModelBuilder()
+                .status(CERT_STATUS_INACTIVE)
+                .build();
 
         final String newStatus = "INACTIVE";
         newModel.setStatus(newStatus);

@@ -9,7 +9,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.CertificateDescription;
 import software.amazon.awssdk.services.iot.model.DescribeCertificateResponse;
-import software.amazon.awssdk.services.iot.model.DescribeProvisioningTemplateResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -48,13 +47,15 @@ public class ReadHandlerTest extends CertificateTestBase {
     @Test
     public void handleRequest_SimpleSuccess() {
         final ResourceModel model = defaultModelBuilder().build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
+                .previousResourceState(null)
+                .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenReturn(DescribeCertificateResponse.builder()
                 .certificateDescription(CertificateDescription.builder()
                         .certificateArn(CERT_ARN)
                         .certificateId(CERT_ID)
-                        .status(CERT_STATUS)
+                        .status(CERT_STATUS_ACTIVE)
                         .build())
                 .build());
 
@@ -64,7 +65,7 @@ public class ReadHandlerTest extends CertificateTestBase {
         final ResourceModel expectedModel = ResourceModel.builder()
                 .id(CERT_ID)
                 .arn(CERT_ARN)
-                .status(CERT_STATUS)
+                .status(CERT_STATUS_ACTIVE)
                 .build();
 
         assertThat(response).isNotNull();
@@ -72,6 +73,7 @@ public class ReadHandlerTest extends CertificateTestBase {
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        assertThat(response.getResourceModel().getArn()).isEqualTo(CERT_ARN);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
