@@ -1,0 +1,16 @@
+{
+    "typeName": "AWS::IoT::Authorizer",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.authorizer.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.authorizer.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "authorizer"
+        ],
+        "protocolVersion": "2.0.0"
+    }
+}
