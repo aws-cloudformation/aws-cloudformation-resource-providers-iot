@@ -1,0 +1,16 @@
+{
+    "typeName": "AWS::IoT::DomainConfiguration",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.domainconfiguration.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.domainconfiguration.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "domainconfiguration"
+        ],
+        "protocolVersion": "2.0.0"
+    }
+}
