@@ -22,5 +22,3 @@ Resources:
       Runtime: java8
       CodeUri: ./target/aws-iot-domainconfiguration-handler-1.0-SNAPSHOT.jar
       MemorySize: 256
-
-

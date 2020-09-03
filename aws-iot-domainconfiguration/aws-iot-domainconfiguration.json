@@ -45,11 +45,18 @@
       "items": {
         "type": "object",
         "properties": {
-          "Key": { "type": "string" },
-          "Value": { "type": "string" }
+          "Key": {
+            "type": "string"
+          },
+          "Value": {
+            "type": "string"
+          }
         },
         "additionalProperties": false,
-        "required": ["Key", "Value"]
+        "required": [
+          "Key",
+          "Value"
+        ]
       }
     }
   },
@@ -82,7 +89,9 @@
     "ServiceType": {
       "type": "string",
       "enum": [
-        "DATA", "CREDENTIAL_PROVIDER", "JOBS"
+        "DATA",
+        "CREDENTIAL_PROVIDER",
+        "JOBS"
       ]
     },
     "ValidationCertificateArn": {
