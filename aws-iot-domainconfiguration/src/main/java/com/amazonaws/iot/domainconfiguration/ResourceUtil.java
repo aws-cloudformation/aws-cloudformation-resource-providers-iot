@@ -4,12 +4,6 @@ import software.amazon.awssdk.services.iot.model.AuthorizerConfig;
 
 public final class ResourceUtil {
 
-    /**
-     * We wait 35 seconds between create/update and read to handle eventual consistency issues. Our canaries wait 31 seconds.
-     * We wait 35 seconds between update(disable) and delete. For internal test accounts, we have a 30 second wait time
-     * before a disabled AWS managed domain configuration can be deleted. This way we dont need additional logic to wait
-     * between disable and delete for test for test accounts. Our canaries wait 35 seconds before deleting the resource.
-     * */
     public static final int DELAY_CONSTANT = 35;
     public static final int MAX_RETRIES = 3;
 
