@@ -19,6 +19,8 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.List;
+
 public class UpdateHandler extends BaseHandler<CallbackContext> {
     private static final String OPERATION = "UpdateDomainConfiguration";
 
@@ -32,6 +34,11 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         this.iotClient = iotClient;
     }
 
+    private boolean areServerCertificatesUnchanged(List<String> newModelCerts, List<String> prevModelCerts) {
+        if (newModelCerts.size() != prevModelCerts.size()) return false;
+        return newModelCerts.containsAll(prevModelCerts);
+    }
+
     private void validatePropertiesAreUpdatable(ResourceModel prevModel, ResourceModel newModel) {
         if (!StringUtils.equals(newModel.getDomainConfigurationName(), prevModel.getDomainConfigurationName())) {
             throw new CfnNotUpdatableException(ResourceModel.TYPE_NAME, "DomainConfigurationName");
@@ -43,6 +50,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             throw new CfnNotUpdatableException(ResourceModel.TYPE_NAME, "ServiceType");
         }
         if (!StringUtils.equals(newModel.getValidationCertificateArn(), prevModel.getValidationCertificateArn())) {
+            throw new CfnNotUpdatableException(ResourceModel.TYPE_NAME, "ValidationCertificateArn");
+        }
+        if (!areServerCertificatesUnchanged(newModel.getServerCertificateArns(), prevModel.getServerCertificateArns())) {
             throw new CfnNotUpdatableException(ResourceModel.TYPE_NAME, "ValidationCertificateArn");
         }
     }
@@ -93,7 +103,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     ResourceUtil.DELAY_CONSTANT,
                     ResourceModel.builder().
                             domainConfigurationName(response.domainConfigurationName())
-                            .domainConfigurationArn(response.domainConfigurationArn())
+                            .arn(response.domainConfigurationArn())
                             .build());
         } catch (final ResourceNotFoundException e) {
             throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getDomainConfigurationName());

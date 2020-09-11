@@ -98,7 +98,7 @@
       "type": "string",
       "pattern": "^arn:aws(-cn|-us-gov|-iso-b|-iso)?:acm:[a-z]{2}-(gov-|iso-|isob-)?[a-z]{4,9}-\\d{1}:\\d{12}:certificate/[a-zA-Z0-9/-]+$"
     },
-    "DomainConfigurationArn": {
+    "Arn": {
       "type": "string"
     },
     "DomainConfigurationStatus": {
@@ -132,10 +132,11 @@
     "/properties/DomainConfigurationName",
     "/properties/DomainName",
     "/properties/ServiceType",
-    "/properties/ValidationCertificateArn"
+    "/properties/ValidationCertificateArn",
+    "/properties/ServerCertificateArns"
   ],
   "readOnlyProperties": [
-    "/properties/DomainConfigurationArn",
+    "/properties/Arn",
     "/properties/DomainType",
     "/properties/ServerCertificates"
   ],

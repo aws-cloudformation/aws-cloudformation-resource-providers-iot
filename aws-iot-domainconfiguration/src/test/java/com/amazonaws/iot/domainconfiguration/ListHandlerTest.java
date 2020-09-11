@@ -80,7 +80,7 @@ public class ListHandlerTest extends DomainConfigurationTestBase {
 
         ResourceModel model = models.get(0);
         assertThat(model.getDomainConfigurationName()).isEqualTo(DOMAIN_CONFIG_NAME);
-        assertThat(model.getDomainConfigurationArn()).isEqualTo(DOMAIN_CONFIG_ARN);
+        assertThat(model.getArn()).isEqualTo(DOMAIN_CONFIG_ARN);
     }
 
     @Test

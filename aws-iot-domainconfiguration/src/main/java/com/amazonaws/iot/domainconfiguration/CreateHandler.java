@@ -95,7 +95,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 return readResponse;
             } catch (final CfnNotFoundException e) {
                 if(currentRetryCount >= ResourceUtil.MAX_RETRIES)
-                    throw new CfnResourceConflictException(model.getDomainName(), model.getDomainConfigurationArn(),
+                    throw new CfnResourceConflictException(model.getDomainName(), model.getArn(),
                             "Unable to create the resource", e);
                 else
                     return ProgressEvent.defaultInProgressHandler(
@@ -139,7 +139,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     ResourceUtil.DELAY_CONSTANT,
                     ResourceModel.builder().
                             domainConfigurationName(response.domainConfigurationName())
-                            .domainConfigurationArn(response.domainConfigurationArn())
+                            .arn(response.domainConfigurationArn())
                             .build());
 
         } catch (final ResourceAlreadyExistsException e) {

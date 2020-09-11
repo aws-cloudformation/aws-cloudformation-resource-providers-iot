@@ -69,7 +69,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     iotClient::describeDomainConfiguration);
 
             return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
-                    .domainConfigurationArn(response.domainConfigurationArn())
+                    .arn(response.domainConfigurationArn())
                     .domainConfigurationName(response.domainConfigurationName())
                     .domainConfigurationStatus(response.domainConfigurationStatusAsString())
                     .domainName(response.domainName())

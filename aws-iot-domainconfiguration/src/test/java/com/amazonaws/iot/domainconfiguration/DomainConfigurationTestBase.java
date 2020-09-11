@@ -61,7 +61,7 @@ public class DomainConfigurationTestBase {
 
     protected final static ResourceModel DEFAULT_RESOURCE_MODEL = ResourceModel.builder()
             .domainConfigurationName(DOMAIN_CONFIG_NAME)
-            .domainConfigurationArn(DOMAIN_CONFIG_ARN)
+            .arn(DOMAIN_CONFIG_ARN)
             .build();
 
     protected final static UpdateDomainConfigurationResponse DEFAULT_UPDATE_DOMAIN_CONFIGURATION_RESPONSE = UpdateDomainConfigurationResponse.builder()
@@ -83,7 +83,7 @@ public class DomainConfigurationTestBase {
         return ResourceModel.builder()
                 .domainName(DOMAIN_NAME)
                 .domainConfigurationName(DOMAIN_CONFIG_NAME)
-                .domainConfigurationArn(DOMAIN_CONFIG_ARN)
+                .arn(DOMAIN_CONFIG_ARN)
                 .serverCertificates(Collections.singletonList(com.amazonaws.iot.domainconfiguration.ServerCertificateSummary.builder()
                         .serverCertificateArn(SERVER_CERT_ARN)
                         .serverCertificateStatus(CERT_STATUS)

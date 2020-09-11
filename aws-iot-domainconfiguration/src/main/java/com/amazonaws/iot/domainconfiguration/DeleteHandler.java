@@ -71,7 +71,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                         CallbackContext.builder().domainConfigurationDisabled(true).build(),
                         ResourceUtil.DELAY_CONSTANT,
                         ResourceModel.builder()
-                                .domainConfigurationArn(response.domainConfigurationArn())
+                                .arn(response.domainConfigurationArn())
                                 .domainConfigurationName(response.domainConfigurationName())
                                 .build());
             }

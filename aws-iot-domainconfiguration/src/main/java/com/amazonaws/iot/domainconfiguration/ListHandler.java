@@ -49,10 +49,10 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                     iotClient::listDomainConfigurations);
 
             final List<ResourceModel> models = response.domainConfigurations().stream()
-                    .map(config-> ResourceModel.builder()
-                            .domainConfigurationName(config.domainConfigurationName())
-                            .domainConfigurationArn(config.domainConfigurationArn())
-                            .serviceType(config.serviceTypeAsString())
+                    .map(domainConfig-> ResourceModel.builder()
+                            .domainConfigurationName(domainConfig.domainConfigurationName())
+                            .arn(domainConfig.domainConfigurationArn())
+                            .serviceType(domainConfig.serviceTypeAsString())
                             .build())
                     .collect(Collectors.toList());
 

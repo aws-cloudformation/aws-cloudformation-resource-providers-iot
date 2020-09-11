@@ -37,7 +37,7 @@ public class CreateHandlerTest extends DomainConfigurationTestBase {
     private CreateHandler handler;
     private final ResourceModel expectedResponse = ResourceModel.builder()
             .domainConfigurationName(DOMAIN_CONFIG_NAME)
-            .domainConfigurationArn(DOMAIN_CONFIG_ARN)
+            .arn(DOMAIN_CONFIG_ARN)
             .build();
 
     @Mock

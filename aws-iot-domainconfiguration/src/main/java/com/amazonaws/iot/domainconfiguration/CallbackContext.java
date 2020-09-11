@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 /**
- * Context used for CloudFormation handlers. Not used for this resource type.
+ * Context used for CloudFormation handlers when creating/updating/deleting domain configuration request.
  */
 @Data
 @NoArgsConstructor
