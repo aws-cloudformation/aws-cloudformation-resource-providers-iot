@@ -1,0 +1,13 @@
+{
+  "Name": "TopicFilterForAuthMessages",
+  "StringValues": [
+    "device/+/auth"
+  ],
+  "Type": "TOPIC_FILTER",
+  "Tags": [
+    {
+      "Key": "!!!~~~",
+      "Value": "tagValue"
+    }
+  ]
+}

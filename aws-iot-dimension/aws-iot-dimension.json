@@ -1,0 +1,115 @@
+{
+  "typeName": "AWS::IoT::Dimension",
+  "description": "A dimension can be used to limit the scope of a metric used in a security profile for AWS IoT Device Defender.",
+  "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-iot.git",
+  "definitions": {
+    "Tag": {
+      "description": "A key-value pair to associate with a resource.",
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The tag's key.",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "Value": {
+          "type": "string",
+          "description": "The tag's value.",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "Value",
+        "Key"
+      ]
+    }
+  },
+  "properties": {
+    "Name": {
+      "description": "A unique identifier for the dimension.",
+      "type": "string",
+      "pattern": "[a-zA-Z0-9:_-]+",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "Type": {
+      "type": "string",
+      "enum": [
+        "TOPIC_FILTER"
+      ]
+    },
+    "StringValues": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "minItems": 1,
+      "maxItems": 5
+    },
+    "Tags": {
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "insertionOrder": false,
+      "description": "An array of key-value pairs to apply to this resource.",
+      "items": {
+        "$ref": "#/definitions/Tag"
+      }
+    },
+    "Arn": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "Type",
+    "StringValues"
+  ],
+  "createOnlyProperties": [
+    "/properties/Name",
+    "/properties/Type"
+  ],
+  "readOnlyProperties": [
+    "/properties/Arn"
+  ],
+  "primaryIdentifier": [
+    "/properties/Name"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "iot:CreateDimension"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "iot:DescribeDimension",
+        "iot:ListTagsForResource"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "iot:UpdateDimension",
+        "iot:ListTagsForResource",
+        "iot:UntagResource",
+        "iot:TagResource"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        "iot:DescribeDimension",
+        "iot:DeleteDimension"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "iot:ListDimensions"
+      ]
+    }
+  }
+}

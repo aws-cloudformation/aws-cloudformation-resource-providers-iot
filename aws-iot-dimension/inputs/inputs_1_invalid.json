@@ -1,0 +1,8 @@
+{
+  "Name": "TopicFilterForAuthMessages",
+  "StringValues": [
+    "device/+/auth"
+  ],
+  "Type": "TOPIC_FILTER",
+  "Arn": "Arn is a read-only property"
+}
