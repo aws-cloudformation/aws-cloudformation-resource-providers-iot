@@ -1,5 +1,5 @@
 {
-  "Name": "TopicFilterForAuthMessages",
+  "Name": "CfnContractTest_Invalid3",
   "StringValues": [
     "device/+/auth"
   ],

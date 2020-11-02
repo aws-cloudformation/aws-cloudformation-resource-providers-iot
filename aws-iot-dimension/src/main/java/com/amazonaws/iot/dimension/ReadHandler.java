@@ -20,7 +20,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
     private final IotClient iotClient;
 
     public ReadHandler() {
-        this.iotClient = IotClient.builder().build();
+        iotClient = IotClient.builder().build();
     }
 
     @Override

@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;

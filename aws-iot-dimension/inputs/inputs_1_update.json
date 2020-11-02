@@ -1,12 +1,12 @@
 {
-  "Name": "TopicFilterForAuthMessages",
+  "Name": "CfnContractTest_Update",
   "StringValues": [
     "device/+/authV2"
   ],
   "Type": "TOPIC_FILTER",
   "Tags": [
     {
-      "Key": "testTagKey2",
+      "Key": "cfnTestTagKey2",
       "Value": "tagValue2"
     }
   ]

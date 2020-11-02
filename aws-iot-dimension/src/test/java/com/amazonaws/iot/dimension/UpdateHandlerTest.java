@@ -27,12 +27,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDimensionRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDimensionResponse;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -209,6 +211,30 @@ public class UpdateHandlerTest {
         assertThatThrownBy(() ->
                 handler.updateTags(proxy, request, DIMENSION_ARN, logger))
                 .isInstanceOf(CfnInternalFailureException.class);
+    }
+
+    @Test
+    void handleRequest_ResourceAlreadyDeleted_VerifyException() {
+
+        ResourceModel desiredModel = ResourceModel.builder()
+                .name(DIMENSION_NAME)
+                .type(DIMENSION_TYPE)
+                .stringValues(DIMENSION_VALUE)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
+                .previousResourceState(ResourceModel.builder().build())
+                .desiredResourceState(desiredModel)
+                .build();
+
+        // If the resource is already deleted, the update API throws ResourceNotFoundException. Mocking that here.
+        when(proxy.injectCredentialsAndInvokeV2(any(), any()))
+                .thenThrow(ResourceNotFoundException.builder().build());
+
+        assertThatThrownBy(() ->
+                handler.handleRequest(proxy, request, null, logger))
+                .isInstanceOf(CfnNotFoundException.class);
     }
 
     // TODO: test system tags when the src code is ready
