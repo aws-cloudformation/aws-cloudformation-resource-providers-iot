@@ -1,0 +1,16 @@
+{
+    "typeName": "AWS::IoT::TopicRule",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.topicrule.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.topicrule.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "topicrule"
+        ],
+        "protocolVersion": "2.0.0"
+    }
+}
