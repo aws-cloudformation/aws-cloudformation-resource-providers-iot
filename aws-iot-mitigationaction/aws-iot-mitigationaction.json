@@ -1,0 +1,239 @@
+{
+    "typeName": "AWS::IoT::MitigationAction",
+    "description": "Mitigation actions can to take actions to mitigate issues that were found during an audit",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-iot.git",
+    "definitions": {
+        "Tag": {
+            "description": "A key-value pair to associate with a resource.",
+            "type": "object",
+            "properties": {
+                "Key": {
+                    "type": "string",
+                    "description": "The tag's key.",
+                    "minLength": 1,
+                    "maxLength": 128
+                },
+                "Value": {
+                    "type": "string",
+                    "description": "The tag's value.",
+                    "minLength": 1,
+                    "maxLength": 256
+                }
+            },
+            "required": [
+                "Value",
+                "Key"
+            ]
+        },
+        "ActionParams": {
+            "type": "object",
+            "properties": {
+                "AddThingsToThingGroupParams": {
+                    "$ref": "#/definitions/AddThingsToThingGroupParams"
+                },
+                "EnableIoTLoggingParams": {
+                    "$ref": "#/definitions/EnableIoTLoggingParams"
+                },
+                "PublishFindingToSnsParams": {
+                    "$ref": "#/definitions/PublishFindingToSnsParams"
+                },
+                "ReplaceDefaultPolicyVersionParams": {
+                    "$ref": "#/definitions/ReplaceDefaultPolicyVersionParams"
+                },
+                "UpdateCACertificateParams": {
+                    "$ref": "#/definitions/UpdateCACertificateParams"
+                },
+                "UpdateDeviceCertificateParams": {
+                    "$ref": "#/definitions/UpdateDeviceCertificateParams"
+                }
+            }
+        },
+        "AddThingsToThingGroupParams": {
+            "description": "Allows adding things that triggered the mitigation action to thing groups",
+            "type": "object",
+            "properties": {
+                "OverrideDynamicGroups": {
+                    "type": "boolean",
+                    "description": "Specifies if this mitigation action can move the things that triggered the mitigation action out of one or more dynamic thing groups."
+                },
+                "ThingGroupNames": {
+                    "description": "The list of groups to which you want to add the things that triggered the mitigation action.",
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                    },
+                    "minItems": 1,
+                    "maxItems":10
+                }
+            },
+            "required": [
+                "ThingGroupNames"
+            ]
+        },
+        "EnableIoTLoggingParams": {
+            "description": "Allows logging",
+            "type": "object",
+            "properties": {
+                "LogLevel": {
+                    "type": "string",
+                    "enum": [
+                        "DEBUG", "INFO", "ERROR", "WARN"
+                    ],
+                    "description": " Specifies which types of information are logged."
+                },
+                "RoleArnForLogging": {
+                    "description": " The ARN of the IAM role used for logging.",
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 2048
+                }
+            },
+            "required": [
+                "LogLevel",
+                "RoleArnForLogging"
+            ]
+        },
+        "PublishFindingToSnsParams": {
+            "type": "object",
+            "properties": {
+                "TopicArn": {
+                    "type": "string",
+                    "description": "The ARN of the topic to which you want to publish the findings.",
+                    "minLength": 20,
+                    "maxLength": 2048
+                }
+            },
+            "required": [
+                "TopicArn"
+            ]
+        },
+        "ReplaceDefaultPolicyVersionParams": {
+            "type": "object",
+            "properties": {
+                "TemplateName": {
+                    "type": "string",
+                    "enum": [
+                        "BLANK_POLICY"
+                    ]
+                }
+            },
+            "required": [
+                "TemplateName"
+            ]
+        },
+        "UpdateCACertificateParams": {
+            "type": "object",
+            "properties": {
+                "Action": {
+                    "type": "string",
+                    "enum": [
+                        "DEACTIVATE"
+                    ]
+                }
+            },
+            "required": [
+                "Action"
+            ]
+        },
+        "UpdateDeviceCertificateParams": {
+            "type": "object",
+            "properties": {
+                "Action": {
+                    "type": "string",
+                    "enum": [
+                        "DEACTIVATE"
+                    ]
+                }
+            },
+            "required": [
+                "Action"
+            ]
+        }
+    },
+    "properties": {
+        "ActionName": {
+            "description": "A unique identifier for the mitigation action.",
+            "type": "string",
+            "pattern": "[a-zA-Z0-9:_-]+",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "RoleArn": {
+            "type": "string"
+        },
+        "Tags": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "insertionOrder": false,
+            "description": "An array of key-value pairs to apply to this resource.",
+            "items": {
+                "$ref": "#/definitions/Tag"
+            }
+        },
+        "ActionParams": {
+            "$ref": "#/definitions/ActionParams"
+        },
+        "MitigationActionArn": {
+            "type": "string"
+        },
+        "MitigationActionId": {
+            "type": "string"
+        },
+        "CreationDate": {
+            "type": "string"
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "ActionName",
+        "RoleArn",
+        "ActionParams"
+    ],
+    "createOnlyProperties": [
+        "/properties/ActionName"
+    ],
+    "readOnlyProperties": [
+        "/properties/MitigationActionArn",
+        "/properties/MitigationActionId"
+    ],
+    "primaryIdentifier": [
+        "/properties/ActionName"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "iot:CreateMitigationAction",
+                "iam:PassRole"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "iot:DescribeMitigationAction",
+                "iot:ListTagsForResource"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "iot:UpdateMitigationAction",
+                "iot:ListTagsForResource",
+                "iot:UntagResource",
+                "iot:TagResource"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "iot:DescribeMitigationAction",
+                "iot:DeleteMitigationAction"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "iot:ListMitigationActions"
+            ]
+        }
+    }
+}

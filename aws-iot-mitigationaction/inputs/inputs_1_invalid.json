@@ -1,0 +1,12 @@
+{
+    "ActionName": "CfnContractTest",
+    "RoleArn": "arn:aws:iam::072938559174:role/Admin",
+    "ActionParams":
+    {
+        "PublishFindingToSnsParams":
+        {
+            "TopicArn": "arn:aws:sns:us-east-1:072938559174:myTopic.fifo"
+        }
+    },
+    "MitigationActionId": "This is a read only property"
+}

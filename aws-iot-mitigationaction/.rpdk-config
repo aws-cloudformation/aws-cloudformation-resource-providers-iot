@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::IoT::MitigationAction",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.mitigationaction.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.mitigationaction.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "mitigationaction"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    }
+}
