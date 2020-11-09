@@ -16,6 +16,9 @@ import software.amazon.cloudformation.resource.IdentifierUtils;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
+    // Copied value from software.amazon.cloudformation.resource.IdentifierUtils
+    private static final int GENERATED_NAME_MAX_LENGTH = 40;
+
     private final IotClient iotClient;
 
     public CreateHandler() {
@@ -53,17 +56,16 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(model);
     }
 
-    private static CreateDimensionRequest translateToCreateRequest(ResourceHandlerRequest<ResourceModel> request) {
+    private CreateDimensionRequest translateToCreateRequest(ResourceHandlerRequest<ResourceModel> request) {
 
         ResourceModel model = request.getDesiredResourceState();
 
         // We don't require the Name field in CFN resource definition.
         // If it's not provided, generate one based on the Logical ID + Idempotency Token
         if (StringUtils.isBlank(model.getName())) {
-            // TODO: include stack-id in the generated name. Will do it once the new release of the java plugin
-            // comes out, it will have a helper method for it: https://tinyurl.com/y567wznd
-            model.setName(IdentifierUtils.generateResourceIdentifier(request.getLogicalResourceIdentifier(),
-                    request.getClientRequestToken()));
+            model.setName(IdentifierUtils.generateResourceIdentifier(
+                    request.getStackId(), request.getLogicalResourceIdentifier(),
+                    request.getClientRequestToken(), GENERATED_NAME_MAX_LENGTH));
         }
 
         // getDesiredResourceTags combines the model and stack-level tags.

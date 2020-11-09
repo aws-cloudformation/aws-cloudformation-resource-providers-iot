@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDimensionRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDimensionResponse;
+import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -38,7 +39,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
 
         ResourceModel desiredModel = request.getDesiredResourceState();
         String previousArn = request.getPreviousResourceState().getArn();
-        if (!Objects.equals(desiredModel.getArn(), previousArn)) {
+        String desiredArn = desiredModel.getArn();
+        if (!StringUtils.isEmpty(desiredArn) && !desiredArn.equals(previousArn)) {
             logger.log(String.format("Arn cannot be updated, caller tried changing %s to %s.",
                     previousArn, desiredModel.getArn()));
             return ProgressEvent.failed(desiredModel, callbackContext, HandlerErrorCode.InvalidRequest,
@@ -51,7 +53,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         updateTags(proxy, request, resourceArn, logger);
 
         logger.log(String.format("Successfully updated %s.", resourceArn));
-        return ProgressEvent.defaultSuccessHandler(request.getDesiredResourceState());
+
+        desiredModel.setArn(resourceArn);
+        return ProgressEvent.defaultSuccessHandler(desiredModel);
     }
 
     /**

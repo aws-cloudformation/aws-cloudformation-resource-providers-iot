@@ -36,6 +36,7 @@ import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -71,6 +72,7 @@ public class UpdateHandlerTest {
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
                 .stringValues(Collections.singletonList("previousValue"))
+                .arn(DIMENSION_ARN)
                 .build();
         ResourceModel desiredModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
@@ -104,6 +106,9 @@ public class UpdateHandlerTest {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+
+        desiredModel.setArn(DIMENSION_ARN);
+        assertThat(response.getResourceModel()).isEqualTo(desiredModel);
 
         ArgumentCaptor<IotRequest> requestCaptor = ArgumentCaptor.forClass(IotRequest.class);
         verify(proxy, times(3)).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
@@ -181,10 +186,16 @@ public class UpdateHandlerTest {
                 .type(DIMENSION_TYPE)
                 .stringValues(DIMENSION_VALUE)
                 .build();
+        ResourceModel previousModel = ResourceModel.builder()
+                .name(DIMENSION_NAME)
+                .type(DIMENSION_TYPE)
+                .stringValues(Collections.singletonList("previousValue"))
+                .arn(DIMENSION_ARN)
+                .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
-                .previousResourceState(ResourceModel.builder().build())
+                .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
                 .build();
 
@@ -221,10 +232,16 @@ public class UpdateHandlerTest {
                 .type(DIMENSION_TYPE)
                 .stringValues(DIMENSION_VALUE)
                 .build();
+        ResourceModel previousModel = ResourceModel.builder()
+                .name(DIMENSION_NAME)
+                .type(DIMENSION_TYPE)
+                .stringValues(Collections.singletonList("previousValue"))
+                .arn(DIMENSION_ARN)
+                .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
-                .previousResourceState(ResourceModel.builder().build())
+                .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
                 .build();
 
@@ -235,6 +252,35 @@ public class UpdateHandlerTest {
         assertThatThrownBy(() ->
                 handler.handleRequest(proxy, request, null, logger))
                 .isInstanceOf(CfnNotFoundException.class);
+    }
+
+    @Test
+    void handleRequest_DesiredArnIsDifferent_ReturnFailed() {
+
+        ResourceModel desiredModel = ResourceModel.builder()
+                .name(DIMENSION_NAME)
+                .type(DIMENSION_TYPE)
+                .stringValues(DIMENSION_VALUE)
+                .arn("UpdatedArn")
+                .build();
+        ResourceModel previousModel = ResourceModel.builder()
+                .name(DIMENSION_NAME)
+                .type(DIMENSION_TYPE)
+                .stringValues(Collections.singletonList("previousValue"))
+                .arn(DIMENSION_ARN)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
+                .previousResourceState(previousModel)
+                .desiredResourceState(desiredModel)
+                .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> result =
+                handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(result).isEqualTo(ProgressEvent.failed(
+                desiredModel, null, HandlerErrorCode.InvalidRequest, "Arn cannot be updated."));
     }
 
     // TODO: test system tags when the src code is ready

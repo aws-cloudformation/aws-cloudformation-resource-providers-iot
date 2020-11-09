@@ -13,14 +13,12 @@ public class TranslatorTest {
 
     @Test
     public void translateIotExceptionToCfn_LimitExceeded_Translated() {
-
         BaseHandlerException result = Translator.translateIotExceptionToCfn(LimitExceededException.builder().build());
         assertThat(result).isInstanceOf(CfnServiceLimitExceededException.class);
     }
 
     @Test
     public void translateIotExceptionToCfn_UnexpectedException_Rethrown() {
-
         IndexNotReadyException unexpectedException = IndexNotReadyException.builder().build();
         assertThatThrownBy(() -> Translator.translateIotExceptionToCfn(unexpectedException))
                 .isInstanceOf(IndexNotReadyException.class);

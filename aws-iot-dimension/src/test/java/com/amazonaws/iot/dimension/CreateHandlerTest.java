@@ -140,9 +140,11 @@ public class CreateHandlerTest {
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
-                .logicalResourceIdentifier("TestDimensionIdentifier")
-                .clientRequestToken(CLIENT_REQUEST_TOKEN)
+                .logicalResourceIdentifier("MyResourceName")
+                .clientRequestToken("MyToken")
                 .desiredResourceTags(DESIRED_TAGS)
+                .stackId("arn:aws:cloudformation:us-east-1:123456789012:stack/my-stack-name/" +
+                         "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
                 .build();
 
         CreateDimensionResponse createApiResponse = CreateDimensionResponse.builder()
@@ -158,10 +160,11 @@ public class CreateHandlerTest {
         verify(proxy).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
 
         CreateDimensionRequest submittedRequest = requestCaptor.getValue();
-        // Can't easily check the randomly generated name. Just making sure it contains
-        // the logical identifier and some more random characters.
-        assertThat(submittedRequest.name()).contains("TestDimensionIdentifier");
-        assertThat(submittedRequest.name().length() > "TestDimensionIdentifier" .length()).isTrue();
+        // Can't easily check the randomly generated name. Just making sure it contains part of
+        // the logical identifier and the stack name, and some more random characters
+        assertThat(submittedRequest.name()).contains("my-stack");
+        assertThat(submittedRequest.name()).contains("MyRes");
+        assertThat(submittedRequest.name().length() > 20).isTrue();
     }
 
     // TODO: test system tags when the src code is ready

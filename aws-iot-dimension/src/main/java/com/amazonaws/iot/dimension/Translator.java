@@ -30,7 +30,8 @@ public class Translator {
     static BaseHandlerException translateIotExceptionToCfn(IotException e) {
 
         // We're handling all the exceptions documented in API docs
-        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateDimension.html#API_CreateDimension_Errors (+same pages for other APIs)
+        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateDimension.html#API_CreateDimension_Errors
+        // (+similar pages for other APIs)
         // For Throttling and InternalFailure, we want CFN to retry, and it will do so based on the exception type.
         // Reference with Retriable/Terminal in comments for each: https://tinyurl.com/y378qdno
         if (e instanceof ResourceAlreadyExistsException) {

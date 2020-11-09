@@ -35,12 +35,14 @@
       "maxLength": 128
     },
     "Type": {
+      "description": "Specifies the type of the dimension.",
       "type": "string",
       "enum": [
         "TOPIC_FILTER"
       ]
     },
     "StringValues": {
+      "description": "Specifies the value or list of values for the dimension.",
       "type": "array",
       "uniqueItems": true,
       "items": {
@@ -52,16 +54,17 @@
       "maxItems": 5
     },
     "Tags": {
+      "description": "Metadata that can be used to manage the dimension.",
       "type": "array",
       "maxItems": 50,
       "uniqueItems": true,
       "insertionOrder": false,
-      "description": "An array of key-value pairs to apply to this resource.",
       "items": {
         "$ref": "#/definitions/Tag"
       }
     },
     "Arn": {
+      "description": "The ARN (Amazon resource name) of the created dimension.",
       "type": "string"
     }
   },
