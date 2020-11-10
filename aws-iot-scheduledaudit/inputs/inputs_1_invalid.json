@@ -1,0 +1,15 @@
+{
+  "ScheduledAuditName": "CfnContractTest",
+  "Frequency": "DAILY",
+  "TargetCheckNames": [
+    "DEVICE_CERTIFICATE_SHARED_CHECK",
+    "REVOKED_CA_CERT_CHECK"
+  ],
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ],
+  "ScheduledAuditArn": "Arn is read only"
+}
