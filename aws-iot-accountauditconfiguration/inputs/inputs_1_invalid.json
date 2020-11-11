@@ -1,0 +1,12 @@
+{
+  "AccountId": "123456789012",
+  "AuditCheckConfigurations": {
+    "NON_EXISTENT_CHECK": {
+      "Enabled": true
+    },
+    "CA_CERTIFICATE_EXPIRING_CHECK": {
+      "Enabled": true
+    }
+  },
+  "RoleArn": "arn:aws:iam::123456789012:role/service-role/AWSIoTDeviceDefenderAudit"
+}

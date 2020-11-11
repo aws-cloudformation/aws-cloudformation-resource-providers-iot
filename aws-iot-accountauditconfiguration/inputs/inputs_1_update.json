@@ -1,0 +1,22 @@
+{
+  "AccountId": "123456789012",
+  "AuditCheckConfigurations": {
+    "LOGGING_DISABLED_CHECK": {
+      "Enabled": true
+    },
+    "CA_CERTIFICATE_EXPIRING_CHECK": {
+      "Enabled": true
+    },
+    "DEVICE_CERTIFICATE_EXPIRING_CHECK": {
+      "Enabled": true
+    }
+  },
+  "AuditNotificationTargetConfigurations": {
+    "SNS": {
+      "TargetArn": "arn:aws:sns:us-west-2:123456789012:AuditNotifications",
+      "RoleArn": "arn:aws:iam::123456789012:role/service-role/iot-logging-role",
+      "Enabled": false
+    }
+  },
+  "RoleArn": "arn:aws:iam::123456789012:role/service-role/AWSIoTDeviceDefenderAudit"
+}
