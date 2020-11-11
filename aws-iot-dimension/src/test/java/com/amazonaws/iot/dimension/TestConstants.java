@@ -12,7 +12,8 @@ public class TestConstants {
 
     protected static final String DIMENSION_NAME = "TestDimensionName";
     protected static final String DIMENSION_TYPE = "TOPIC_FILTER";
-    protected static final List<String> DIMENSION_VALUE = Arrays.asList("value1", "value2");
+    protected static final List<String> DIMENSION_VALUE_IOT = Arrays.asList("value1", "value2");
+    protected static final Set<String> DIMENSION_VALUE_CFN = ImmutableSet.of("value1", "value2");
     protected static final String CLIENT_REQUEST_TOKEN = "b99b5ee6";
     protected static final String DIMENSION_ARN = "arn:aws:iot:us-east-1:123456789012:dimension/TestDimensionName";
 

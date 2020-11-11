@@ -3,7 +3,8 @@ package com.amazonaws.iot.dimension;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
 import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
 import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,18 +16,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.DescribeDimensionRequest;
 import software.amazon.awssdk.services.iot.model.DescribeDimensionResponse;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -62,7 +59,7 @@ public class ReadHandlerTest {
         DescribeDimensionResponse describeResponse = DescribeDimensionResponse.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_IOT)
                 .arn(DIMENSION_ARN)
                 .build();
         when(proxy.injectCredentialsAndInvokeV2(eq(expectedDescribeRequest), any()))
@@ -86,7 +83,7 @@ public class ReadHandlerTest {
         ResourceModel expectedModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .arn(DIMENSION_ARN)
                 .tags(MODEL_TAGS)
                 .build();

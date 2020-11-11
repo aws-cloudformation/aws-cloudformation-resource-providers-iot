@@ -3,7 +3,8 @@ package com.amazonaws.iot.dimension;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,8 +16,10 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,6 +58,7 @@ public class UpdateHandlerTest {
                     .key("DesiredTagKey")
                     .value("DesiredTagValue")
                     .build();
+    protected static final Set<String> PREVIOUS_DIMENSION_VALUE = ImmutableSet.of("previousValue");
 
     @Mock
     private AmazonWebServicesClientProxy proxy;
@@ -71,13 +75,13 @@ public class UpdateHandlerTest {
         ResourceModel previousModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(Collections.singletonList("previousValue"))
+                .stringValues(PREVIOUS_DIMENSION_VALUE)
                 .arn(DIMENSION_ARN)
                 .build();
         ResourceModel desiredModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .build();
         Map<String, String> desiredTags = ImmutableMap.of("DesiredTagKey", "DesiredTagValue");
 
@@ -116,7 +120,7 @@ public class UpdateHandlerTest {
 
         UpdateDimensionRequest submittedUpdateRequest = (UpdateDimensionRequest) submittedIotRequests.get(0);
         assertThat(submittedUpdateRequest.name()).isEqualTo(DIMENSION_NAME);
-        assertThat(submittedUpdateRequest.stringValues()).isEqualTo(DIMENSION_VALUE);
+        assertThat(submittedUpdateRequest.stringValues()).isEqualTo(DIMENSION_VALUE_IOT);
 
         TagResourceRequest submittedTagRequest = (TagResourceRequest) submittedIotRequests.get(1);
         assertThat(submittedTagRequest.tags()).isEqualTo(Collections.singletonList(DESIRED_SDK_RESOURCE_TAG));
@@ -184,12 +188,12 @@ public class UpdateHandlerTest {
         ResourceModel desiredModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .build();
         ResourceModel previousModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(Collections.singletonList("previousValue"))
+                .stringValues(PREVIOUS_DIMENSION_VALUE)
                 .arn(DIMENSION_ARN)
                 .build();
 
@@ -230,12 +234,12 @@ public class UpdateHandlerTest {
         ResourceModel desiredModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .build();
         ResourceModel previousModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(Collections.singletonList("previousValue"))
+                .stringValues(PREVIOUS_DIMENSION_VALUE)
                 .arn(DIMENSION_ARN)
                 .build();
 
@@ -260,13 +264,13 @@ public class UpdateHandlerTest {
         ResourceModel desiredModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .arn("UpdatedArn")
                 .build();
         ResourceModel previousModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(Collections.singletonList("previousValue"))
+                .stringValues(PREVIOUS_DIMENSION_VALUE)
                 .arn(DIMENSION_ARN)
                 .build();
 

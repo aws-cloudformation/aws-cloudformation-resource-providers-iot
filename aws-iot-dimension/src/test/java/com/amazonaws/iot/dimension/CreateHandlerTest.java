@@ -5,7 +5,8 @@ import static com.amazonaws.iot.dimension.TestConstants.DESIRED_TAGS;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
 import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
 import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
 import static com.amazonaws.iot.dimension.TestConstants.SDK_SYSTEM_TAG;
@@ -57,7 +58,7 @@ public class CreateHandlerTest {
         ResourceModel model = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .tags(MODEL_TAGS)
                 .build();
 
@@ -71,7 +72,7 @@ public class CreateHandlerTest {
         CreateDimensionRequest expectedRequest = CreateDimensionRequest.builder()
                 .name(DIMENSION_NAME)
                 .type(DimensionType.TOPIC_FILTER)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_IOT)
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .tags(SDK_MODEL_TAG, SDK_SYSTEM_TAG)
                 .build();
@@ -96,7 +97,7 @@ public class CreateHandlerTest {
         ResourceModel expectedModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .tags(MODEL_TAGS)
                 .arn(DIMENSION_ARN)
                 .build();
@@ -109,7 +110,7 @@ public class CreateHandlerTest {
         ResourceModel model = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 .tags(MODEL_TAGS)
                 .build();
 
@@ -133,7 +134,7 @@ public class CreateHandlerTest {
 
         ResourceModel model = ResourceModel.builder()
                 .type(DIMENSION_TYPE)
-                .stringValues(DIMENSION_VALUE)
+                .stringValues(DIMENSION_VALUE_CFN)
                 // Handler ignores these, uses desiredResourceTags which contain system tags
                 .tags(MODEL_TAGS)
                 .build();

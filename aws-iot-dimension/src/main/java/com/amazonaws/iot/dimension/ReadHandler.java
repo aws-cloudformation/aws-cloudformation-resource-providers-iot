@@ -1,6 +1,7 @@
 package com.amazonaws.iot.dimension;
 
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -59,7 +60,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                 ResourceModel.builder()
                         .name(describeDimensionResponse.name())
                         .type(describeDimensionResponse.type().name())
-                        .stringValues(describeDimensionResponse.stringValues())
+                        .stringValues(new HashSet<>(describeDimensionResponse.stringValues()))
                         .arn(describeDimensionResponse.arn())
                         .tags(responseTags)
                         .build());
