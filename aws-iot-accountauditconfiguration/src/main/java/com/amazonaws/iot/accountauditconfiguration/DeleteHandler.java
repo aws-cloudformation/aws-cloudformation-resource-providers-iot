@@ -48,6 +48,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         // For an existing configuration, the RoleArn can never be nullified,
         // unless the whole configuration is deleted.
         if (StringUtils.isEmpty(describeResponse.roleArn())) {
+            // CFN swallows this NotFound failure, the customer will see success.
             return ProgressEvent.failed(request.getDesiredResourceState(), callbackContext,
                     HandlerErrorCode.NotFound,
                     "The configuration for your account has not been set up or was deleted.");

@@ -75,6 +75,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             // CFN, but, unlike for other resources, we don't have a way to tell how
             // the configuration was created.
             boolean areEquivalent = areEquivalent(model, describeResponse, logger);
+            logger.log("An AccountAuditConfiguration already existed, areEquivalent=" + areEquivalent);
             if (areEquivalent) {
                 return ProgressEvent.defaultSuccessHandler(model);
             } else {
@@ -82,6 +83,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                         "A configuration with different properties already exists.");
             }
         }
+        logger.log("DescribeAccountAuditConfiguration for " + accountId +
+                " returned a blank config, updating now.");
 
         // Note that the handlers act as pass-through in terms of input validation.
         // We have some validations in the json model, but we delegate deeper checks to the service.
