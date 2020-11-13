@@ -49,9 +49,9 @@
       "patternProperties": {
         "[A-Z_]+": {
           "$ref": "#/definitions/AuditCheckConfiguration"
-        },
-        "additionalProperties": false
-      }
+        }
+      },
+      "additionalProperties": false
     },
     "AuditNotificationTargetConfigurations": {
       "description": "Information about the targets to which audit notifications are sent.",
