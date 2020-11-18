@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::IoT::TopicRuleDestination",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.topicruledestination.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.topicruledestination.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "topicruledestination"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    }
+}
