@@ -1,5 +1,5 @@
 {
-  "AccountId": "123456789012",
+  "AccountId": "{{AccountId}}",
   "AuditCheckConfigurations": {
     "NON_EXISTENT_CHECK": {
       "Enabled": true
@@ -8,5 +8,5 @@
       "Enabled": true
     }
   },
-  "RoleArn": "arn:aws:iam::123456789012:role/service-role/AWSIoTDeviceDefenderAudit"
+  "RoleArn": "{{RoleForDeviceDefenderAuditArn}}"
 }

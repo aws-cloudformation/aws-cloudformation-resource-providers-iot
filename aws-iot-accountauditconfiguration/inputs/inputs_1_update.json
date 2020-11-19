@@ -1,5 +1,5 @@
 {
-  "AccountId": "123456789012",
+  "AccountId": "{{AccountId}}",
   "AuditCheckConfigurations": {
     "LOGGING_DISABLED_CHECK": {
       "Enabled": true
@@ -11,12 +11,5 @@
       "Enabled": true
     }
   },
-  "AuditNotificationTargetConfigurations": {
-    "SNS": {
-      "TargetArn": "arn:aws:sns:us-west-2:123456789012:AuditNotifications",
-      "RoleArn": "arn:aws:iam::123456789012:role/service-role/iot-logging-role",
-      "Enabled": false
-    }
-  },
-  "RoleArn": "arn:aws:iam::123456789012:role/service-role/AWSIoTDeviceDefenderAudit"
+  "RoleArn": "{{RoleForDeviceDefenderAuditArn}}"
 }
