@@ -1,0 +1,9 @@
+{
+  "SecurityProfileName": "CfnContractTest-Invalid",
+  "AdditionalMetricsToRetainV2": [
+    {
+      "Metric": "aws:num-messages-sent"
+    }
+  ],
+  "SecurityProfileArn": "Arn is a read-only property"
+}
