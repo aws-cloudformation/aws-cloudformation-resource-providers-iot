@@ -38,6 +38,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         } catch (IotException e) {
             // If the resource doesn't exist, DescribeDimension will throw NotFoundException,
             // which we'll rethrow as CfnNotFoundException - that's all we need to do.
+            // CFN (the caller) will swallow this NotFound exception and the customer will see success.
             throw Translator.translateIotExceptionToCfn(e);
         }
         logger.log(String.format("Called Describe for %s with name %s, accountId %s.",

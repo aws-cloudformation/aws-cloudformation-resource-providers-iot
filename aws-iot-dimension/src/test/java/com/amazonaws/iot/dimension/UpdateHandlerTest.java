@@ -259,19 +259,18 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    void handleRequest_DesiredArnIsDifferent_ReturnFailed() {
+    void handleRequest_DesiredArnIsPopulatedAndSame_ReturnFailed() {
 
         ResourceModel desiredModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
                 .stringValues(DIMENSION_VALUE_CFN)
-                .arn("UpdatedArn")
+                .arn(DIMENSION_ARN)
                 .build();
         ResourceModel previousModel = ResourceModel.builder()
                 .name(DIMENSION_NAME)
                 .type(DIMENSION_TYPE)
                 .stringValues(PREVIOUS_DIMENSION_VALUE)
-                .arn(DIMENSION_ARN)
                 .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()

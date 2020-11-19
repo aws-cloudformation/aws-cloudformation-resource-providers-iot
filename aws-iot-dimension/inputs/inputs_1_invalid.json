@@ -1,5 +1,5 @@
 {
-  "Name": "CfnContractTest",
+  "Name": "CfnContractTest-Invalid",
   "StringValues": [
     "device/+/auth"
   ],

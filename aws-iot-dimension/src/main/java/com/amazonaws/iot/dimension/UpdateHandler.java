@@ -38,11 +38,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             Logger logger) {
 
         ResourceModel desiredModel = request.getDesiredResourceState();
-        String previousArn = request.getPreviousResourceState().getArn();
         String desiredArn = desiredModel.getArn();
-        if (!StringUtils.isEmpty(desiredArn) && !desiredArn.equals(previousArn)) {
-            logger.log(String.format("Arn cannot be updated, caller tried changing %s to %s.",
-                    previousArn, desiredModel.getArn()));
+        if (!StringUtils.isEmpty(desiredArn)) {
+            logger.log("Arn cannot be updated, caller tried setting it to " + desiredArn);
             return ProgressEvent.failed(desiredModel, callbackContext, HandlerErrorCode.InvalidRequest,
                     "Arn cannot be updated.");
         }
