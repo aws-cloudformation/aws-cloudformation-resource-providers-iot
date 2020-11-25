@@ -23,7 +23,8 @@
       "required": [
         "Value",
         "Key"
-      ]
+      ],
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -72,7 +73,9 @@
     },
     "ScheduledAuditArn": {
       "description": "The ARN (Amazon resource name) of the scheduled audit.",
-      "type": "string"
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 2048
     },
     "Tags": {
       "type": "array",
@@ -86,6 +89,9 @@
     }
   },
   "additionalProperties": false,
+  "primaryIdentifier": [
+    "/properties/ScheduledAuditName"
+  ],
   "required": [
     "ScheduledAuditName",
     "Frequency"
@@ -95,9 +101,6 @@
   ],
   "readOnlyProperties": [
     "/properties/ScheduledAuditArn"
-  ],
-  "primaryIdentifier": [
-    "/properties/ScheduledAuditName"
   ],
   "handlers": {
     "create": {

@@ -79,7 +79,6 @@ public class UpdateHandlerTest {
                 .build();
         ResourceModel desiredModel = ResourceModel.builder()
                 .scheduledAuditName(SCHEDULED_AUDIT_NAME)
-                .scheduledAuditArn(SCHEDULED_AUDIT_ARN)
                 .frequency(FREQUENCY)
                 .targetCheckNames(TARGET_CHECK_NAMES)
                 .dayOfWeek(DAY_OF_WEEK_2)
@@ -268,14 +267,14 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    void handleRequest_DesiredArnIsDifferent_ReturnFailed() {
+    void handleRequest_DesiredArnIsPopulatedAndSame_ReturnFailed() {
 
         ResourceModel desiredModel = ResourceModel.builder()
                 .scheduledAuditName(SCHEDULED_AUDIT_NAME)
                 .frequency(FREQUENCY)
                 .dayOfWeek(DAY_OF_WEEK)
                 .targetCheckNames(TARGET_CHECK_NAMES)
-                .scheduledAuditArn("UpdatedArn")
+                .scheduledAuditArn(SCHEDULED_AUDIT_ARN)
                 .build();
         ResourceModel previousModel = ResourceModel.builder()
                 .scheduledAuditName(SCHEDULED_AUDIT_NAME)

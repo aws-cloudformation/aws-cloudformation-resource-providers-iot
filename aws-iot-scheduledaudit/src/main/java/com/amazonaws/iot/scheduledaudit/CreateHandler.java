@@ -61,8 +61,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         ResourceModel model = request.getDesiredResourceState();
 
-        // We don't require the Name field in CFN resource definition.
-        // If it's not provided, generate one based on the Logical ID + Idempotency Token
+        // Like most services, we don't require an explicit resource name in the template,
+        // and, if it's not provided, generate one based on the stack ID and logical ID.
         if (StringUtils.isBlank(model.getScheduledAuditName())) {
             model.setScheduledAuditName(IdentifierUtils.generateResourceIdentifier(
                     request.getStackId(), request.getLogicalResourceIdentifier(),
@@ -70,12 +70,15 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         }
 
         // getDesiredResourceTags combines the model and stack-level tags.
-        // Reference: https://tinyurl.com/y2p8medk
+        // Reference: https://tinyurl.com/yyxtd7w6
         Map<String, String> tags = request.getDesiredResourceTags();
         // TODO: uncomment this after we update the service to allow these (only from CFN)
         // SystemTags are the default stack-level tags with aws:cloudformation prefix
         // tags.putAll(request.getSystemTags());
 
+        // Note that the handlers act as pass-through in terms of input validation.
+        // We have some validations in the json model, but we delegate deeper checks to the service.
+        // If there's an invalid input, we'll rethrow the service's InvalidRequestException with a readable message.
         return CreateScheduledAuditRequest.builder()
                 .scheduledAuditName(model.getScheduledAuditName())
                 .frequency(model.getFrequency())
