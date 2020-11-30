@@ -3,6 +3,8 @@ package com.amazonaws.iot.securityprofile;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.AttachSecurityProfileRequest;
@@ -20,6 +22,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
     // Copied value from software.amazon.cloudformation.resource.IdentifierUtils
     private static final int GENERATED_NAME_MAX_LENGTH = 40;
+    private static final int MAX_CALLS_PER_SECOND_LIMIT = 5;
 
     private final IotClient iotClient;
 
@@ -59,7 +62,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         // using the TargetArns field. Thus, we need to make an AttachSecurityProfile call for every target.
         Set<String> targetArns = model.getTargetArns();
         if (targetArns != null) {
+            // The number of targets can be large, we need to avoid getting throttled.
+            RateLimiter rateLimiter = RateLimiter.create(MAX_CALLS_PER_SECOND_LIMIT);
             for (String targetArn : targetArns) {
+                rateLimiter.acquire();
                 attachSecurityProfile(model.getSecurityProfileName(), targetArn, proxy);
                 logger.log("Attached the security profile to " + targetArn);
             }

@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.RateLimiter;
 
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.AttachSecurityProfileRequest;
@@ -29,6 +30,8 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
     private final IotClient iotClient;
+
+    private static final int MAX_CALLS_PER_SECOND_LIMIT = 5;
 
     public UpdateHandler() {
         iotClient = IotClient.builder().build();
@@ -157,7 +160,11 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .filter(target -> !desiredTargets.contains(target))
                 .collect(Collectors.toSet());
 
+        // The number of targets can be large, we need to avoid getting throttled.
+        RateLimiter rateLimiter = RateLimiter.create(MAX_CALLS_PER_SECOND_LIMIT);
+
         for (String targetArn : targetsToAttach) {
+            rateLimiter.acquire();
             AttachSecurityProfileRequest attachRequest = AttachSecurityProfileRequest.builder()
                     .securityProfileName(securityProfileName)
                     .securityProfileTargetArn(targetArn)
@@ -171,6 +178,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         }
 
         for (String targetArn : targetsToDetach) {
+            rateLimiter.acquire();
             DetachSecurityProfileRequest detachRequest = DetachSecurityProfileRequest.builder()
                     .securityProfileName(securityProfileName)
                     .securityProfileTargetArn(targetArn)
