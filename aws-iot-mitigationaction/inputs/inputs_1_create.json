@@ -1,17 +1,15 @@
 {
-    "ActionName": "CfnContractTest",
-    "RoleArn": "arn:aws:iam::072938559174:role/Admin",
-    "ActionParams":
-        {
-            "PublishFindingToSnsParams":
-            {
-                "TopicArn": "arn:aws:sns:us-east-1:072938559174:myTopic.fifo"
-            }
-        },
-    "Tags": [
-        {
-            "Key": "testTagKey",
-            "Value": "tagValue"
-        }
-    ]
+  "ActionName": "CfnContractTest",
+  "RoleArn": "{{RoleForDeviceDefenderAuditArn}}",
+  "ActionParams": {
+    "PublishFindingToSnsParams": {
+      "TopicArn": "{{TopicForDeviceDefenderAuditCreateArn}}"
+    }
+  },
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
 }

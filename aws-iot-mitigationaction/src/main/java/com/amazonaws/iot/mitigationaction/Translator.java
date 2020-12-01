@@ -1,11 +1,5 @@
 package com.amazonaws.iot.mitigationaction;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
@@ -25,13 +19,19 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * This class is a centralized placeholder for
  *  - api request construction
  *  - object translation to/from aws sdk
  *  - resource model construction for read/list handlers
  */
-
 public class Translator {
 
 
@@ -95,28 +95,28 @@ public class Translator {
               .thingGroupNames(actionParams.getAddThingsToThingGroupParams().getThingGroupNames())
               .build();
     }
-    else if (actionParams.getEnableIoTLoggingParams() != null) {
+    if (actionParams.getEnableIoTLoggingParams() != null) {
       enableIoTLoggingParams = software.amazon.awssdk.services.iot.model.EnableIoTLoggingParams.builder()
               .logLevel(actionParams.getEnableIoTLoggingParams().getLogLevel())
               .roleArnForLogging(actionParams.getEnableIoTLoggingParams().getRoleArnForLogging())
               .build();
     }
-    else if (actionParams.getPublishFindingToSnsParams() != null) {
+    if (actionParams.getPublishFindingToSnsParams() != null) {
       publishFindingToSnsParams = software.amazon.awssdk.services.iot.model.PublishFindingToSnsParams.builder()
               .topicArn(actionParams.getPublishFindingToSnsParams().getTopicArn())
               .build();
     }
-    else if (actionParams.getReplaceDefaultPolicyVersionParams() != null) {
+    if (actionParams.getReplaceDefaultPolicyVersionParams() != null) {
       replaceDefaultPolicyVersionParams = software.amazon.awssdk.services.iot.model.ReplaceDefaultPolicyVersionParams.builder()
               .templateName(actionParams.getReplaceDefaultPolicyVersionParams().getTemplateName())
               .build();
     }
-    else if (actionParams.getUpdateCACertificateParams() != null) {
+    if (actionParams.getUpdateCACertificateParams() != null) {
       updateCACertificateParams = software.amazon.awssdk.services.iot.model.UpdateCACertificateParams.builder()
               .action(actionParams.getUpdateCACertificateParams().getAction())
               .build();
     }
-    else if (actionParams.getUpdateDeviceCertificateParams() != null) {
+    if (actionParams.getUpdateDeviceCertificateParams() != null) {
       updateDeviceCertificateParams = software.amazon.awssdk.services.iot.model.UpdateDeviceCertificateParams.builder()
               .action(actionParams.getUpdateDeviceCertificateParams().getAction())
               .build();
@@ -144,12 +144,12 @@ public class Translator {
     if (actionParams.addThingsToThingGroupParams() != null) {
       addThingsToThingGroupParams =  AddThingsToThingGroupParams.builder()
               .overrideDynamicGroups(actionParams.addThingsToThingGroupParams().overrideDynamicGroups())
-              .thingGroupNames(actionParams.addThingsToThingGroupParams().thingGroupNames())
+              .thingGroupNames(new HashSet<>(actionParams.addThingsToThingGroupParams().thingGroupNames()))
               .build();
     }
     else if (actionParams.enableIoTLoggingParams() != null) {
       enableIoTLoggingParams = EnableIoTLoggingParams.builder()
-              .logLevel(actionParams.enableIoTLoggingParams().logLevel().toString())
+              .logLevel(actionParams.enableIoTLoggingParams().logLevelAsString())
               .roleArnForLogging(actionParams.enableIoTLoggingParams().roleArnForLogging())
               .build();
     }
@@ -160,21 +160,20 @@ public class Translator {
     }
     else if (actionParams.replaceDefaultPolicyVersionParams() != null) {
       replaceDefaultPolicyVersionParams = ReplaceDefaultPolicyVersionParams.builder()
-              .templateName(actionParams.replaceDefaultPolicyVersionParams().templateName().toString())
+              .templateName(actionParams.replaceDefaultPolicyVersionParams().templateNameAsString())
               .build();
     }
     else if (actionParams.updateCACertificateParams() != null) {
       updateCACertificateParams = UpdateCACertificateParams.builder()
-              .action(actionParams.updateCACertificateParams().action().toString())
+              .action(actionParams.updateCACertificateParams().actionAsString())
               .build();
     }
     else if (actionParams.updateDeviceCertificateParams() != null) {
       updateDeviceCertificateParams = UpdateDeviceCertificateParams.builder()
-              .action(actionParams.updateDeviceCertificateParams().action().toString())
+              .action(actionParams.updateDeviceCertificateParams().actionAsString())
               .build();
     }
     return ActionParams.builder()
-            .addThingsToThingGroupParams(addThingsToThingGroupParams)
             .addThingsToThingGroupParams(addThingsToThingGroupParams)
             .enableIoTLoggingParams(enableIoTLoggingParams)
             .publishFindingToSnsParams(publishFindingToSnsParams)

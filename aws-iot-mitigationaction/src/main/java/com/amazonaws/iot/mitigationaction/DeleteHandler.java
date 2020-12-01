@@ -36,7 +36,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeMitigationAction);
         } catch (IotException e) {
-            // If the resource doesn't exist, DescribeMitigationAction will throw RNFE,
+            // If the resource doesn't exist, DescribeMitigationAction will throw ResourceNotFoundException,
             // which we'll rethrow as CfnNotFoundException - that's all we need to do.
             throw Translator.translateIotExceptionToCfn(e);
         }

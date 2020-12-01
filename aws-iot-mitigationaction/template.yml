@@ -21,4 +21,3 @@ Resources:
       Handler: com.amazonaws.iot.mitigationaction.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-iot-mitigationaction-handler-1.0-SNAPSHOT.jar
-

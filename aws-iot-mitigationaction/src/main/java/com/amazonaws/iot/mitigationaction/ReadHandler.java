@@ -1,13 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
-// TODO: replace all usage of SdkClient with your service client type, e.g; YourServiceAsyncClient
-// import software.amazon.awssdk.services.yourservice.YourServiceAsyncClient;
-
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.annotations.VisibleForTesting;
-
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.DescribeMitigationActionResponse;
@@ -16,6 +9,9 @@ import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.List;
+import java.util.Set;
 
 public class ReadHandler extends BaseHandler<CallbackContext> {
 

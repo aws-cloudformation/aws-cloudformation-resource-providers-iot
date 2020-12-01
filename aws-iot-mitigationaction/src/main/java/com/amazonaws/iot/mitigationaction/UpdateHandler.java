@@ -1,13 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.google.common.annotations.VisibleForTesting;
-
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
@@ -15,11 +8,18 @@ import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.UpdateMitigationActionResponse;
+import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UpdateHandler extends BaseHandler<CallbackContext> {
 
@@ -37,18 +37,16 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             Logger logger) {
 
         ResourceModel desiredModel = request.getDesiredResourceState();
-        String previousArn = request.getPreviousResourceState().getMitigationActionArn();
-        if (!Objects.equals(desiredModel.getMitigationActionArn(), previousArn)) {
-            logger.log(String.format("MitigationActionArn cannot be updated, caller tried changing %s to %s.",
-                    previousArn, desiredModel.getMitigationActionArn()));
+        String desiredArn = desiredModel.getMitigationActionArn();
+        if (!StringUtils.isEmpty(desiredArn)) {
+            logger.log(String.format("MitigationActionArn cannot be updated, caller tried setting it to " + desiredArn));
             return ProgressEvent.failed(desiredModel, callbackContext, HandlerErrorCode.InvalidRequest,
                     "MitigationActionArn cannot be updated.");
         }
 
-        String previousActionId = request.getPreviousResourceState().getMitigationActionId();
-        if (!Objects.equals(desiredModel.getMitigationActionId(), previousActionId)) {
-            logger.log(String.format("MitigationActionId cannot be updated, caller tried changing %s to %s.",
-                    previousActionId, desiredModel.getMitigationActionId()));
+        String desiredActionId = desiredModel.getMitigationActionId();
+        if (!StringUtils.isEmpty(desiredActionId)) {
+            logger.log(String.format("MitigationActionId cannot be updated, caller tried setting it to " + desiredActionId));
             return ProgressEvent.failed(desiredModel, callbackContext, HandlerErrorCode.InvalidRequest,
                     "MitigationActionId cannot be updated.");
         }

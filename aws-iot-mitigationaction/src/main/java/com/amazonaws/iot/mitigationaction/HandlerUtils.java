@@ -1,10 +1,5 @@
 package com.amazonaws.iot.mitigationaction;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
@@ -12,6 +7,9 @@ import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HandlerUtils {
 

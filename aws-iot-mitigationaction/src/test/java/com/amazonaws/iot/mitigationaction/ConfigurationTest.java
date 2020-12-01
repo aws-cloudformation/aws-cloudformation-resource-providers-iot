@@ -1,16 +1,15 @@
 package com.amazonaws.iot.mitigationaction;
 
-import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConfigurationTest {
 

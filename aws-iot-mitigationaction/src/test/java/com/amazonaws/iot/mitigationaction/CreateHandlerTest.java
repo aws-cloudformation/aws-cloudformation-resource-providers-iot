@@ -1,23 +1,5 @@
 package com.amazonaws.iot.mitigationaction;
 
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ID;
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS;
-import static com.amazonaws.iot.mitigationaction.TestConstants.CLIENT_REQUEST_TOKEN;
-import static com.amazonaws.iot.mitigationaction.TestConstants.DESIRED_TAGS;
-import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
-import static com.amazonaws.iot.mitigationaction.TestConstants.MODEL_TAGS;
-import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
-import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS;
-import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
-import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_SYSTEM_TAG;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +16,24 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ID;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.CLIENT_REQUEST_TOKEN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.DESIRED_TAGS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MODEL_TAGS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_SYSTEM_TAG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -58,7 +58,7 @@ public class CreateHandlerTest {
         ResourceModel model = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
                 .tags(MODEL_TAGS)
                 .build();
 
@@ -72,7 +72,7 @@ public class CreateHandlerTest {
         CreateMitigationActionRequest expectedRequest = CreateMitigationActionRequest.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(SDK_ACTION_PARAMS)
+                .actionParams(SDK_ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY)
                 .tags(SDK_MODEL_TAG, SDK_SYSTEM_TAG)
                 .build();
 
@@ -96,7 +96,7 @@ public class CreateHandlerTest {
 
         ResourceModel expectedModel = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
                 .mitigationActionArn(ACTION_ARN)
                 .mitigationActionId(ACTION_ID)
@@ -111,7 +111,7 @@ public class CreateHandlerTest {
         ResourceModel model = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
                 .tags(MODEL_TAGS)
                 .build();
 
@@ -135,15 +135,17 @@ public class CreateHandlerTest {
 
         ResourceModel model = ResourceModel.builder()
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
                 .tags(MODEL_TAGS)
                 .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
-                .logicalResourceIdentifier("TestActionIdentifier")
-                .clientRequestToken(CLIENT_REQUEST_TOKEN)
+                .logicalResourceIdentifier("MyResourceName")
+                .clientRequestToken("MyToken")
                 .desiredResourceTags(DESIRED_TAGS)
+                .stackId("arn:aws:cloudformation:us-east-1:123456789012:stack/my-stack-name/" +
+                        "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
                 .build();
 
         CreateMitigationActionResponse createApiResponse = CreateMitigationActionResponse.builder()
@@ -160,10 +162,12 @@ public class CreateHandlerTest {
         verify(proxy).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
 
         CreateMitigationActionRequest submittedRequest = requestCaptor.getValue();
-        // Can't easily check the randomly generated name. Just making sure it contains
-        // the logical identifier and some more random characters.
-        assertThat(submittedRequest.actionName()).contains("TestActionIdentifier");
-        assertThat(submittedRequest.actionName().length() > "TestActionIdentifier" .length()).isTrue();
+
+        // Can't easily check the randomly generated name. Just making sure it contains part of
+        // the logical identifier and the stack name, and some more random characters
+        assertThat(submittedRequest.actionName()).contains("my-stack");
+        assertThat(submittedRequest.actionName()).contains("MyRes");
+        assertThat(submittedRequest.actionName().length() > 20).isTrue();
     }
 
     // TODO: test system tags when the src code is ready

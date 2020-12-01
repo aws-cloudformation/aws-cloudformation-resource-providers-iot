@@ -1,16 +1,5 @@
 package com.amazonaws.iot.mitigationaction;
 
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
-import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -20,6 +9,17 @@ import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class HandlerUtilsTest {
 

@@ -1,21 +1,5 @@
 package com.amazonaws.iot.mitigationaction;
 
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ID;
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS;
-import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
-import static com.amazonaws.iot.mitigationaction.TestConstants.MODEL_TAGS;
-import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
-import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -30,6 +14,22 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Collections;
+
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ID;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MODEL_TAGS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
@@ -60,7 +60,7 @@ public class ReadHandlerTest {
                 .actionArn(ACTION_ARN)
                 .actionId(ACTION_ID)
                 .actionName(MITIGATION_ACTION_NAME)
-                .actionParams(Translator.translateActionParamsToSdk(ACTION_PARAMS))
+                .actionParams(Translator.translateActionParamsToSdk(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS))
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
                 .build();
         when(proxy.injectCredentialsAndInvokeV2(eq(expectedDescribeRequest), any()))
@@ -85,7 +85,7 @@ public class ReadHandlerTest {
                 .actionName(MITIGATION_ACTION_NAME)
                 .mitigationActionArn(ACTION_ARN)
                 .mitigationActionId(ACTION_ID)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
                 .tags(MODEL_TAGS)
                 .build();

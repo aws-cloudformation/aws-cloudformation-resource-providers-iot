@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Resources for running the AccountAuditConfiguration contract tests'
+Resources:
+  RoleForDeviceDefenderAudit:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "iot.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+  TopicForDeviceDefenderAuditCreate:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "CreateTopic"
+  TopicForDeviceDefenderAuditUpdate:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "UpdateTopic"
+
+Outputs:
+  RoleForDeviceDefenderAuditOutput:
+    Value:
+      Fn::GetAtt: [RoleForDeviceDefenderAudit, Arn]
+    Export:
+      Name: RoleForDeviceDefenderAuditArn
+  TopicForDeviceDefenderAuditCreateOutput:
+    Value:
+      Ref: TopicForDeviceDefenderAuditCreate
+    Export:
+      Name: TopicForDeviceDefenderAuditCreateArn
+  TopicForDeviceDefenderAuditUpdateOutput:
+    Value:
+      Ref: TopicForDeviceDefenderAuditUpdate
+    Export:
+      Name: TopicForDeviceDefenderAuditUpdateArn
+  AccountIdOutput:
+    Value:
+      Fn::Sub: "${AWS::AccountId}"
+    Export:
+      Name: AccountId

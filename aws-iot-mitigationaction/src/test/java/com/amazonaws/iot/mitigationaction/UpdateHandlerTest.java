@@ -1,20 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
-import static com.amazonaws.iot.mitigationaction.TestConstants.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,8 +9,8 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateMitigationActionRequest;
@@ -33,10 +19,31 @@ import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ID;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS_2;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
+import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest {
@@ -66,12 +73,12 @@ public class UpdateHandlerTest {
         ResourceModel previousModel = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS2)
+                .actionParams(ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS)
                 .build();
         ResourceModel desiredModel = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS3)
+                .actionParams(ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS_2)
                 .build();
         Map<String, String> desiredTags = ImmutableMap.of("DesiredTagKey", "DesiredTagValue");
 
@@ -108,7 +115,7 @@ public class UpdateHandlerTest {
         UpdateMitigationActionRequest submittedUpdateRequest =
                 (UpdateMitigationActionRequest) submittedIotRequests.get(0);
         assertThat(submittedUpdateRequest.actionName()).isEqualTo(MITIGATION_ACTION_NAME);
-        assertThat(submittedUpdateRequest.actionParams()).isEqualTo(SDK_ACTION_PARAMS3);
+        assertThat(submittedUpdateRequest.actionParams()).isEqualTo(SDK_ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS);
         assertThat(submittedUpdateRequest.roleArn()).isEqualTo(MITIGATION_ACTION_ROLE_ARN);
 
         TagResourceRequest submittedTagRequest = (TagResourceRequest) submittedIotRequests.get(1);
@@ -178,7 +185,7 @@ public class UpdateHandlerTest {
         ResourceModel desiredModel = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
                 .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -218,13 +225,21 @@ public class UpdateHandlerTest {
         ResourceModel desiredModel = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
                 .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(ACTION_PARAMS)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
+                .build();
+
+        ResourceModel previousModel = ResourceModel.builder()
+                .actionName(MITIGATION_ACTION_NAME)
+                .roleArn(MITIGATION_ACTION_ROLE_ARN)
+                .actionParams(ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS)
+                .mitigationActionArn(ACTION_ARN)
                 .build();
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .previousResourceState(ResourceModel.builder().build())
                 .desiredResourceState(desiredModel)
+                .previousResourceState(previousModel)
                 .build();
 
         // If the resource is already deleted, the update API throws ResourceNotFoundException. Mocking that here.
@@ -234,6 +249,69 @@ public class UpdateHandlerTest {
         assertThatThrownBy(() ->
                 handler.handleRequest(proxy, request, null, logger))
                 .isInstanceOf(CfnNotFoundException.class);
+    }
+
+    @Test
+    void handleRequest__DesiredMitigationActionArnIsPopulatedAndSame_ReturnFailed() {
+
+        ResourceModel desiredModel = ResourceModel.builder()
+                .actionName(MITIGATION_ACTION_NAME)
+                .mitigationActionArn(ACTION_ARN)
+                .roleArn(MITIGATION_ACTION_ROLE_ARN)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
+                .build();
+
+        ResourceModel previousModel = ResourceModel.builder()
+                .actionName(MITIGATION_ACTION_NAME)
+                .roleArn(MITIGATION_ACTION_ROLE_ARN)
+                .actionParams(ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS)
+                .mitigationActionArn(ACTION_ARN)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
+                .previousResourceState(ResourceModel.builder().build())
+                .desiredResourceState(desiredModel)
+                .previousResourceState(previousModel)
+                .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> result =
+                handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(result).isEqualTo(ProgressEvent.failed(
+                desiredModel, null, HandlerErrorCode.InvalidRequest, "MitigationActionArn cannot be updated."));
+    }
+
+    @Test
+    void handleRequest__DesiredMitigationActionIdIsPopulatedAndSame_ReturnFailed() {
+
+        ResourceModel desiredModel = ResourceModel.builder()
+                .actionName(MITIGATION_ACTION_NAME)
+                .mitigationActionId(ACTION_ID)
+                .roleArn(MITIGATION_ACTION_ROLE_ARN)
+                .actionParams(ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS)
+                .build();
+
+        ResourceModel previousModel = ResourceModel.builder()
+                .actionName(MITIGATION_ACTION_NAME)
+                .roleArn(MITIGATION_ACTION_ROLE_ARN)
+                .actionParams(ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS)
+                .mitigationActionArn(ACTION_ARN)
+                .mitigationActionId(ACTION_ID)
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
+                .previousResourceState(ResourceModel.builder().build())
+                .desiredResourceState(desiredModel)
+                .previousResourceState(previousModel)
+                .build();
+
+        ProgressEvent<ResourceModel, CallbackContext> result =
+                handler.handleRequest(proxy, request, null, logger);
+
+        assertThat(result).isEqualTo(ProgressEvent.failed(
+                desiredModel, null, HandlerErrorCode.InvalidRequest, "MitigationActionId cannot be updated."));
     }
 
     // TODO: test system tags when the src code is ready
