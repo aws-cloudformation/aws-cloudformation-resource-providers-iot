@@ -10,6 +10,7 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,7 +61,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                         .frequency(Translator.translateAuditFrequencyToCfn(describeScheduledAuditResponse.frequency()))
                         .dayOfMonth(describeScheduledAuditResponse.dayOfMonth())
                         .dayOfWeek(Translator.translateDayOfTheWeekToCfn(describeScheduledAuditResponse.dayOfWeek()))
-                        .targetCheckNames(describeScheduledAuditResponse.targetCheckNames())
+                        .targetCheckNames(new HashSet<>(describeScheduledAuditResponse.targetCheckNames()))
                         .tags(responseTags)
                         .build());
     }

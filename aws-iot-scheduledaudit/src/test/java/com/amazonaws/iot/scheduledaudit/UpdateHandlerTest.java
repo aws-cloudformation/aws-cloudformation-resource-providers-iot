@@ -28,6 +28,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -122,7 +123,7 @@ public class UpdateHandlerTest {
                 (UpdateScheduledAuditRequest) submittedIotRequests.get(0);
         assertThat(submittedUpdateRequest.scheduledAuditName()).isEqualTo(SCHEDULED_AUDIT_NAME);
         assertThat(submittedUpdateRequest.frequency()).isEqualTo(AuditFrequency.fromValue(FREQUENCY));
-        assertThat(submittedUpdateRequest.targetCheckNames()).isEqualTo(TARGET_CHECK_NAMES);
+        assertThat(new HashSet<>(submittedUpdateRequest.targetCheckNames())).isEqualTo(TARGET_CHECK_NAMES);
         assertThat(submittedUpdateRequest.dayOfWeek()).isEqualTo(DayOfWeek.fromValue(DAY_OF_WEEK_2));
 
         TagResourceRequest submittedTagRequest = (TagResourceRequest) submittedIotRequests.get(1);

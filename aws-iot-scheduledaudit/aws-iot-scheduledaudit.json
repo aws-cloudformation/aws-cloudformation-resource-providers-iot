@@ -67,6 +67,7 @@
       "description": "Which checks are performed during the scheduled audit. Checks must be enabled for your account.",
       "type": "array",
       "uniqueItems": true,
+      "insertionOrder": false,
       "items": {
         "type": "string"
       }
