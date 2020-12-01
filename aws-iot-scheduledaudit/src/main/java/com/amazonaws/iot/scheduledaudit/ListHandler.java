@@ -44,7 +44,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                 .map(scheduledAudits -> ResourceModel.builder()
                         .scheduledAuditName(scheduledAudits.scheduledAuditName())
                         .scheduledAuditArn(scheduledAudits.scheduledAuditArn())
-                        .frequency(Translator.translateAuditFrequencyToCfn(scheduledAudits.frequency()))
+                        .frequency(scheduledAudits.frequencyAsString())
                         .dayOfMonth(scheduledAudits.dayOfMonth())
                         .dayOfWeek(Translator.translateDayOfTheWeekToCfn(scheduledAudits.dayOfWeek()))
                         .build())

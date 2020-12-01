@@ -58,7 +58,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                 ResourceModel.builder()
                         .scheduledAuditName(describeScheduledAuditResponse.scheduledAuditName())
                         .scheduledAuditArn(describeScheduledAuditResponse.scheduledAuditArn())
-                        .frequency(Translator.translateAuditFrequencyToCfn(describeScheduledAuditResponse.frequency()))
+                        .frequency(describeScheduledAuditResponse.frequencyAsString())
                         .dayOfMonth(describeScheduledAuditResponse.dayOfMonth())
                         .dayOfWeek(Translator.translateDayOfTheWeekToCfn(describeScheduledAuditResponse.dayOfWeek()))
                         .targetCheckNames(new HashSet<>(describeScheduledAuditResponse.targetCheckNames()))

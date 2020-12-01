@@ -1,6 +1,5 @@
 package com.amazonaws.iot.scheduledaudit;
 
-import software.amazon.awssdk.services.iot.model.AuditFrequency;
 import software.amazon.awssdk.services.iot.model.DayOfWeek;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
@@ -95,11 +94,6 @@ public class Translator {
                     .value(tag.value())
                     .build())
             .collect(Collectors.toSet());
-  }
-
-  static String translateAuditFrequencyToCfn(AuditFrequency auditFrequency) {
-
-    return auditFrequency == null? null : auditFrequency.toString();
   }
 
   static String translateDayOfTheWeekToCfn(DayOfWeek dayOfWeek) {
