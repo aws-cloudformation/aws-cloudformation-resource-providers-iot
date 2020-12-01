@@ -2,8 +2,6 @@ package com.amazonaws.iot.securityprofile;
 
 import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_CFN;
 import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_IOT;
-import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_V1_LIST;
-import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_V1_SET;
 import static com.amazonaws.iot.securityprofile.TestConstants.ALERT_TARGET_MAP_CFN;
 import static com.amazonaws.iot.securityprofile.TestConstants.ALERT_TARGET_MAP_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.BEHAVIOR_1_CFN_SET;
@@ -93,7 +91,6 @@ public class UpdateHandlerTest {
                 .securityProfileDescription(SECURITY_PROFILE_DESCRIPTION)
                 .behaviors(BEHAVIOR_1_CFN_SET)
                 .alertTargets(ALERT_TARGET_MAP_CFN)
-                .additionalMetricsToRetain(ADDITIONAL_METRICS_V1_SET)
                 .additionalMetricsToRetainV2(ADDITIONAL_METRICS_CFN)
                 .targetArns(TARGET_ARN_2_SET)
                 .build();
@@ -140,7 +137,6 @@ public class UpdateHandlerTest {
         assertThat(submittedUpdateRequest.securityProfileDescription()).isEqualTo(SECURITY_PROFILE_DESCRIPTION);
         assertThat(submittedUpdateRequest.behaviors()).isEqualTo(BEHAVIOR_1_IOT_LIST);
         assertThat(submittedUpdateRequest.alertTargetsAsStrings()).isEqualTo(ALERT_TARGET_MAP_IOT);
-        assertThat(submittedUpdateRequest.additionalMetricsToRetain()).isEqualTo(ADDITIONAL_METRICS_V1_LIST);
         assertThat(submittedUpdateRequest.additionalMetricsToRetainV2()).isEqualTo(ADDITIONAL_METRICS_IOT);
         assertThat(submittedUpdateRequest.deleteBehaviors()).isFalse();
         assertThat(submittedUpdateRequest.deleteAlertTargets()).isFalse();
@@ -209,7 +205,6 @@ public class UpdateHandlerTest {
                 .targetArns(TARGET_ARN_2_SET)
                 .behaviors(Collections.emptySet())
                 .alertTargets(Collections.emptyMap())
-                .additionalMetricsToRetain(Collections.emptySet())
                 .additionalMetricsToRetainV2(Collections.emptySet())
                 .build();
 

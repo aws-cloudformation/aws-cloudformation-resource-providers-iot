@@ -114,8 +114,4 @@ public class TestConstants {
             ImmutableMap.of("SNS", ALERT_TARGET_IOT);
     static final Map<String, AlertTarget> ALERT_TARGET_MAP_CFN =
             ImmutableMap.of("SNS", ALERT_TARGET_CFN);
-    static final Set<String> ADDITIONAL_METRICS_V1_SET =
-            ImmutableSet.of("aws:listening-tcp-ports", "aws:num-listening-udp-ports");
-    static final List<String> ADDITIONAL_METRICS_V1_LIST =
-            ImmutableList.of("aws:listening-tcp-ports", "aws:num-listening-udp-ports");
 }

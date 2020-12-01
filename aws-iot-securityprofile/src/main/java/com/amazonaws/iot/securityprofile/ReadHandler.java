@@ -99,10 +99,6 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             resourceModelBuilder.alertTargets(Translator.translateAlertTargetMapFromIotToCfn(
                     describeResponse.alertTargetsAsStrings()));
         }
-        if (describeResponse.hasAdditionalMetricsToRetain()) {
-            resourceModelBuilder.additionalMetricsToRetain(
-                    new HashSet<>(describeResponse.additionalMetricsToRetain()));
-        }
         if (describeResponse.hasAdditionalMetricsToRetainV2()) {
             resourceModelBuilder.additionalMetricsToRetainV2(
                     Translator.translateMetricToRetainListFromIotToCfn(

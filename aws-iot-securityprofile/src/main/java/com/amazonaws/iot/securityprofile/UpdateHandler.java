@@ -94,20 +94,14 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             alertTargetsForRequest = Translator.translateAlertTargetMapFromCfnToIot(model.getAlertTargets());
         }
 
-        // For additionalMetricsToRetain, there's no separate flag for V2
+        // Same for additionalMetricsToRetain
         boolean deleteAdditionalMetricsToRetain;
-        boolean noMetricsToRetainProvided =
-                CollectionUtils.isNullOrEmpty(model.getAdditionalMetricsToRetain()) &&
-                CollectionUtils.isNullOrEmpty(model.getAdditionalMetricsToRetainV2());
-        Set<String> additionalMetricsV1ForRequest;
         Set<MetricToRetain> additionalMetricsV2ForRequest;
-        if (noMetricsToRetainProvided) {
+        if (CollectionUtils.isNullOrEmpty(model.getAdditionalMetricsToRetainV2())) {
             deleteAdditionalMetricsToRetain = true;
-            additionalMetricsV1ForRequest = null;
             additionalMetricsV2ForRequest = null;
         } else {
             deleteAdditionalMetricsToRetain = false;
-            additionalMetricsV1ForRequest = model.getAdditionalMetricsToRetain();
             additionalMetricsV2ForRequest = Translator.translateMetricToRetainSetFromCfnToIot(
                     model.getAdditionalMetricsToRetainV2());
         }
@@ -117,7 +111,6 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .securityProfileDescription(model.getSecurityProfileDescription())
                 .behaviors(behaviorsForRequest)
                 .alertTargetsWithStrings(alertTargetsForRequest)
-                .additionalMetricsToRetain(additionalMetricsV1ForRequest)
                 .additionalMetricsToRetainV2(additionalMetricsV2ForRequest)
                 .deleteBehaviors(deleteBehaviors)
                 .deleteAlertTargets(deleteAlertTargets)

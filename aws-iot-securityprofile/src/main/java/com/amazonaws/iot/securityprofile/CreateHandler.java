@@ -102,7 +102,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 .securityProfileDescription(model.getSecurityProfileDescription())
                 .behaviors(Translator.translateBehaviorSetFromCfnToIot(model.getBehaviors()))
                 .alertTargetsWithStrings(Translator.translateAlertTargetMapFromCfnToIot(model.getAlertTargets()))
-                .additionalMetricsToRetain(model.getAdditionalMetricsToRetain())
                 .additionalMetricsToRetainV2(Translator.translateMetricToRetainSetFromCfnToIot(
                         model.getAdditionalMetricsToRetainV2()))
                 .tags(Translator.translateTagsFromCfnToIot(tags))

@@ -2,7 +2,6 @@ package com.amazonaws.iot.securityprofile;
 
 import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_CFN;
 import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_IOT;
-import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_V1_SET;
 import static com.amazonaws.iot.securityprofile.TestConstants.ALERT_TARGET_MAP_CFN;
 import static com.amazonaws.iot.securityprofile.TestConstants.ALERT_TARGET_MAP_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.BEHAVIOR_1_CFN_SET;
@@ -74,7 +73,6 @@ public class ReadHandlerTest {
                 .securityProfileDescription(SECURITY_PROFILE_DESCRIPTION)
                 .behaviors(BEHAVIOR_1_IOT)
                 .alertTargetsWithStrings(ALERT_TARGET_MAP_IOT)
-                .additionalMetricsToRetain(ADDITIONAL_METRICS_V1_SET)
                 .additionalMetricsToRetainV2(ADDITIONAL_METRICS_IOT)
                 .build();
         when(proxy.injectCredentialsAndInvokeV2(eq(expectedDescribeRequest), any()))
@@ -105,7 +103,6 @@ public class ReadHandlerTest {
                 .securityProfileDescription(SECURITY_PROFILE_DESCRIPTION)
                 .behaviors(BEHAVIOR_1_CFN_SET)
                 .alertTargets(ALERT_TARGET_MAP_CFN)
-                .additionalMetricsToRetain(ADDITIONAL_METRICS_V1_SET)
                 .additionalMetricsToRetainV2(ADDITIONAL_METRICS_CFN)
                 .targetArns(TARGET_ARN_1_SET)
                 .tags(TAG_1_CFN_SET)
@@ -139,7 +136,6 @@ public class ReadHandlerTest {
                 .securityProfileDescription(SECURITY_PROFILE_DESCRIPTION)
                 .behaviors(null)
                 .alertTargets(null)
-                .additionalMetricsToRetain(null)
                 .additionalMetricsToRetainV2(null)
                 .targetArns(TARGET_ARN_1_SET)
                 .tags(TAG_1_CFN_SET)

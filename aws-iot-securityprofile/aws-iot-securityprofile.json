@@ -257,18 +257,6 @@
       },
       "additionalProperties": false
     },
-    "AdditionalMetricsToRetain": {
-      "description": "This parameter has been deprecated, please use AdditionalMetricsToRetainV2.",
-      "type": "array",
-      "uniqueItems": true,
-      "insertionOrder": false,
-      "items": {
-        "type": "string",
-        "pattern": "[a-zA-Z0-9:_-]+",
-        "minLength": 1,
-        "maxLength": 128
-      }
-    },
     "AdditionalMetricsToRetainV2": {
       "description": "A list of metrics whose data is retained (stored). By default, data is retained for any metric used in the profile's behaviors, but it is also retained for any metric specified here.",
       "type": "array",
