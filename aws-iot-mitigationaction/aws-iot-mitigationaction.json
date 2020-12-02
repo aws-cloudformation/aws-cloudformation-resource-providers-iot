@@ -23,7 +23,8 @@
       "required": [
         "Value",
         "Key"
-      ]
+      ],
+      "additionalProperties": false
     },
     "ActionParams": {
       "type": "object",
@@ -47,7 +48,8 @@
         "UpdateDeviceCertificateParams": {
           "$ref": "#/definitions/UpdateDeviceCertificateParams"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "AddThingsToThingGroupParams": {
       "description": "Parameters to define a mitigation action that moves devices associated with a certificate to one or more specified thing groups, typically for quarantine.",
@@ -73,7 +75,8 @@
       },
       "required": [
         "ThingGroupNames"
-      ]
+      ],
+      "additionalProperties": false
     },
     "EnableIoTLoggingParams": {
       "description": "Parameters to define a mitigation action that enables AWS IoT logging at a specified level of detail.",
@@ -99,7 +102,8 @@
       "required": [
         "LogLevel",
         "RoleArnForLogging"
-      ]
+      ],
+      "additionalProperties": false
     },
     "PublishFindingToSnsParams": {
       "type": "object",
@@ -114,7 +118,8 @@
       },
       "required": [
         "TopicArn"
-      ]
+      ],
+      "additionalProperties": false
     },
     "ReplaceDefaultPolicyVersionParams": {
       "type": "object",
@@ -129,7 +134,8 @@
       },
       "required": [
         "TemplateName"
-      ]
+      ],
+      "additionalProperties": false
     },
     "UpdateCACertificateParams": {
       "type": "object",
@@ -144,7 +150,8 @@
       },
       "required": [
         "Action"
-      ]
+      ],
+      "additionalProperties": false
     },
     "UpdateDeviceCertificateParams": {
       "type": "object",
@@ -159,7 +166,8 @@
       },
       "required": [
         "Action"
-      ]
+      ],
+      "additionalProperties": false
     }
   },
   "properties": {
