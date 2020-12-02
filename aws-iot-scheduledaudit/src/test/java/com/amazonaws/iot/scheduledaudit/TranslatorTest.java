@@ -37,9 +37,4 @@ public class TranslatorTest {
     void translateTagsToCfn_InputNull_ReturnsEmpty() {
         assertThat(Translator.translateTagsToCfn(null)).isEmpty();
     }
-
-    @Test
-    void translateDayOfTheWeekToCfnTest() {
-        assertThat(Translator.translateDayOfTheWeekToCfn(DayOfWeek.fromValue(DAY_OF_WEEK))).isEqualTo(DAY_OF_WEEK);
-    }
 }

@@ -95,7 +95,8 @@
   ],
   "required": [
     "ScheduledAuditName",
-    "Frequency"
+    "Frequency",
+    "TargetCheckNames"
   ],
   "createOnlyProperties": [
     "/properties/ScheduledAuditName"

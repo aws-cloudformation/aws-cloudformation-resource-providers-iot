@@ -60,7 +60,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                         .scheduledAuditArn(describeScheduledAuditResponse.scheduledAuditArn())
                         .frequency(describeScheduledAuditResponse.frequencyAsString())
                         .dayOfMonth(describeScheduledAuditResponse.dayOfMonth())
-                        .dayOfWeek(Translator.translateDayOfTheWeekToCfn(describeScheduledAuditResponse.dayOfWeek()))
+                        .dayOfWeek(describeScheduledAuditResponse.dayOfWeekAsString())
                         .targetCheckNames(new HashSet<>(describeScheduledAuditResponse.targetCheckNames()))
                         .tags(responseTags)
                         .build());

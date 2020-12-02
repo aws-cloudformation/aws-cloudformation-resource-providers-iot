@@ -46,7 +46,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                         .scheduledAuditArn(scheduledAudits.scheduledAuditArn())
                         .frequency(scheduledAudits.frequencyAsString())
                         .dayOfMonth(scheduledAudits.dayOfMonth())
-                        .dayOfWeek(Translator.translateDayOfTheWeekToCfn(scheduledAudits.dayOfWeek()))
+                        .dayOfWeek(scheduledAudits.dayOfWeekAsString())
                         .build())
                 .collect(Collectors.toList());
 
