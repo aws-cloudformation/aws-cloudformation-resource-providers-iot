@@ -75,7 +75,6 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         // Like most services, we don't require an explicit resource name in the template,
         // and, if it's not provided, generate one based on the stack ID and logical ID.
         if (StringUtils.isBlank(model.getActionName())) {
-            // TODO: include stack-id in the generated name. Will do it once the new release of the java plugin
             model.setActionName(IdentifierUtils.generateResourceIdentifier(
                     request.getStackId(), request.getLogicalResourceIdentifier(),
                     request.getClientRequestToken(), GENERATED_NAME_MAX_LENGTH));

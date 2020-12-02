@@ -3,9 +3,7 @@ package com.amazonaws.iot.mitigationaction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,8 +17,6 @@ public class TestConstants {
             "/TestMitigationActionName2";
     protected static final String ACTION_ID = "12345-abced-6789-efgh";
     protected static final String MITIGATION_ACTION_ROLE_ARN = "arn:aws:iot:us-east-1:123456789012:Role/TestRole";
-    protected static final Instant CREATION_DATE1 = Instant.parse("2020-11-04T10:00:00.00Z");
-    protected static final Instant CREATION_DATE2 = Instant.parse("2020-11-04T11:00:00.00Z");
     protected static final ReplaceDefaultPolicyVersionParams REPLACE_DEFAULT_POLICY_VERSION_PARAMS =
             ReplaceDefaultPolicyVersionParams.builder()
                     .templateName("BLANK_POLICY")

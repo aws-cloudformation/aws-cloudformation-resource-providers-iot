@@ -191,9 +191,6 @@
     },
     "MitigationActionId": {
       "type": "string"
-    },
-    "CreationDate": {
-      "type": "string"
     }
   },
   "additionalProperties": false,

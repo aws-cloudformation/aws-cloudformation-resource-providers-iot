@@ -44,7 +44,6 @@ public class ListHandler extends BaseHandler<CallbackContext> {
                 .map(actionIdentifier -> ResourceModel.builder()
                         .actionName(actionIdentifier.actionName())
                         .mitigationActionArn(actionIdentifier.actionArn())
-                        .creationDate(actionIdentifier.creationDate().toString())
                         .build())
                 .collect(Collectors.toList());
 

@@ -17,7 +17,6 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -99,7 +98,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         // Yet we should, otherwise the resource wouldn't equate the template.
         Set<Tag> currentTags = listTags(proxy, resourceArn, logger);
 
-        // getDesiredResourceTags includes model+stack-level tags, reference: https://tinyurl.com/y2p8medk
+        // getDesiredResourceTags includes model+stack-level tags, reference: https://tinyurl.com/y55mqrnc
         Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
         // TODO: uncomment this after we update the service to allow these (only from CFN)
         // SystemTags are the default stack-level tags with aws:cloudformation prefix

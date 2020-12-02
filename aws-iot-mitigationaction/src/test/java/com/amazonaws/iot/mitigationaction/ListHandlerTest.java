@@ -22,8 +22,6 @@ import java.util.List;
 
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN2;
-import static com.amazonaws.iot.mitigationaction.TestConstants.CREATION_DATE1;
-import static com.amazonaws.iot.mitigationaction.TestConstants.CREATION_DATE2;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME2;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,13 +60,11 @@ public class ListHandlerTest {
         MitigationActionIdentifier mitigationActionIdentifier1 = MitigationActionIdentifier.builder()
                 .actionArn(ACTION_ARN)
                 .actionName(MITIGATION_ACTION_NAME)
-                .creationDate(CREATION_DATE1)
                 .build();
 
         MitigationActionIdentifier mitigationActionIdentifier2 = MitigationActionIdentifier.builder()
                 .actionArn(ACTION_ARN2)
                 .actionName(MITIGATION_ACTION_NAME2)
-                .creationDate(CREATION_DATE2)
                 .build();
 
         ListMitigationActionsResponse listResponse = ListMitigationActionsResponse.builder()
@@ -95,12 +91,10 @@ public class ListHandlerTest {
                 ResourceModel.builder()
                         .actionName(MITIGATION_ACTION_NAME)
                         .mitigationActionArn(ACTION_ARN)
-                        .creationDate(CREATION_DATE1.toString())
                         .build(),
                 ResourceModel.builder()
                         .actionName(MITIGATION_ACTION_NAME2)
                         .mitigationActionArn(ACTION_ARN2)
-                        .creationDate(CREATION_DATE2.toString())
                         .build());
         assertThat(response.getResourceModels()).isEqualTo(expectedModels);
     }
