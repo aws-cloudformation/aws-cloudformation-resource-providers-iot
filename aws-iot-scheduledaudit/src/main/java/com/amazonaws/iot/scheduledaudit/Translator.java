@@ -95,9 +95,4 @@ public class Translator {
                     .build())
             .collect(Collectors.toSet());
   }
-
-/*  static String translateDayOfTheWeekToCfn(DayOfWeek dayOfWeek) {
-
-    return dayOfWeek == null? null : dayOfWeek.toString();
-  }*/
 }
