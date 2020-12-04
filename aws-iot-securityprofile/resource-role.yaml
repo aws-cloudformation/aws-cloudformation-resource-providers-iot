@@ -29,7 +29,7 @@ Resources:
                 - "iot:DeleteSecurityProfile"
                 - "iot:DescribeSecurityProfile"
                 - "iot:DetachSecurityProfile"
-                - "iot:ListDimensions"
+                - "iot:ListSecurityProfiles"
                 - "iot:ListTagsForResource"
                 - "iot:ListTargetsForSecurityProfile"
                 - "iot:TagResource"

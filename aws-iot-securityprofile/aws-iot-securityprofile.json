@@ -340,7 +340,7 @@
     },
     "list": {
       "permissions": [
-        "iot:ListDimensions"
+        "iot:ListSecurityProfiles"
       ]
     }
   }
