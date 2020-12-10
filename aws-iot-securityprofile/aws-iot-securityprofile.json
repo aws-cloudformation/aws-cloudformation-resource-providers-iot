@@ -296,9 +296,7 @@
   "primaryIdentifier": [
     "/properties/SecurityProfileName"
   ],
-  "required": [
-    "SecurityProfileName"
-  ],
+  "required": [],
   "createOnlyProperties": [
     "/properties/SecurityProfileName"
   ],
