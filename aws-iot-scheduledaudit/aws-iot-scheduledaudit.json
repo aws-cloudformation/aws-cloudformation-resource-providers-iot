@@ -94,7 +94,6 @@
     "/properties/ScheduledAuditName"
   ],
   "required": [
-    "ScheduledAuditName",
     "Frequency",
     "TargetCheckNames"
   ],
@@ -132,7 +131,7 @@
     },
     "list": {
       "permissions": [
-        "iot:ListScheduledAudit"
+        "iot:ListScheduledAudits"
       ]
     }
   }

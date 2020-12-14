@@ -26,7 +26,7 @@ Resources:
                 - "iot:CreateScheduledAudit"
                 - "iot:DeleteScheduledAudit"
                 - "iot:DescribeScheduledAudit"
-                - "iot:ListScheduledAudit"
+                - "iot:ListScheduledAudits"
                 - "iot:ListTagsForResource"
                 - "iot:TagResource"
                 - "iot:UntagResource"
