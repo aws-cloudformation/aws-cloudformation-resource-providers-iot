@@ -10,8 +10,8 @@ import software.amazon.awssdk.services.iot.model.ListMitigationActionsRequest;
 import software.amazon.awssdk.services.iot.model.ListMitigationActionsResponse;
 import software.amazon.awssdk.services.iot.model.MitigationActionIdentifier;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -25,7 +25,6 @@ import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN2;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME2;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -109,7 +108,8 @@ public class ListHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnAccessDeniedException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
     }
 }

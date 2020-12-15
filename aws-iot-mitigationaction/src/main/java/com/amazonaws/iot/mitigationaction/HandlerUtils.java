@@ -1,7 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.Tag;
@@ -26,13 +25,9 @@ public class HandlerUtils {
                     .resourceArn(resourceArn)
                     .nextToken(nextToken)
                     .build();
-            ListTagsForResourceResponse listTagsForResourceResponse;
-            try {
-                listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
-                        listTagsRequest, iotClient::listTagsForResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            ListTagsForResourceResponse listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
+                    listTagsRequest, iotClient::listTagsForResource);
+
             result.addAll(listTagsForResourceResponse.tags());
             nextToken = listTagsForResourceResponse.nextToken();
         } while (nextToken != null);

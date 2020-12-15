@@ -2,7 +2,6 @@ package com.amazonaws.iot.mitigationaction;
 
 import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
@@ -50,10 +49,19 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     "MitigationActionId cannot be updated.");
         }
 
-        String resourceArn = updateMitigationAction(proxy, desiredModel, logger);
+        String resourceArn;
+        try {
+            resourceArn = updateMitigationAction(proxy, desiredModel, logger);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
+        }
 
         // For an exiting resource, we have to update via TagResource API, UpdateMitigationId API doesn't take tags.
-        updateTags(proxy, request, resourceArn, logger);
+        try {
+            updateTags(proxy, request, resourceArn, logger);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
+        }
 
         logger.log(String.format("Successfully updated %s.", resourceArn));
         return ProgressEvent.defaultSuccessHandler(request.getDesiredResourceState());
@@ -72,14 +80,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .actionParams(Translator.translateActionParamsToSdk(model.getActionParams()))
                 .build();
 
-        UpdateMitigationActionResponse updateMitigationActionResponse;
-        try {
-            updateMitigationActionResponse =
-                    proxy.injectCredentialsAndInvokeV2(updateMitigationActionRequest,
-                            iotClient::updateMitigationAction);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
-        }
+        UpdateMitigationActionResponse updateMitigationActionResponse =
+                proxy.injectCredentialsAndInvokeV2(updateMitigationActionRequest,
+                        iotClient::updateMitigationAction);
         String actionArn = updateMitigationActionResponse.actionArn();
         logger.log(String.format("Called UpdateMitigationAction for %s.", actionArn));
         return actionArn;
@@ -121,11 +124,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .resourceArn(resourceArn)
                     .tags(tagsToAttach)
                     .build();
-            try {
-                proxy.injectCredentialsAndInvokeV2(tagResourceRequest, iotClient::tagResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            proxy.injectCredentialsAndInvokeV2(tagResourceRequest, iotClient::tagResource);
             logger.log(String.format("Called TagResource for %s.", resourceArn));
         }
 
@@ -134,11 +133,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .resourceArn(resourceArn)
                     .tagKeys(tagKeysToDetach)
                     .build();
-            try {
-                proxy.injectCredentialsAndInvokeV2(untagResourceRequest, iotClient::untagResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            proxy.injectCredentialsAndInvokeV2(untagResourceRequest, iotClient::untagResource);
             logger.log(String.format("Called UntagResource for %s.", resourceArn));
         }
     }

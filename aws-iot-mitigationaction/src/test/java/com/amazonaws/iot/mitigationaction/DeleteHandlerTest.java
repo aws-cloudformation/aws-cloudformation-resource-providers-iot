@@ -11,8 +11,8 @@ import software.amazon.awssdk.services.iot.model.DeleteMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.DescribeMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -20,7 +20,6 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -77,7 +76,7 @@ public class DeleteHandlerTest {
     }
 
     @Test
-    public void handleRequest_DescribeThrowsRNFE_VerifyTranslation() {
+    public void handleRequest_DescribeThrowsNotFound_VerifyTranslation() {
 
         ResourceModel model = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
@@ -90,8 +89,8 @@ public class DeleteHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnNotFoundException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 }

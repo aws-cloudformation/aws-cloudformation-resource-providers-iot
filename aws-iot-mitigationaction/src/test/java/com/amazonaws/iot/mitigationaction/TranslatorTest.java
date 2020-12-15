@@ -1,10 +1,13 @@
 package com.amazonaws.iot.mitigationaction;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import software.amazon.awssdk.services.iot.model.IndexNotReadyException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
-import software.amazon.cloudformation.exceptions.BaseHandlerException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
 
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_ADD_THINGS_TO_THING_GROUP_PARAMS;
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_ALL;
@@ -21,23 +24,31 @@ import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_UPDATE_CA_CERTIFICATE_PARAMS;
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_UPDATE_DEVICE_CERTIFICATE_PARAMS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class TranslatorTest {
 
-    @Test
-    public void translateIotExceptionToCfn_LimitExceeded_Translated() {
+    @Mock
+    private Logger logger;
 
-        BaseHandlerException result = Translator.translateIotExceptionToCfn(LimitExceededException.builder().build());
-        assertThat(result).isInstanceOf(CfnServiceLimitExceededException.class);
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void translateIotExceptionToCfn_UnexpectedException_Rethrown() {
+    public void translateIotExceptionToCfn_LimitExceededErrorCode() {
+
+        HandlerErrorCode result =
+                Translator.translateExceptionToErrorCode(LimitExceededException.builder().build(), logger);
+        assertThat(result).isEqualByComparingTo(HandlerErrorCode.ServiceLimitExceeded);
+    }
+
+    @Test
+    public void translateIotExceptionToCfn_UnexpectedErrorCode() {
 
         IndexNotReadyException unexpectedException = IndexNotReadyException.builder().build();
-        assertThatThrownBy(() -> Translator.translateIotExceptionToCfn(unexpectedException))
-                .isInstanceOf(IndexNotReadyException.class);
+        HandlerErrorCode result = Translator.translateExceptionToErrorCode(unexpectedException, logger);
+        assertThat(result).isEqualByComparingTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test

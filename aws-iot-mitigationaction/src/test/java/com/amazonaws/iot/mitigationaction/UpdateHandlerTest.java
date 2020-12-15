@@ -7,7 +7,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -15,9 +14,6 @@ import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.UpdateMitigationActionResponse;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -31,9 +27,9 @@ import java.util.Map;
 
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ARN;
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_ID;
-import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS;
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS;
 import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS_PARAMS_2;
+import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY_VERSION_PARAMS;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS;
@@ -180,7 +176,7 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequest_UpdateThrowsIRE_VerifyTranslation() {
+    public void handleRequest_UpdateThrowsInvalidRequest_VerifyTranslation() {
 
         ResourceModel desiredModel = ResourceModel.builder()
                 .actionName(MITIGATION_ACTION_NAME)
@@ -197,13 +193,13 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(InvalidRequestException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnInvalidRequestException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
     }
 
     @Test
-    public void updateTags_ApiThrowsIFE_VerifyTranslation() {
+    public void updateTags_ApiThrowsException_BubbleUp() {
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceState(ResourceModel.builder().build())
@@ -212,11 +208,11 @@ public class UpdateHandlerTest {
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
-                .thenThrow(InternalFailureException.builder().build());
+                .thenThrow(InvalidRequestException.builder().build());
 
         assertThatThrownBy(() ->
                 handler.updateTags(proxy, request, ACTION_ARN, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     @Test
@@ -246,9 +242,9 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnNotFoundException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 
     @Test

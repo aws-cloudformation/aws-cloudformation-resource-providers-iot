@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.CreateMitigationActionResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.MitigationActionParams;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
@@ -56,8 +55,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createMitigationActionResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createMitigationAction);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
         model.setMitigationActionArn(createMitigationActionResponse.actionArn());

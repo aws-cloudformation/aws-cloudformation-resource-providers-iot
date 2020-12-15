@@ -1,7 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListMitigationActionsRequest;
 import software.amazon.awssdk.services.iot.model.ListMitigationActionsResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -36,8 +35,8 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listMitigationActionsResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listMitigationActions);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(request.getDesiredResourceState(), e, logger);
         }
 
         List<ResourceModel> models = listMitigationActionsResponse.actionIdentifiers().stream()
