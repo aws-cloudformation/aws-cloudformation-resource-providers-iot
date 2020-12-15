@@ -7,23 +7,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.NonNull;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.BaseHandlerException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class Translator {
 
@@ -292,11 +289,31 @@ public class Translator {
                 .collect(Collectors.toSet());
     }
 
-    static BaseHandlerException translateIotExceptionToCfn(IotException e) {
+    static ProgressEvent<ResourceModel, CallbackContext> translateExceptionToProgressEvent(
+            ResourceModel model, Exception e, Logger logger) {
+
+        HandlerErrorCode errorCode = translateExceptionToProgressEvent(e, logger);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                ProgressEvent.<ResourceModel, CallbackContext>builder()
+                        .resourceModel(model)
+                        .status(OperationStatus.FAILED)
+                        .errorCode(errorCode)
+                        .build();
+        if (errorCode != HandlerErrorCode.InternalFailure) {
+            progressEvent.setMessage(e.getMessage());
+        }
+        return progressEvent;
+    }
+
+    static HandlerErrorCode translateExceptionToProgressEvent(Exception e, Logger logger) {
+
+        logger.log(String.format("Translating exception \"%s\", stack trace: %s",
+                e.getMessage(), ExceptionUtils.getStackTrace(e)));
+
         // We're handling all the exceptions documented in API docs
         // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateSecurityProfile.html
         // (+similar pages for other APIs)
-        // For Throttling and InternalFailure, we want CFN to retry, and it will do so based on the exception type.
+        // For Throttling and InternalFailure, we want CFN to retry, and it will do so based on the error code.
         // Reference with Retriable/Terminal in comments for each: https://tinyurl.com/y378qdno
         if (e instanceof ResourceAlreadyExistsException) {
             // Note regarding idempotency:
@@ -304,23 +321,24 @@ public class Translator {
             // SecurityProfile is created out of band and then the same request is sent via CFN, the API will throw
             // AlreadyExists because the CFN request will contain the stack level tags.
             // This behavior satisfies the CreateHandler contract.
-            return new CfnAlreadyExistsException(e);
+            return HandlerErrorCode.AlreadyExists;
         } else if (e instanceof InvalidRequestException) {
-            return new CfnInvalidRequestException(e);
+            return HandlerErrorCode.InvalidRequest;
         } else if (e instanceof LimitExceededException) {
-            return new CfnServiceLimitExceededException(e);
+            return HandlerErrorCode.ServiceLimitExceeded;
         } else if (e instanceof UnauthorizedException) {
-            return new CfnAccessDeniedException(e);
+            return HandlerErrorCode.AccessDenied;
         } else if (e instanceof InternalFailureException) {
-            return new CfnInternalFailureException(e);
+            return HandlerErrorCode.InternalFailure;
         } else if (e instanceof ThrottlingException) {
-            return new CfnThrottlingException(e);
+            return HandlerErrorCode.Throttling;
         } else if (e instanceof ResourceNotFoundException) {
-            return new CfnNotFoundException(e);
+            return HandlerErrorCode.NotFound;
         } else {
-            // Any other exception at this point is unexpected. CFN will catch this and convert appropriately.
-            // Reference: https://tinyurl.com/y6mphxbn
-            throw e;
+            logger.log(String.format("Unexpected exception \"%s\", stack trace: %s",
+                    e.getMessage(), ExceptionUtils.getStackTrace(e)));
+            // Any other exception at this point is unexpected.
+            return HandlerErrorCode.InternalFailure;
         }
     }
 }

@@ -11,7 +11,6 @@ import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_STRINGMAP;
 import static com.amazonaws.iot.securityprofile.TestConstants.TARGET_ARNS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,8 +30,6 @@ import software.amazon.awssdk.services.iot.model.CreateSecurityProfileResponse;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -133,9 +130,9 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceAlreadyExistsException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnAlreadyExistsException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
     }
 
     @Test
@@ -159,9 +156,9 @@ public class CreateHandlerTest {
                 .thenReturn(createResponse)
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnNotFoundException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 
     @Test

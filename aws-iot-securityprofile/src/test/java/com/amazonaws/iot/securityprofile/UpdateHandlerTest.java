@@ -53,9 +53,6 @@ import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateSecurityProfileRequest;
 import software.amazon.awssdk.services.iot.model.UpdateSecurityProfileResponse;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -321,13 +318,13 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnNotFoundException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 
     @Test
-    public void updateTags_ApiThrowsException_VerifyTranslation() {
+    public void updateTags_ApiThrowsException_BubbleUp() {
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceState(ResourceModel.builder().build())
@@ -340,11 +337,11 @@ public class UpdateHandlerTest {
 
         assertThatThrownBy(() ->
                 handler.updateTags(proxy, request, SECURITY_PROFILE_ARN, logger))
-                .isInstanceOf(CfnInvalidRequestException.class);
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     @Test
-    public void updateTargetAttachments_AttachThrowsException_VerifyTranslation() {
+    public void updateTargetAttachments_AttachThrowsException_BubbleUp() {
 
         Set<String> previousTargets = ImmutableSet.of("keepTarget", "detachTarget1", "detachTarget2");
         doReturn(previousTargets)
@@ -362,7 +359,7 @@ public class UpdateHandlerTest {
 
         assertThatThrownBy(() ->
                 handler.updateTargetAttachments(proxy, model, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+                .isInstanceOf(InternalFailureException.class);
     }
 
     @Test

@@ -28,13 +28,8 @@ public class HandlerUtils {
                     .securityProfileName(securityProfileName)
                     .nextToken(nextToken)
                     .build();
-            ListTargetsForSecurityProfileResponse listResponse;
-            try {
-                listResponse = proxy.injectCredentialsAndInvokeV2(
-                        listRequest, iotClient::listTargetsForSecurityProfile);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            ListTargetsForSecurityProfileResponse listResponse = proxy.injectCredentialsAndInvokeV2(
+                    listRequest, iotClient::listTargetsForSecurityProfile);
             List<SecurityProfileTarget> securityProfileTargets = listResponse.securityProfileTargets();
             securityProfileTargets.forEach(target -> result.add(target.arn()));
             nextToken = listResponse.nextToken();
@@ -55,13 +50,8 @@ public class HandlerUtils {
                     .resourceArn(resourceArn)
                     .nextToken(nextToken)
                     .build();
-            ListTagsForResourceResponse listTagsForResourceResponse;
-            try {
-                listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
+            ListTagsForResourceResponse listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
                         listTagsRequest, iotClient::listTagsForResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
             result.addAll(listTagsForResourceResponse.tags());
             nextToken = listTagsForResourceResponse.nextToken();
         } while (nextToken != null);

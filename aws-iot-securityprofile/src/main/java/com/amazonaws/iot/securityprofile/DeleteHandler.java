@@ -3,7 +3,6 @@ package com.amazonaws.iot.securityprofile;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DeleteSecurityProfileRequest;
 import software.amazon.awssdk.services.iot.model.DescribeSecurityProfileRequest;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -35,11 +34,11 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeSecurityProfile);
-        } catch (IotException e) {
+        } catch (Exception e) {
             // If the resource doesn't exist, DescribeSecurityProfile will throw NotFoundException,
-            // which we'll rethrow as CfnNotFoundException - that's all we need to do.
-            // CFN (the caller) will swallow this NotFound exception and the customer will see success.
-            throw Translator.translateIotExceptionToCfn(e);
+            // and we'll return FAILED with HandlerErrorCode.NotFound.
+            // CFN (the caller) will swallow the "failure" and the customer will see success.
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
         logger.log(String.format("Called Describe for %s with name %s, accountId %s.",
                 ResourceModel.TYPE_NAME, model.getSecurityProfileName(), request.getAwsAccountId()));
@@ -49,8 +48,8 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteSecurityProfile);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
         logger.log(String.format("Deleted %s with name %s, accountId %s.",

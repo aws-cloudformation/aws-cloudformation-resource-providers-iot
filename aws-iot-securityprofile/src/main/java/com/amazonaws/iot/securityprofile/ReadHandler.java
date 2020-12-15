@@ -1,6 +1,5 @@
 package com.amazonaws.iot.securityprofile;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -8,7 +7,6 @@ import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeSecurityProfileRequest;
 import software.amazon.awssdk.services.iot.model.DescribeSecurityProfileResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -39,9 +37,10 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeSecurityProfile);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
+
 
         String securityProfileArn = describeResponse.securityProfileArn();
         logger.log("Called Describe for " + securityProfileArn);
