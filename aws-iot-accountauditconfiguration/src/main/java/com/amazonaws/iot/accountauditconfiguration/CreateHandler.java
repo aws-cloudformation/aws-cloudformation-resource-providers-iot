@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.AuditNotificationTarget;
 import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.UpdateAccountAuditConfigurationRequest;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.awssdk.utils.StringUtils;
@@ -40,9 +39,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         String accountIdFromTemplate = model.getAccountId();
         String accountId = request.getAwsAccountId();
         if (!accountIdFromTemplate.equals(accountId)) {
-            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest,
-                    String.format("AccountId in the template (%s) doesn't match actual: %s.",
-                            accountIdFromTemplate, accountId));
+            String message = String.format("AccountId in the template (%s) doesn't match actual: %s.",
+                    accountIdFromTemplate, accountId);
+            logger.log(message);
+            return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest, message);
         }
 
         // Call Describe to see whether the customer has a configuration already.
@@ -54,8 +54,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             describeResponse = proxy.injectCredentialsAndInvokeV2(
                     DescribeAccountAuditConfigurationRequest.builder().build(),
                     iotClient::describeAccountAuditConfiguration);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
         logger.log("Called DescribeAccountAuditConfiguration for " + accountId);
 
@@ -88,8 +88,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         // Note that the handlers act as pass-through in terms of input validation.
         // We have some validations in the json model, but we delegate deeper checks to the service.
-        // If there's invalid input (e.g. non-existent check name), we'll rethrow the service's
-        // InvalidRequestException which will contain a readable message.
+        // If there's invalid input (e.g. non-existent check name), we'll translate the service's
+        // InvalidRequestException and include a readable message.
         UpdateAccountAuditConfigurationRequest updateRequest = UpdateAccountAuditConfigurationRequest.builder()
                 .auditCheckConfigurations(Translator.translateChecksFromCfnToIot(model))
                 .auditNotificationTargetConfigurationsWithStrings(Translator.translateNotificationsFromCfnToIot(model))
@@ -98,8 +98,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             proxy.injectCredentialsAndInvokeV2(
                     updateRequest, iotClient::updateAccountAuditConfiguration);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
         logger.log("Created AccountAuditConfiguration for " + accountId);

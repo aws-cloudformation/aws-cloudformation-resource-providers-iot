@@ -5,29 +5,30 @@ import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NO
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE_CFN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
-import software.amazon.cloudformation.exceptions.BaseHandlerException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
 
 public class TranslatorTest {
 
     @Test
-    public void translateIotExceptionToCfn_IRE_Translated() {
-        BaseHandlerException result = Translator.translateIotExceptionToCfn(InvalidRequestException.builder().build());
-        assertThat(result).isInstanceOf(CfnInvalidRequestException.class);
+    public void translateExceptionToErrorCode_IRE_Translated() {
+        HandlerErrorCode result = Translator.translateExceptionToErrorCode(
+                InvalidRequestException.builder().build(), mock(Logger.class));
+        assertThat(result).isEqualTo(HandlerErrorCode.InvalidRequest);
     }
 
     @Test
-    public void translateIotExceptionToCfn_RNFE_Rethrown() {
-        ResourceNotFoundException rnfe = ResourceNotFoundException.builder().build();
-        assertThatThrownBy(() -> Translator.translateIotExceptionToCfn(rnfe))
-                .isInstanceOf(ResourceNotFoundException.class);
+    public void translateExceptionToErrorCode_UnexpectedRNFE_TranslatedToInternalError() {
+        HandlerErrorCode result = Translator.translateExceptionToErrorCode(
+                ResourceNotFoundException.builder().build(), mock(Logger.class));
+        assertThat(result).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test

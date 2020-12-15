@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
@@ -15,10 +16,33 @@ import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
 
 public class Translator {
 
-    static BaseHandlerException translateIotExceptionToCfn(IotException e) {
+    static ProgressEvent<ResourceModel, CallbackContext> translateExceptionToProgressEvent(
+            ResourceModel model, Exception e, Logger logger) {
+
+        HandlerErrorCode errorCode = translateExceptionToErrorCode(e, logger);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                ProgressEvent.<ResourceModel, CallbackContext>builder()
+                        .resourceModel(model)
+                        .status(OperationStatus.FAILED)
+                        .errorCode(errorCode)
+                        .build();
+        if (errorCode != HandlerErrorCode.InternalFailure) {
+            progressEvent.setMessage(e.getMessage());
+        }
+        return progressEvent;
+    }
+
+    static HandlerErrorCode translateExceptionToErrorCode(Exception e, Logger logger) {
+
+        logger.log(String.format("Translating exception \"%s\", stack trace: %s",
+                e.getMessage(), ExceptionUtils.getStackTrace(e)));
 
         // We're handling all the exceptions documented in API docs
         // https://docs.aws.amazon.com/iot/latest/apireference/API_UpdateAccountAuditConfiguration.html (+similar
@@ -26,17 +50,18 @@ public class Translator {
         // For Throttling and InternalFailure, we want CFN to retry, and it will do so based on the exception type.
         // Reference with Retriable/Terminal in comments for each: https://tinyurl.com/y378qdno
         if (e instanceof InvalidRequestException) {
-            return new CfnInvalidRequestException(e);
+            return HandlerErrorCode.InvalidRequest;
         } else if (e instanceof UnauthorizedException) {
-            return new CfnAccessDeniedException(e);
+            return HandlerErrorCode.AccessDenied;
         } else if (e instanceof InternalFailureException) {
-            return new CfnInternalFailureException(e);
+            return HandlerErrorCode.InternalFailure;
         } else if (e instanceof ThrottlingException) {
-            return new CfnThrottlingException(e);
+            return HandlerErrorCode.Throttling;
         } else {
-            // Any other exception at this point is unexpected. CFN will catch this and convert appropriately.
-            // Reference: https://tinyurl.com/y6mphxbn
-            throw e;
+            logger.log(String.format("Unexpected exception \"%s\", stack trace: %s",
+                    e.getMessage(), ExceptionUtils.getStackTrace(e)));
+            // Any other exception at this point is unexpected.
+            return HandlerErrorCode.InternalFailure;
         }
     }
 

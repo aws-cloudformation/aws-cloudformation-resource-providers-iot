@@ -120,7 +120,8 @@ public class ReadHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(DESCRIBE_REQUEST), any()))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, cfnRequest, null, logger))
-                .isInstanceOf(CfnAccessDeniedException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, cfnRequest, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
     }
 }

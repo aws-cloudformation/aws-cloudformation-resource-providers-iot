@@ -1,11 +1,11 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_REQUEST;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -23,8 +23,6 @@ import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurati
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -36,7 +34,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 public class DeleteHandlerTest {
 
     private static final ResourceModel MODEL_FOR_REQUEST = ResourceModel.builder()
-            .accountId("doesn't matter")
+            .accountId(ACCOUNT_ID)
             .roleArn("doesn't matter")
             .build();
 
@@ -104,9 +102,9 @@ public class DeleteHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(DESCRIBE_REQUEST), any()))
                 .thenThrow(InternalFailureException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, cfnRequest, null, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, cfnRequest, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test
@@ -116,8 +114,8 @@ public class DeleteHandlerTest {
                 .thenReturn(DESCRIBE_RESPONSE_V1_STATE)
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, cfnRequest, null, logger))
-                .isInstanceOf(CfnAccessDeniedException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, cfnRequest, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
     }
 }

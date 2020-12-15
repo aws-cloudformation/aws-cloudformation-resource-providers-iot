@@ -14,7 +14,6 @@ import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ROLE_ARN
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.getNotificationBuilderIot;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -36,8 +35,6 @@ import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UpdateAccountAuditConfigurationRequest;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -181,9 +178,9 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(DESCRIBE_REQUEST), any()))
                 .thenThrow(InternalFailureException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, cfnRequest, null, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, cfnRequest, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 
     @Test
@@ -194,8 +191,8 @@ public class UpdateHandlerTest {
                 .thenReturn(DESCRIBE_RESPONSE_V1_STATE)
                 .thenThrow(ThrottlingException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, cfnRequest, null, logger))
-                .isInstanceOf(CfnThrottlingException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, cfnRequest, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
     }
 }

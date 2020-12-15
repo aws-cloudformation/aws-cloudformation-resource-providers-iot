@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -103,7 +104,8 @@ public class ListHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(DESCRIBE_REQUEST), any()))
                 .thenThrow(InternalFailureException.builder().build());
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, cfnRequest, null, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, cfnRequest, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
     }
 }

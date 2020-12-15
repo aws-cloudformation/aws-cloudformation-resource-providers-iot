@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.iot.model.AuditNotificationTarget;
 import software.amazon.awssdk.services.iot.model.AuditNotificationType;
 import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.UpdateAccountAuditConfigurationRequest;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -48,16 +47,17 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             describeResponse = proxy.injectCredentialsAndInvokeV2(
                     DescribeAccountAuditConfigurationRequest.builder().build(),
                     iotClient::describeAccountAuditConfiguration);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
         logger.log(String.format("Called DescribeAccountAuditConfiguration for %s.", accountId));
 
         // If RoleArn is null, the configuration must've been deleted. The RoleArn can never be nullified.
         if (StringUtils.isEmpty(describeResponse.roleArn())) {
+            String message = "The configuration for your account has not been set up or was deleted.";
+            logger.log(message);
             return ProgressEvent.failed(request.getDesiredResourceState(), callbackContext,
-                    HandlerErrorCode.NotFound,
-                    "The configuration for your account has not been set up or was deleted.");
+                    HandlerErrorCode.NotFound, message);
         }
 
         Map<String, AuditCheckConfiguration> checkConfigurationsForUpdate =
@@ -74,8 +74,8 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         try {
             proxy.injectCredentialsAndInvokeV2(
                     updateRequest, iotClient::updateAccountAuditConfiguration);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
         logger.log(String.format("Updated AccountAuditConfiguration for %s.", accountId));
