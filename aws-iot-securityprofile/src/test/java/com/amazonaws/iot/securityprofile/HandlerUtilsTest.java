@@ -115,13 +115,13 @@ public class HandlerUtilsTest {
         assertThat(actualResponse).isEqualTo(TAGS_IOT);
     }
 
-//    @Test
-    void listTags_ApiThrowsException_VerifyTranslation() {
+    @Test
+    void listTags_ApiThrowsException_BubbleUp() {
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(LimitExceededException.builder().build());
         assertThatThrownBy(() -> HandlerUtils.listTags(
                 iotClient, proxy, SECURITY_PROFILE_ARN))
-                .isInstanceOf(CfnServiceLimitExceededException.class);
+                .isInstanceOf(LimitExceededException.class);
     }
 }
