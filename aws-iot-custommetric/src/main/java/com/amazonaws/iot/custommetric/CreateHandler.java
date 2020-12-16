@@ -47,7 +47,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createCustomMetricResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createCustomMetric);
-        } catch (IotException e) {
+        } catch (Exception e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

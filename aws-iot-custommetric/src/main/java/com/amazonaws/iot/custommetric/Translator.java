@@ -51,15 +51,16 @@ public class Translator {
                 e.getMessage(), ExceptionUtils.getStackTrace(e)));
 
         // We're handling all the exceptions documented in API docs
-        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateScheduledAudit.html#API_CreateScheduledAudit_Errors
+        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateCustomMetric.html#API_CreateCustomMetric_Errors
         // (+same pages for other APIs)
         // For Throttling and InternalFailure, we want CFN to retry, and it will do so based on the error code.
         // Reference with Retriable/Terminal in comments for each: https://tinyurl.com/y378qdno
         if (e instanceof ResourceAlreadyExistsException) {
             // Note regarding idempotency:
-            // CreateScheduledAudit API allows tags. CFN attaches its own stack level tags with the request. If a
-            // ScheduledAudit is created out of band and then the same request is sent via CFN, API will throw RAEE because
-            // the CFN request will have, extra stack level tags. This behavior satisfies the CreateHandler contract.
+            // CreateCustomMetric API allows tags. CFN attaches its own stack level tags with the request. If a
+            // CustomMetric is created out of band and then the same request is sent via CFN, API will throw
+            // ResourceNotFoundException because the CFN request will have extra stack level tags. This behavior
+            // satisfies the CreateHandler contract.
             return HandlerErrorCode.AlreadyExists;
         } else if (e instanceof InvalidRequestException) {
             return HandlerErrorCode.InvalidRequest;
