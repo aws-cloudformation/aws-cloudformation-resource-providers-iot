@@ -1,7 +1,6 @@
 package com.amazonaws.iot.scheduledaudit;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListScheduledAuditsRequest;
 import software.amazon.awssdk.services.iot.model.ListScheduledAuditsResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -36,8 +35,8 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listScheduledAuditsResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listScheduledAudits);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(request.getDesiredResourceState(), e, logger);
         }
 
         List<ResourceModel> models = listScheduledAuditsResponse.scheduledAudits().stream()

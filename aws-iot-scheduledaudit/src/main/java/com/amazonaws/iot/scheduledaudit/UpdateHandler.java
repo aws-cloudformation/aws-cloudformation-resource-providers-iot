@@ -2,7 +2,6 @@ package com.amazonaws.iot.scheduledaudit;
 
 import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
@@ -43,10 +42,19 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     "ScheduledAuditArn cannot be updated.");
         }
 
-        String resourceArn = updateScheduledAudit(proxy, desiredModel, logger);
+        String resourceArn;
+        try {
+            resourceArn = updateScheduledAudit(proxy, desiredModel, logger);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
+        }
 
         // For an exiting resource, we have to update via TagResource API, UpdateScheduledAudit API doesn't take tags.
-        updateTags(proxy, request, resourceArn, logger);
+        try {
+            updateTags(proxy, request, resourceArn, logger);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
+        }
 
         logger.log(String.format("Successfully updated %s.", resourceArn));
         desiredModel.setScheduledAuditArn(resourceArn);
@@ -68,14 +76,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .targetCheckNames(model.getTargetCheckNames())
                 .build();
 
-        UpdateScheduledAuditResponse updateScheduledAuditResponse;
-        try {
-            updateScheduledAuditResponse =
-                    proxy.injectCredentialsAndInvokeV2(updateScheduledAuditRequest,
-                            iotClient::updateScheduledAudit);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
-        }
+        UpdateScheduledAuditResponse updateScheduledAuditResponse =
+                proxy.injectCredentialsAndInvokeV2(updateScheduledAuditRequest,
+                        iotClient::updateScheduledAudit);
         String scheduledAuditArn = updateScheduledAuditResponse.scheduledAuditArn();
         logger.log(String.format("Called UpdateScheduledAudit for %s.", scheduledAuditArn));
         return scheduledAuditArn;
@@ -117,11 +120,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .resourceArn(resourceArn)
                     .tags(tagsToAttach)
                     .build();
-            try {
-                proxy.injectCredentialsAndInvokeV2(tagResourceRequest, iotClient::tagResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            proxy.injectCredentialsAndInvokeV2(tagResourceRequest, iotClient::tagResource);
             logger.log(String.format("Called TagResource for %s.", resourceArn));
         }
 
@@ -130,11 +129,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .resourceArn(resourceArn)
                     .tagKeys(tagKeysToDetach)
                     .build();
-            try {
-                proxy.injectCredentialsAndInvokeV2(untagResourceRequest, iotClient::untagResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            proxy.injectCredentialsAndInvokeV2(untagResourceRequest, iotClient::untagResource);
             logger.log(String.format("Called UntagResource for %s.", resourceArn));
         }
     }

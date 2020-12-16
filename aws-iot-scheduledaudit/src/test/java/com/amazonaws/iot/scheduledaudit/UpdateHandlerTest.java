@@ -9,7 +9,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.AuditFrequency;
 import software.amazon.awssdk.services.iot.model.DayOfWeek;
-import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -17,9 +16,6 @@ import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateScheduledAuditRequest;
 import software.amazon.awssdk.services.iot.model.UpdateScheduledAuditResponse;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -189,7 +185,7 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void handleRequest_UpdateThrowsIRE_VerifyTranslation() {
+    public void handleRequest_UpdateThrowsInvalidRequest_VerifyTranslation() {
 
         ResourceModel desiredModel = ResourceModel.builder()
                 .scheduledAuditName(SCHEDULED_AUDIT_NAME)
@@ -214,13 +210,13 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(InvalidRequestException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnInvalidRequestException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
     }
 
     @Test
-    public void updateTags_ApiThrowsIFE_VerifyTranslation() {
+    public void updateTags_ApiThrowsException_BubbleUp() {
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceState(ResourceModel.builder().build())
@@ -229,11 +225,11 @@ public class UpdateHandlerTest {
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
-                .thenThrow(InternalFailureException.builder().build());
+                .thenThrow(InvalidRequestException.builder().build());
 
         assertThatThrownBy(() ->
                 handler.updateTags(proxy, request, SCHEDULED_AUDIT_ARN, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+                .isInstanceOf(InvalidRequestException.class);
     }
     @Test
     void handleRequest_ResourceAlreadyDeleted_VerifyException() {
@@ -262,9 +258,9 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnNotFoundException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 
     @Test

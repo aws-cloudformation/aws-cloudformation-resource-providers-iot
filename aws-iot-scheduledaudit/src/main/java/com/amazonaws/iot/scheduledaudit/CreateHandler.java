@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateScheduledAuditRequest;
 import software.amazon.awssdk.services.iot.model.CreateScheduledAuditResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -47,8 +46,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createScheduledAuditResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createScheduledAudit);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
         model.setScheduledAuditArn(createScheduledAuditResponse.scheduledAuditArn());

@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeScheduledAuditRequest;
 import software.amazon.awssdk.services.iot.model.DescribeScheduledAuditResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -39,8 +38,8 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeScheduledAuditResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeScheduledAudit);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
         String scheduledAuditArn = describeScheduledAuditResponse.scheduledAuditArn();
