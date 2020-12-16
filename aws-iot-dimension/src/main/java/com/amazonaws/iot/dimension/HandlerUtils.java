@@ -28,13 +28,8 @@ public class HandlerUtils {
                     .resourceArn(resourceArn)
                     .nextToken(nextToken)
                     .build();
-            ListTagsForResourceResponse listTagsForResourceResponse;
-            try {
-                listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
-                        listTagsRequest, iotClient::listTagsForResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            ListTagsForResourceResponse listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
+                    listTagsRequest, iotClient::listTagsForResource);
             result.addAll(listTagsForResourceResponse.tags());
             nextToken = listTagsForResourceResponse.nextToken();
         } while (nextToken != null);

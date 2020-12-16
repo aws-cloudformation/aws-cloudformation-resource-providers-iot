@@ -36,8 +36,8 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listDimensionsResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listDimensions);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(request.getDesiredResourceState(), e, logger);
         }
 
         List<ResourceModel> models = listDimensionsResponse.dimensionNames().stream()

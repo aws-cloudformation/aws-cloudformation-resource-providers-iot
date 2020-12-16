@@ -6,7 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateDimensionRequest;
 import software.amazon.awssdk.services.iot.model.CreateDimensionResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -46,8 +45,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createDimensionResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createDimension);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 
         model.setArn(createDimensionResponse.arn());
@@ -77,7 +76,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         // Note that the handlers act as pass-through in terms of input validation.
         // We have some validations in the json model, but we delegate deeper checks to the service.
-        // If there's invalid input, we'll rethrow the service's InvalidRequestException with a readable message.
+        // If there's invalid input, we'll translate the service's InvalidRequestException,
+        // keeping the readable message.
         return CreateDimensionRequest.builder()
                 .name(model.getName())
                 .type(model.getType())

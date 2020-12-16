@@ -8,7 +8,6 @@ import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
 import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
 import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -24,8 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.DescribeDimensionRequest;
 import software.amazon.awssdk.services.iot.model.DescribeDimensionResponse;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -103,7 +102,8 @@ public class ReadHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ThrottlingException.builder().build());
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnThrottlingException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
     }
 }

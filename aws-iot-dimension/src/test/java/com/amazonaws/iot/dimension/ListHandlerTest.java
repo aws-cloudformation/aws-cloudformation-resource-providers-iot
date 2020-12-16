@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.iot.model.ListDimensionsResponse;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -89,7 +90,8 @@ public class ListHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThatThrownBy(() -> handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnAccessDeniedException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
     }
 }

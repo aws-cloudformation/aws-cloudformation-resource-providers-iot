@@ -41,15 +41,20 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeDimensionResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeDimension);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 
         String dimensionArn = describeDimensionResponse.arn();
         logger.log(String.format("Called Describe for %s.", dimensionArn));
 
         // Now call ListTagsForResource, because DescribeDimension doesn't provide the tags.
-        List<software.amazon.awssdk.services.iot.model.Tag> iotTags = listTags(proxy, dimensionArn, logger);
+        List<software.amazon.awssdk.services.iot.model.Tag> iotTags;
+        try {
+            iotTags = listTags(proxy, dimensionArn, logger);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(model, e, logger);
+        }
         logger.log(String.format("Called ListTags for %s.", dimensionArn));
 
         Set<Tag> responseTags = Translator.translateTagsToCfn(iotTags);

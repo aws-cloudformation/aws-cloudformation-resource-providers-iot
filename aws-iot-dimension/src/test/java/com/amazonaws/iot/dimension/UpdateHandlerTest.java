@@ -206,13 +206,13 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(InvalidRequestException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnInvalidRequestException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
     }
 
     @Test
-    public void updateTags_ApiThrowsIFE_VerifyTranslation() {
+    public void updateTags_ApiThrowsIFE_BubbleUp() {
 
         ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .previousResourceState(ResourceModel.builder().build())
@@ -225,7 +225,7 @@ public class UpdateHandlerTest {
 
         assertThatThrownBy(() ->
                 handler.updateTags(proxy, request, DIMENSION_ARN, logger))
-                .isInstanceOf(CfnInternalFailureException.class);
+                .isInstanceOf(InternalFailureException.class);
     }
 
     @Test
@@ -253,9 +253,9 @@ public class UpdateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        assertThatThrownBy(() ->
-                handler.handleRequest(proxy, request, null, logger))
-                .isInstanceOf(CfnNotFoundException.class);
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 
     @Test

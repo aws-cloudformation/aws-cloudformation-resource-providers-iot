@@ -35,11 +35,11 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeDimension);
-        } catch (IotException e) {
+        } catch (Exception e) {
             // If the resource doesn't exist, DescribeDimension will throw NotFoundException,
-            // which we'll rethrow as CfnNotFoundException - that's all we need to do.
-            // CFN (the caller) will swallow this NotFound exception and the customer will see success.
-            throw Translator.translateIotExceptionToCfn(e);
+            // which we'll translate to NotFound Failure - that's all we need to do.
+            // CFN (the caller) will swallow this failure and the customer will see success.
+            return Translator.translateExceptionToErrorCode(model, e, logger);
         }
         logger.log(String.format("Called Describe for %s with name %s, accountId %s.",
                 ResourceModel.TYPE_NAME, model.getName(), request.getAwsAccountId()));
@@ -49,8 +49,8 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteDimension);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 
         logger.log(String.format("Deleted %s with name %s, accountId %s.",

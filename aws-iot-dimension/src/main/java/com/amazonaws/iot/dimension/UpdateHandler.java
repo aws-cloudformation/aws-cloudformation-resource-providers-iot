@@ -2,14 +2,12 @@ package com.amazonaws.iot.dimension;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
@@ -45,39 +43,32 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     "Arn cannot be updated.");
         }
 
-        String resourceArn = updateDimension(proxy, desiredModel, logger);
-
-        // For an exiting resource, we have to update via TagResource API, UpdateDimension API doesn't take tags.
-        updateTags(proxy, request, resourceArn, logger);
-
-        logger.log(String.format("Successfully updated %s.", resourceArn));
-
-        desiredModel.setArn(resourceArn);
-        return ProgressEvent.defaultSuccessHandler(desiredModel);
-    }
-
-    /**
-     * @return The dimension's ARN.
-     */
-    private String updateDimension(AmazonWebServicesClientProxy proxy,
-                                   ResourceModel model,
-                                   Logger logger) {
-
         UpdateDimensionRequest updateDimensionRequest = UpdateDimensionRequest.builder()
-                .name(model.getName())
-                .stringValues(model.getStringValues())
+                .name(desiredModel.getName())
+                .stringValues(desiredModel.getStringValues())
                 .build();
 
         UpdateDimensionResponse updateDimensionResponse;
         try {
             updateDimensionResponse =
                     proxy.injectCredentialsAndInvokeV2(updateDimensionRequest, iotClient::updateDimension);
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToCfn(e);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(desiredModel, e, logger);
         }
-        String arn = updateDimensionResponse.arn();
-        logger.log(String.format("Called UpdateDimension for %s.", arn));
-        return arn;
+        String resourceArn = updateDimensionResponse.arn();
+        logger.log(String.format("Called UpdateDimension for %s.", resourceArn));
+
+        // For an exiting resource, we have to update via TagResource API, UpdateDimension API doesn't take tags.
+        try {
+            updateTags(proxy, request, resourceArn, logger);
+        } catch (Exception e) {
+            return Translator.translateExceptionToErrorCode(desiredModel, e, logger);
+        }
+
+        logger.log(String.format("Successfully updated %s.", resourceArn));
+
+        desiredModel.setArn(resourceArn);
+        return ProgressEvent.defaultSuccessHandler(desiredModel);
     }
 
     @VisibleForTesting
@@ -116,11 +107,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .resourceArn(resourceArn)
                     .tags(tagsToAttach)
                     .build();
-            try {
-                proxy.injectCredentialsAndInvokeV2(tagResourceRequest, iotClient::tagResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            proxy.injectCredentialsAndInvokeV2(tagResourceRequest, iotClient::tagResource);
             logger.log(String.format("Called TagResource for %s.", resourceArn));
         }
 
@@ -129,11 +116,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .resourceArn(resourceArn)
                     .tagKeys(tagKeysToDetach)
                     .build();
-            try {
-                proxy.injectCredentialsAndInvokeV2(untagResourceRequest, iotClient::untagResource);
-            } catch (IotException e) {
-                throw Translator.translateIotExceptionToCfn(e);
-            }
+            proxy.injectCredentialsAndInvokeV2(untagResourceRequest, iotClient::untagResource);
             logger.log(String.format("Called UntagResource for %s.", resourceArn));
         }
     }
