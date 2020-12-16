@@ -1,0 +1,12 @@
+{
+  "AccountId": "{{AccountId}}",
+  "AuditCheckConfigurations": {
+    "NON_EXISTENT_CHECK": {
+      "Enabled": true
+    },
+    "CA_CERTIFICATE_EXPIRING_CHECK": {
+      "Enabled": true
+    }
+  },
+  "RoleArn": "{{RoleForDeviceDefenderAuditArn}}"
+}

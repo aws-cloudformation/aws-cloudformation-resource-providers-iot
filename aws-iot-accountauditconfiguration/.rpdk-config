@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::IoT::AccountAuditConfiguration",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.accountauditconfiguration.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.accountauditconfiguration.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "accountauditconfiguration"
+        ],
+        "codegen_template_path": "default",
+        "protocolVersion": "2.0.0"
+    }
+}
