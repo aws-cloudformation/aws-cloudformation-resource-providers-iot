@@ -56,11 +56,6 @@ public class Translator {
         // For Throttling and InternalFailure, we want CFN to retry, and it will do so based on the error code.
         // Reference with Retriable/Terminal in comments for each: https://tinyurl.com/y378qdno
         if (e instanceof ResourceAlreadyExistsException) {
-            // Note regarding idempotency:
-            // CreateCustomMetric API allows tags. CFN attaches its own stack level tags with the request. If a
-            // CustomMetric is created out of band and then the same request is sent via CFN, API will throw
-            // ResourceNotFoundException because the CFN request will have extra stack level tags. This behavior
-            // satisfies the CreateHandler contract.
             return HandlerErrorCode.AlreadyExists;
         } else if (e instanceof InvalidRequestException) {
             return HandlerErrorCode.InvalidRequest;
