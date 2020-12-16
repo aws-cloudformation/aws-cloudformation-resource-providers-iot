@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::IoT::ScheduledAudit",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.scheduledaudit.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.scheduledaudit.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "scheduledaudit"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    }
+}

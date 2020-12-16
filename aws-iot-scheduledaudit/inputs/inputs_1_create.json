@@ -1,0 +1,14 @@
+{
+  "ScheduledAuditName": "CfnContractTest",
+  "Frequency": "DAILY",
+  "TargetCheckNames": [
+    "CA_CERTIFICATE_EXPIRING_CHECK",
+    "DEVICE_CERTIFICATE_EXPIRING_CHECK"
+  ],
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}
