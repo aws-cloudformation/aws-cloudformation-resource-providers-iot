@@ -1,7 +1,6 @@
 package com.amazonaws.iot.securityprofile;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -16,7 +15,6 @@ import org.mockito.MockitoAnnotations;
 import software.amazon.awssdk.services.iot.model.ListSecurityProfilesRequest;
 import software.amazon.awssdk.services.iot.model.ListSecurityProfilesResponse;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;

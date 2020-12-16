@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.ListTargetsForSecurityProfileRequest;
@@ -51,7 +50,7 @@ public class HandlerUtils {
                     .nextToken(nextToken)
                     .build();
             ListTagsForResourceResponse listTagsForResourceResponse = proxy.injectCredentialsAndInvokeV2(
-                        listTagsRequest, iotClient::listTagsForResource);
+                    listTagsRequest, iotClient::listTagsForResource);
             result.addAll(listTagsForResourceResponse.tags());
             nextToken = listTagsForResourceResponse.nextToken();
         } while (nextToken != null);

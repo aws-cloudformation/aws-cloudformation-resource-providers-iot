@@ -27,7 +27,6 @@ import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.ListTargetsForSecurityProfileRequest;
 import software.amazon.awssdk.services.iot.model.ListTargetsForSecurityProfileResponse;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 

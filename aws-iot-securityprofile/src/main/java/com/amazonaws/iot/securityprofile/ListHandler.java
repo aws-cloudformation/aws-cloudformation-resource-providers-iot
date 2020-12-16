@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListSecurityProfilesRequest;
 import software.amazon.awssdk.services.iot.model.ListSecurityProfilesResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;

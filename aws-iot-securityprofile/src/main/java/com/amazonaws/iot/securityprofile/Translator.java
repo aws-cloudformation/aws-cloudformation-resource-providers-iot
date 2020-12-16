@@ -305,7 +305,7 @@ public class Translator {
         return progressEvent;
     }
 
-    static HandlerErrorCode translateExceptionToProgressEvent(Exception e, Logger logger) {
+    private static HandlerErrorCode translateExceptionToProgressEvent(Exception e, Logger logger) {
 
         logger.log(String.format("Translating exception \"%s\", stack trace: %s",
                 e.getMessage(), ExceptionUtils.getStackTrace(e)));
