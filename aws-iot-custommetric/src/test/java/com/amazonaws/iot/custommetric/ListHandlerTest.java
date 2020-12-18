@@ -1,5 +1,6 @@
 package com.amazonaws.iot.custommetric;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,7 @@ import static com.amazonaws.iot.custommetric.TestConstants.CUSTOM_METRIC_NAME2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,11 @@ public class ListHandlerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         handler = new ListHandler();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        verifyNoMoreInteractions(proxy);
     }
 
     @Test

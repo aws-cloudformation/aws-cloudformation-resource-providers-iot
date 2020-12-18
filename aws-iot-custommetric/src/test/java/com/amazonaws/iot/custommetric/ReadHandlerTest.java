@@ -1,5 +1,6 @@
 package com.amazonaws.iot.custommetric;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +42,11 @@ public class ReadHandlerTest {
 
     @Spy
     private ReadHandler handler;
+
+    @AfterEach
+    public void afterEach() {
+        verifyNoMoreInteractions(proxy);
+    }
 
     @Test
     public void handleRequest_HappyCase_VerifyRequestResponse() {
