@@ -1,6 +1,7 @@
 package com.amazonaws.iot.mitigationaction;
 
 import com.google.common.collect.ImmutableMap;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,6 +64,11 @@ public class UpdateHandlerTest {
 
     @Spy
     private UpdateHandler handler;
+
+    @AfterEach
+    public void afterEach() {
+        verifyNoMoreInteractions(proxy);
+    }
 
     @Test
     public void handleRequest_BothValueAndTagsAreUpdated_VerifyRequests() {

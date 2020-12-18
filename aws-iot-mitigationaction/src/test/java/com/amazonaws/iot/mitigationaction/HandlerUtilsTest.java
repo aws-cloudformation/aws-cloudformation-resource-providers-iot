@@ -1,8 +1,12 @@
 package com.amazonaws.iot.mitigationaction;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
@@ -18,9 +22,10 @@ import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class HandlerUtilsTest {
 
     @Mock
@@ -33,9 +38,13 @@ public class HandlerUtilsTest {
 
     @BeforeEach
     public void setup() {
-        proxy = mock(AmazonWebServicesClientProxy.class);
-        logger = mock(Logger.class);
+        MockitoAnnotations.initMocks(this);
         iotClient = IotClient.builder().build();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        verifyNoMoreInteractions(proxy);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +51,11 @@ public class CreateHandlerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         handler = new CreateHandler();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        verifyNoMoreInteractions(proxy);
     }
 
     @Test
@@ -168,6 +175,4 @@ public class CreateHandlerTest {
         assertThat(submittedRequest.actionName()).contains("MyRes");
         assertThat(submittedRequest.actionName().length() > 20).isTrue();
     }
-
-    // TODO: test system tags when the src code is ready
 }

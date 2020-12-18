@@ -1,5 +1,6 @@
 package com.amazonaws.iot.mitigationaction;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +43,11 @@ public class DeleteHandlerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         handler = new DeleteHandler();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        verifyNoMoreInteractions(proxy);
     }
 
     @Test
@@ -89,6 +97,20 @@ public class DeleteHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+    }
+
+    @Test
+    public void handleRequest_InvalidName_ReturnNotFound() {
+        ResourceModel model = ResourceModel.builder()
+                .actionName("Exclamation!")
+                .build();
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+        verifyZeroInteractions(proxy);
         ProgressEvent<ResourceModel, CallbackContext> progressEvent =
                 handler.handleRequest(proxy, request, null, logger);
         assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);

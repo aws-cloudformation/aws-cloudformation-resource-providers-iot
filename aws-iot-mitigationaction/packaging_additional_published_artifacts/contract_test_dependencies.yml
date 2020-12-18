@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Resources for running the AccountAuditConfiguration contract tests'
+Description: 'Resources for running the MitigationAction contract tests'
 Resources:
-  RoleForDeviceDefenderAudit:
+  RoleForDeviceDefender:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/"
@@ -14,33 +14,28 @@ Resources:
                 - "iot.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-  TopicForDeviceDefenderAuditCreate:
+  TopicForDeviceDefenderCreate:
     Type: "AWS::SNS::Topic"
     Properties:
       TopicName: "CreateTopic"
-  TopicForDeviceDefenderAuditUpdate:
+  TopicForDeviceDefenderUpdate:
     Type: "AWS::SNS::Topic"
     Properties:
       TopicName: "UpdateTopic"
 
 Outputs:
-  RoleForDeviceDefenderAuditOutput:
+  RoleForDeviceDefenderOutput:
     Value:
-      Fn::GetAtt: [RoleForDeviceDefenderAudit, Arn]
+      Fn::GetAtt: [RoleForDeviceDefender, Arn]
     Export:
-      Name: RoleForDeviceDefenderAuditArn
-  TopicForDeviceDefenderAuditCreateOutput:
+      Name: RoleForDeviceDefenderArn
+  TopicForDeviceDefenderCreateOutput:
     Value:
-      Ref: TopicForDeviceDefenderAuditCreate
+      Ref: TopicForDeviceDefenderCreate
     Export:
-      Name: TopicForDeviceDefenderAuditCreateArn
-  TopicForDeviceDefenderAuditUpdateOutput:
+      Name: TopicForDeviceDefenderCreateArn
+  TopicForDeviceDefenderUpdateOutput:
     Value:
-      Ref: TopicForDeviceDefenderAuditUpdate
+      Ref: TopicForDeviceDefenderUpdate
     Export:
-      Name: TopicForDeviceDefenderAuditUpdateArn
-  AccountIdOutput:
-    Value:
-      Fn::Sub: "${AWS::AccountId}"
-    Export:
-      Name: AccountId
+      Name: TopicForDeviceDefenderUpdateArn

@@ -1,9 +1,9 @@
 {
   "ActionName": "CfnContractTest",
-  "RoleArn": "{{RoleForDeviceDefenderAuditArn}}",
+  "RoleArn": "{{RoleForDeviceDefenderArn}}",
   "ActionParams": {
     "PublishFindingToSnsParams": {
-      "TopicArn": "{{TopicForDeviceDefenderAuditCreateArn}}"
+      "TopicArn": "{{TopicForDeviceDefenderCreateArn}}"
     }
   },
   "MitigationActionId": "This is a read only property"

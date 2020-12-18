@@ -45,7 +45,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         if (!StringUtils.isEmpty(model.getMitigationActionId())) {
             logger.log(String.format("MitigationActionId is read-only, but the caller passed %s.",
-                    model.getMitigationActionArn()));
+                    model.getMitigationActionId()));
             // Note: this is necessary even though MitigationActionId is marked readOnly in the schema.
             return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.InvalidRequest,
                     "MitigationActionId is a read-only property and cannot be set.");
