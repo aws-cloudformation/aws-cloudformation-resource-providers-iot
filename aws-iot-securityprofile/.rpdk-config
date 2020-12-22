@@ -1,0 +1,22 @@
+{
+    "typeName": "AWS::IoT::SecurityProfile",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.securityprofile.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.securityprofile.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "version": false,
+        "subparser_name": null,
+        "verbose": 0,
+        "force": false,
+        "type_name": null,
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "securityprofile"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    }
+}

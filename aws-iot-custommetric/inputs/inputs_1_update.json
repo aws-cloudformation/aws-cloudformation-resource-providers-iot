@@ -1,0 +1,11 @@
+{
+  "MetricName": "CfnCustomMetricTestName",
+  "DisplayName": "CfnCustomMetricTestDisplayNameUpdated",
+  "MetricType": "number",
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}

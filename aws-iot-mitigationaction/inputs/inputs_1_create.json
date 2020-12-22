@@ -1,0 +1,15 @@
+{
+  "ActionName": "CfnContractTest",
+  "RoleArn": "{{RoleForDeviceDefenderArn}}",
+  "ActionParams": {
+    "PublishFindingToSnsParams": {
+      "TopicArn": "{{TopicForDeviceDefenderCreateArn}}"
+    }
+  },
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}

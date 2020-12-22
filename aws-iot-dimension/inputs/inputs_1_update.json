@@ -1,0 +1,13 @@
+{
+  "Name": "CfnContractTest",
+  "StringValues": [
+    "device/+/authV2"
+  ],
+  "Type": "TOPIC_FILTER",
+  "Tags": [
+    {
+      "Key": "cfnTestTagKey2",
+      "Value": "tagValue2"
+    }
+  ]
+}

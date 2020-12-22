@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Resources for running the MitigationAction contract tests'
+Resources:
+  RoleForDeviceDefender:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "iot.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+  TopicForDeviceDefenderCreate:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "CreateTopic"
+  TopicForDeviceDefenderUpdate:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "UpdateTopic"
+
+Outputs:
+  RoleForDeviceDefenderOutput:
+    Value:
+      Fn::GetAtt: [RoleForDeviceDefender, Arn]
+    Export:
+      Name: RoleForDeviceDefenderArn
+  TopicForDeviceDefenderCreateOutput:
+    Value:
+      Ref: TopicForDeviceDefenderCreate
+    Export:
+      Name: TopicForDeviceDefenderCreateArn
+  TopicForDeviceDefenderUpdateOutput:
+    Value:
+      Ref: TopicForDeviceDefenderUpdate
+    Export:
+      Name: TopicForDeviceDefenderUpdateArn

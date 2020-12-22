@@ -1,0 +1,17 @@
+{
+    "typeName": "AWS::IoT::Dimension",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.dimension.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.dimension.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "dimension"
+        ],
+        "codegen_template_path": "default",
+        "protocolVersion": "2.0.0"
+    }
+}

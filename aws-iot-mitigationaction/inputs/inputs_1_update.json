@@ -1,0 +1,9 @@
+{
+  "ActionName": "CfnContractTest",
+  "RoleArn": "{{RoleForDeviceDefenderArn}}",
+  "ActionParams": {
+    "PublishFindingToSnsParams": {
+      "TopicArn": "{{TopicForDeviceDefenderUpdateArn}}"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "SecurityProfileName": "CfnContractTest",
+  "SecurityProfileDescription": "A valid security profile 1!@#$%^&*()",
+  "Behaviors": [
+    {
+      "Name": "Behavior2:_-",
+      "Metric": "aws:source-ip-address",
+      "Criteria": {
+        "ComparisonOperator": "in-cidr-set",
+        "ConsecutiveDatapointsToAlarm": 2,
+        "ConsecutiveDatapointsToClear": 2,
+        "Value": {
+          "Cidrs": [
+            "192.168.100.14/24"
+          ]
+        }
+      }
+    }
+  ],
+  "AdditionalMetricsToRetainV2": [
+    {
+      "Metric": "aws:listening-tcp-ports"
+    }
+  ],
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}

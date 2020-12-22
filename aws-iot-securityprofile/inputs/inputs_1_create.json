@@ -1,0 +1,32 @@
+{
+  "SecurityProfileName": "CfnContractTest",
+  "SecurityProfileDescription": "A valid security profile 1!@#$%^&*()",
+  "Behaviors": [
+    {
+      "Name": "Behavior1:_-",
+      "Metric": "aws:listening-tcp-ports",
+      "Criteria": {
+        "ComparisonOperator": "in-port-set",
+        "ConsecutiveDatapointsToAlarm": 1,
+        "ConsecutiveDatapointsToClear": 1,
+        "Value": {
+          "Ports": [
+            443
+          ]
+        }
+      }
+    }
+  ],
+  "AdditionalMetricsToRetainV2": [
+    {
+      "Metric": "aws:num-messages-sent"
+    }
+  ],
+  "TargetArns": [],
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}
