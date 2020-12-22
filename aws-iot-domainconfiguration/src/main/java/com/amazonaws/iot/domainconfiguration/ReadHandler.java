@@ -3,15 +3,8 @@ package com.amazonaws.iot.domainconfiguration;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeDomainConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.DescribeDomainConfigurationResponse;
-import software.amazon.awssdk.services.iot.model.InternalFailureException;
-import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ServerCertificateSummary;
-import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -79,14 +72,8 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     .serverCertificates(getServerCertificates(response.serverCertificates()))
                     .build());
 
-        } catch (final InternalFailureException e) {
-            throw new CfnServiceInternalErrorException(OPERATION, e);
-        } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(domainRequest.toString(), e);
-        } catch (final ResourceNotFoundException e) {
-            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, domainRequest.domainConfigurationName());
-        } catch (final ThrottlingException e) {
-            throw new CfnThrottlingException(OPERATION, e);
+        } catch (IotException e) {
+            throw ExceptionTranslator.translateIotExceptionToHandlerException(e, OPERATION, model.getDomainConfigurationName());
         }
     }
 }

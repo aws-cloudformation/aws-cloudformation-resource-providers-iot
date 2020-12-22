@@ -56,7 +56,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
         } catch (final InternalFailureException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(templateRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final DeleteConflictException e) {
             throw new CfnResourceConflictException(ResourceModel.TYPE_NAME, templateName, e.getMessage());
         } catch (final ThrottlingException e) {

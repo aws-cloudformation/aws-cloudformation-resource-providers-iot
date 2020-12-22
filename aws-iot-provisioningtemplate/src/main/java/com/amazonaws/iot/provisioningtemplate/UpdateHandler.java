@@ -12,8 +12,12 @@ import software.amazon.awssdk.services.iot.model.ListProvisioningTemplateVersion
 import software.amazon.awssdk.services.iot.model.ListProvisioningTemplateVersionsResponse;
 import software.amazon.awssdk.services.iot.model.ProvisioningTemplateVersionSummary;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
+import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UpdateProvisioningTemplateRequest;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
@@ -107,13 +111,17 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             currentRequest = updateRequest;
             proxy.injectCredentialsAndInvokeV2(updateRequest, iotClient::updateProvisioningTemplate);
         } catch (final ResourceNotFoundException e) {
-            throw new CfnNotFoundException(e);
+            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, templateName);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(currentRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final InternalException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final ThrottlingException e) {
             throw new CfnThrottlingException(OPERATION, e);
+        } catch (final ServiceUnavailableException e) {
+            throw new CfnGeneralServiceException(OPERATION, e);
+        } catch (final UnauthorizedException e) {
+            throw new CfnAccessDeniedException(OPERATION, e);
         }
 
         return ProgressEvent.defaultSuccessHandler(newModel);

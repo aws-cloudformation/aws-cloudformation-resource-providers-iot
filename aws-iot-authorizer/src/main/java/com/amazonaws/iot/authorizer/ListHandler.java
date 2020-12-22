@@ -1,18 +1,9 @@
 package com.amazonaws.iot.authorizer;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.InternalFailureException;
-import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListAuthorizersRequest;
 import software.amazon.awssdk.services.iot.model.ListAuthorizersResponse;
-import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
-import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -59,16 +50,8 @@ public class ListHandler extends BaseHandlerStd {
                     .status(OperationStatus.SUCCESS)
                     .build();
 
-        } catch (final InternalFailureException e) {
-            throw new CfnServiceInternalErrorException(OPERATION, e);
-        } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(authorizersRequest.toString(), e);
-        } catch (final ThrottlingException e) {
-            throw new CfnThrottlingException(OPERATION, e);
-        } catch (final ServiceUnavailableException e) {
-            throw new CfnGeneralServiceException(OPERATION, e);
-        } catch (final UnauthorizedException e) {
-            throw new CfnAccessDeniedException(OPERATION, e);
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(e, OPERATION, "");
         }
     }
 }

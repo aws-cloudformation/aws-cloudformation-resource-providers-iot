@@ -58,7 +58,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         } catch (final InternalFailureException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(describeRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final ResourceNotFoundException e) {
             throw new CfnNotFoundException(ResourceModel.TYPE_NAME, describeRequest.certificateId());
         } catch (final ServiceUnavailableException e) {

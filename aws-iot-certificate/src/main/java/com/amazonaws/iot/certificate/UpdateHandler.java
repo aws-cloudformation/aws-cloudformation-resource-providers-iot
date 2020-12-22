@@ -53,16 +53,14 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
             try {
                 proxy.injectCredentialsAndInvokeV2(updateRequest, iotClient::updateCertificate);
 
-            } catch (final CertificateStateException e) {
+            } catch (final CertificateStateException | ServiceUnavailableException e) {
                 throw new CfnGeneralServiceException(OPERATION, e);
             } catch (final InternalFailureException e) {
                 throw new CfnServiceInternalErrorException(OPERATION, e);
             } catch (final InvalidRequestException e) {
-                throw new CfnInvalidRequestException(updateRequest.toString(), e);
+                throw new CfnInvalidRequestException(e.getMessage(), e);
             } catch (final ResourceNotFoundException e) {
-                throw new CfnNotFoundException(e);
-            } catch (final ServiceUnavailableException e) {
-                throw new CfnGeneralServiceException(OPERATION, e);
+                throw new CfnNotFoundException(ResourceModel.TYPE_NAME, updateRequest.certificateId());
             } catch (final ThrottlingException e) {
                 throw new CfnThrottlingException(OPERATION, e);
             } catch (final UnauthorizedException e) {

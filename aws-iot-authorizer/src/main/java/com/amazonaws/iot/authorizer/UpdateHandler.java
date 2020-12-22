@@ -66,7 +66,6 @@ public class UpdateHandler extends BaseHandlerStd {
             throw Translator.translateIotExceptionToHandlerException(
                     e,
                     OPERATION,
-                    request.toString(),
                     request.authorizerName());
         }
     }

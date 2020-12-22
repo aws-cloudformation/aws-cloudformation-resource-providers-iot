@@ -4,20 +4,11 @@ import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateDomainConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.CreateDomainConfigurationResponse;
-import software.amazon.awssdk.services.iot.model.InternalException;
-import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.LimitExceededException;
-import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
-import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UpdateDomainConfigurationRequest;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -67,12 +58,12 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      * @return A collection of tags or null
      */
     private static Collection<Tag> getTags(ResourceModel model) {
-        final List<Tags> modelTags = model.getTags();
+        final List<com.amazonaws.iot.domainconfiguration.Tag> modelTags = model.getTags();
         return Objects.isNull(modelTags)
                 ? null
                 : modelTags.stream()
-                    .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
-                    .collect(Collectors.toList());
+                .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -142,16 +133,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                             .arn(response.domainConfigurationArn())
                             .build());
 
-        } catch (final ResourceAlreadyExistsException e) {
-            throw new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, domainConfigName);
-        } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(domainRequest.toString(), e);
-        } catch (final LimitExceededException e) {
-            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.toString());
-        } catch (final InternalException e) {
-            throw new CfnServiceInternalErrorException(OPERATION, e);
-        } catch (final ThrottlingException e) {
-            throw new CfnThrottlingException(OPERATION, e);
+        } catch (IotException e) {
+            throw ExceptionTranslator.translateIotExceptionToHandlerException(e, OPERATION, domainConfigName);
         }
     }
 }

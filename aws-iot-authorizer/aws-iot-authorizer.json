@@ -3,33 +3,21 @@
   "description": "Creates an authorizer.",
   "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
   "definitions": {
-    "TokenSigningPublicKeys": {
+    "Tag": {
       "type": "object",
-      "patternProperties": {
-        "[a-zA-Z0-9:_-]+": {
-          "type": "string",
-          "maxLength": 5120
-        }
-      }
-    },
-    "Tags": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "Key": {
-            "type": "string"
-          },
-          "Value": {
-            "type": "string"
-          }
+      "properties": {
+        "Key": {
+          "type": "string"
         },
-        "additionalProperties": false,
-        "required": [
-          "Key",
-          "Value"
-        ]
-      }
+        "Value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "Key",
+        "Value"
+      ]
     }
   },
   "properties": {
@@ -59,10 +47,19 @@
       "type": "string"
     },
     "TokenSigningPublicKeys": {
-      "$ref": "#/definitions/TokenSigningPublicKeys"
+      "type": "object",
+      "patternProperties": {
+        "[a-zA-Z0-9:_-]+": {
+          "type": "string",
+          "maxLength": 5120
+        }
+      }
     },
     "Tags": {
-      "$ref": "#/definitions/Tags"
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Tag"
+      }
     }
   },
   "additionalProperties": false,

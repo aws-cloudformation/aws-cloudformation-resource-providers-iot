@@ -75,7 +75,6 @@ public class DeleteHandler extends BaseHandlerStd {
             throw Translator.translateIotExceptionToHandlerException(
                     e,
                     OPERATION,
-                    request.toString(),
                     request.authorizerName());
         }
     }

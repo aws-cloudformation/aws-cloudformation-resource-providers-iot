@@ -61,7 +61,6 @@ public class CreateHandler extends BaseHandlerStd {
             throw Translator.translateIotExceptionToHandlerException(
                     e,
                     OPERATION,
-                    request.toString(),
                     request.authorizerName());
         }
     }
