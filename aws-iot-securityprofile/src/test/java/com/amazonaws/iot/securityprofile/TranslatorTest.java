@@ -1,19 +1,18 @@
 package com.amazonaws.iot.securityprofile;
 
+import com.google.common.collect.ImmutableSet;
+import org.junit.jupiter.api.Test;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+
+import java.util.ArrayList;
+import java.util.Set;
+
 import static com.amazonaws.iot.securityprofile.TestConstants.BEHAVIOR_NAME;
 import static com.amazonaws.iot.securityprofile.Translator.translateBehaviorListFromIotToCfn;
 import static com.amazonaws.iot.securityprofile.Translator.translateBehaviorSetFromCfnToIot;
 import static com.amazonaws.iot.securityprofile.Translator.translateMetricValueFromCfnToIot;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.util.ArrayList;
-import java.util.Set;
-
-import com.google.common.collect.ImmutableSet;
-
-import org.junit.jupiter.api.Test;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 
 public class TranslatorTest {
 
