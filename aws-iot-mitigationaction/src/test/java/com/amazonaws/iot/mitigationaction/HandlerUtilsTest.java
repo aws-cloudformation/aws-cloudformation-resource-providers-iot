@@ -22,8 +22,8 @@ import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class HandlerUtilsTest {
@@ -57,8 +57,7 @@ public class HandlerUtilsTest {
                 .tags(SDK_MODEL_TAG)
                 .nextToken("testToken")
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest1), any()))
-                .thenReturn(listTagsForResourceResponse1);
+        doReturn(listTagsForResourceResponse1).when(proxy).injectCredentialsAndInvokeV2(eq(expectedRequest1), any());
 
         ListTagsForResourceRequest expectedRequest2 = ListTagsForResourceRequest.builder()
                 .resourceArn(ACTION_ARN)
@@ -68,8 +67,7 @@ public class HandlerUtilsTest {
         ListTagsForResourceResponse listTagsForResourceResponse2 = ListTagsForResourceResponse.builder()
                 .tags(tag2)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest2), any()))
-                .thenReturn(listTagsForResourceResponse2);
+        doReturn(listTagsForResourceResponse2).when(proxy).injectCredentialsAndInvokeV2(eq(expectedRequest2), any());
 
         List<Tag> currentTags = HandlerUtils.listTags(iotClient, proxy, ACTION_ARN, logger);
         assertThat(currentTags).isEqualTo(Arrays.asList(SDK_MODEL_TAG, tag2));

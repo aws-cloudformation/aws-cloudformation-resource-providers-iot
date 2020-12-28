@@ -1,8 +1,5 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
-import java.util.Map;
-import java.util.Set;
-
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.AuditNotificationTarget;
 import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationRequest;
@@ -10,11 +7,15 @@ import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurati
 import software.amazon.awssdk.services.iot.model.UpdateAccountAuditConfigurationRequest;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.awssdk.utils.StringUtils;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Map;
+import java.util.Set;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
@@ -79,8 +80,8 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             if (areEquivalent) {
                 return ProgressEvent.defaultSuccessHandler(model);
             } else {
-                return ProgressEvent.failed(model, callbackContext, HandlerErrorCode.AlreadyExists,
-                        "A configuration with different properties already exists.");
+                throw new CfnAlreadyExistsException(
+                        new Throwable("A configuration with different properties already exists."));
             }
         }
         logger.log("DescribeAccountAuditConfiguration for " + accountId +
@@ -113,7 +114,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         if (!describeResponse.roleArn().equals(model.getRoleArn())) {
             logger.log("AccountAuditConfiguration already exists with a different role ARN: " +
-                       describeResponse.roleArn());
+                    describeResponse.roleArn());
             return false;
         }
 
@@ -124,7 +125,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
         if (!areNotificationTargetsEquivalent(model, describeResponse)) {
             logger.log("AccountAuditConfiguration already exists with different notification " +
-                       "target configurations enabled.");
+                    "target configurations enabled.");
             return false;
         }
         return true;
