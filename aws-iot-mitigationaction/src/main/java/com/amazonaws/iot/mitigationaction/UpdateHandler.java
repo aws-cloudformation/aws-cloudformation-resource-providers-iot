@@ -52,14 +52,14 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         String resourceArn;
         try {
             resourceArn = updateMitigationAction(proxy, desiredModel, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
         }
 
         // For an exiting resource, we have to update via TagResource API, UpdateMitigationId API doesn't take tags.
         try {
             updateTags(proxy, request, resourceArn, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
         }
 

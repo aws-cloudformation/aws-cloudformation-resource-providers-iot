@@ -47,10 +47,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createDimensionResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createDimension);
-        } catch (Exception e) {
-            if (e instanceof ResourceAlreadyExistsException) {
-                throw new CfnAlreadyExistsException(e);
-            }
+        } catch (ResourceAlreadyExistsException e) {
+            logger.log(String.format("Resource already exists %s.", model.getName()));
+            throw new CfnAlreadyExistsException(e);
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 

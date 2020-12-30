@@ -54,7 +54,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             describeResponse = proxy.injectCredentialsAndInvokeV2(
                     DescribeAccountAuditConfigurationRequest.builder().build(),
                     iotClient::describeAccountAuditConfiguration);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
         logger.log("Called DescribeAccountAuditConfiguration for " + accountId);
@@ -73,7 +73,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             proxy.injectCredentialsAndInvokeV2(
                     DeleteAccountAuditConfigurationRequest.builder().build(),
                     iotClient::deleteAccountAuditConfiguration);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

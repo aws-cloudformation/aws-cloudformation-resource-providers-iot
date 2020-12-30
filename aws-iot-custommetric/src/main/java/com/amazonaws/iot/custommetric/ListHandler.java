@@ -35,7 +35,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listCustomMetricsResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listCustomMetrics);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(request.getDesiredResourceState(), e, logger);
         }
 

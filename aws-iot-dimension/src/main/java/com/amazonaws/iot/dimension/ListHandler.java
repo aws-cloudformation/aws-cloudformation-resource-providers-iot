@@ -36,7 +36,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listDimensionsResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listDimensions);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(request.getDesiredResourceState(), e, logger);
         }
 

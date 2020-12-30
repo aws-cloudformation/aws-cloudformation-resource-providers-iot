@@ -38,7 +38,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeScheduledAuditResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeScheduledAudit);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

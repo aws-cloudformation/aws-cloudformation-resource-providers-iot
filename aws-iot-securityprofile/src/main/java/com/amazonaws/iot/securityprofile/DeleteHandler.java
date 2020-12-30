@@ -55,7 +55,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeSecurityProfile);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // If the resource doesn't exist, DescribeSecurityProfile will throw NotFoundException,
             // and we'll return FAILED with HandlerErrorCode.NotFound.
             // CFN (the caller) will swallow the "failure" and the customer will see success.
@@ -69,7 +69,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteSecurityProfile);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

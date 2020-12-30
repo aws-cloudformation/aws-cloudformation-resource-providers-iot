@@ -52,7 +52,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         try {
             updateDimensionResponse =
                     proxy.injectCredentialsAndInvokeV2(updateDimensionRequest, iotClient::updateDimension);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(desiredModel, e, logger);
         }
         String resourceArn = updateDimensionResponse.arn();
@@ -61,7 +61,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         // For an exiting resource, we have to update via TagResource API, UpdateDimension API doesn't take tags.
         try {
             updateTags(proxy, request, resourceArn, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(desiredModel, e, logger);
         }
 

@@ -55,7 +55,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             describeResponse = proxy.injectCredentialsAndInvokeV2(
                     DescribeAccountAuditConfigurationRequest.builder().build(),
                     iotClient::describeAccountAuditConfiguration);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
         logger.log("Called DescribeAccountAuditConfiguration for " + accountId);
@@ -99,7 +99,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             proxy.injectCredentialsAndInvokeV2(
                     updateRequest, iotClient::updateAccountAuditConfiguration);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

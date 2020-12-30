@@ -36,7 +36,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             describeResponse = proxy.injectCredentialsAndInvokeV2(
                     DescribeAccountAuditConfigurationRequest.builder().build(),
                     iotClient::describeAccountAuditConfiguration);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(request.getDesiredResourceState(), e, logger);
         }
         logger.log("Called DescribeAccountAuditConfiguration for " + accountId);
