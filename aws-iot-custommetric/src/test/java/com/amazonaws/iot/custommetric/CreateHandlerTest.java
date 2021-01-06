@@ -11,8 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.CreateCustomMetricRequest;
 import software.amazon.awssdk.services.iot.model.CreateCustomMetricResponse;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -28,6 +28,7 @@ import static com.amazonaws.iot.custommetric.TestConstants.MODEL_TAGS;
 import static com.amazonaws.iot.custommetric.TestConstants.SDK_MODEL_TAG;
 import static com.amazonaws.iot.custommetric.TestConstants.SDK_SYSTEM_TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -129,9 +130,9 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceAlreadyExistsException.builder().build());
 
-        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
-                handler.handleRequest(proxy, request, null, logger);
-        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThatThrownBy(() ->
+                handler.handleRequest(proxy, request, null, logger))
+                .isInstanceOf(CfnAlreadyExistsException.class);
     }
 
     @Test

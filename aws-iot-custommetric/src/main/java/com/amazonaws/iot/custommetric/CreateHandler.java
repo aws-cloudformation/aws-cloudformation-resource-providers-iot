@@ -4,7 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateCustomMetricRequest;
 import software.amazon.awssdk.services.iot.model.CreateCustomMetricResponse;
-import software.amazon.awssdk.services.iot.model.IotException;
+import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -47,7 +48,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createCustomMetricResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createCustomMetric);
-        } catch (Exception e) {
+        } catch (ResourceAlreadyExistsException e) {
+            logger.log(String.format("Resource already exists %s.", model.getMetricName()));
+            throw new CfnAlreadyExistsException(e);
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

@@ -37,7 +37,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeCustomMetricResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeCustomMetric);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

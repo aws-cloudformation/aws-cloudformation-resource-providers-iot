@@ -1,21 +1,5 @@
 package com.amazonaws.iot.dimension;
 
-import static com.amazonaws.iot.dimension.TestConstants.CLIENT_REQUEST_TOKEN;
-import static com.amazonaws.iot.dimension.TestConstants.DESIRED_TAGS;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
-import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
-import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
-import static com.amazonaws.iot.dimension.TestConstants.SDK_SYSTEM_TAG;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,12 +11,29 @@ import software.amazon.awssdk.services.iot.model.CreateDimensionRequest;
 import software.amazon.awssdk.services.iot.model.CreateDimensionResponse;
 import software.amazon.awssdk.services.iot.model.DimensionType;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import static com.amazonaws.iot.dimension.TestConstants.CLIENT_REQUEST_TOKEN;
+import static com.amazonaws.iot.dimension.TestConstants.DESIRED_TAGS;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
+import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_SYSTEM_TAG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -123,9 +124,9 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceAlreadyExistsException.builder().build());
 
-        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
-                handler.handleRequest(proxy, request, null, logger);
-        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThatThrownBy(() ->
+                handler.handleRequest(proxy, request, null, logger))
+                .isInstanceOf(CfnAlreadyExistsException.class);
     }
 
     @Test
@@ -144,7 +145,7 @@ public class CreateHandlerTest {
                 .clientRequestToken("MyToken")
                 .desiredResourceTags(DESIRED_TAGS)
                 .stackId("arn:aws:cloudformation:us-east-1:123456789012:stack/my-stack-name/" +
-                         "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
+                        "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
                 .build();
 
         CreateDimensionResponse createApiResponse = CreateDimensionResponse.builder()

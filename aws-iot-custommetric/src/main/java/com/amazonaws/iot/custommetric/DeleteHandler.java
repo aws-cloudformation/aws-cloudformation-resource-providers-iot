@@ -59,7 +59,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeCustomMetric);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // If the resource doesn't exist, DescribeCustomMetric will throw ResourceNotFoundException,
             // and we'll return FAILED with HandlerErrorCode.NotFound.
             // CFN (the caller) will swallow the "failure" and the customer will see success.
@@ -73,7 +73,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteCustomMetric);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

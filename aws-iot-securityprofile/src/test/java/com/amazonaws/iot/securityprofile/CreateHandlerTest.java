@@ -1,23 +1,5 @@
 package com.amazonaws.iot.securityprofile;
 
-import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_CFN;
-import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_IOT;
-import static com.amazonaws.iot.securityprofile.TestConstants.CLIENT_REQUEST_TOKEN;
-import static com.amazonaws.iot.securityprofile.TestConstants.LOGICAL_IDENTIFIER;
-import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_ARN;
-import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
-import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_CFN_SET;
-import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT;
-import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_STRINGMAP;
-import static com.amazonaws.iot.securityprofile.TestConstants.TARGET_ARNS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,12 +12,32 @@ import software.amazon.awssdk.services.iot.model.CreateSecurityProfileResponse;
 import software.amazon.awssdk.services.iot.model.IotRequest;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.List;
+
+import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_CFN;
+import static com.amazonaws.iot.securityprofile.TestConstants.ADDITIONAL_METRICS_IOT;
+import static com.amazonaws.iot.securityprofile.TestConstants.CLIENT_REQUEST_TOKEN;
+import static com.amazonaws.iot.securityprofile.TestConstants.LOGICAL_IDENTIFIER;
+import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_ARN;
+import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
+import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_CFN_SET;
+import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT;
+import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_STRINGMAP;
+import static com.amazonaws.iot.securityprofile.TestConstants.TARGET_ARNS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class CreateHandlerTest {
 
@@ -130,9 +132,9 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenThrow(ResourceAlreadyExistsException.builder().build());
 
-        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
-                handler.handleRequest(proxy, request, null, logger);
-        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThatThrownBy(() ->
+                handler.handleRequest(proxy, request, null, logger))
+                .isInstanceOf(CfnAlreadyExistsException.class);
     }
 
     @Test
@@ -176,7 +178,7 @@ public class CreateHandlerTest {
                 .clientRequestToken("MyToken")
                 .desiredResourceTags(TAG_1_STRINGMAP)
                 .stackId("arn:aws:cloudformation:us-east-1:123456789012:stack/my-stack-name/" +
-                         "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
+                        "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))

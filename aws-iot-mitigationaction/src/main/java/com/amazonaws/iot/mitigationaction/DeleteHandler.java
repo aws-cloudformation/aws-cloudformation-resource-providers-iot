@@ -57,7 +57,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeMitigationAction);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // If the resource doesn't exist, DescribeMitigationAction will throw ResourceNotFoundException,
             // and we'll return FAILED with HandlerErrorCode.NotFound.
             // CFN (the caller) will swallow the "failure" and the customer will see success.
@@ -71,7 +71,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteMitigationAction);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

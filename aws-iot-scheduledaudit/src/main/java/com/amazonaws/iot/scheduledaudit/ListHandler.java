@@ -35,7 +35,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listScheduledAuditsResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listScheduledAudits);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(request.getDesiredResourceState(), e, logger);
         }
 

@@ -58,7 +58,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(describeRequest, iotClient::describeDimension);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // If the resource doesn't exist, DescribeDimension will throw NotFoundException,
             // which we'll translate to NotFound Failure - that's all we need to do.
             // CFN (the caller) will swallow this failure and the customer will see success.
@@ -72,7 +72,7 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
                 .build();
         try {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteDimension);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 

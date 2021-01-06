@@ -1,5 +1,30 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
+import com.google.common.collect.ImmutableMap;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationRequest;
+import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationResponse;
+import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotRequest;
+import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.awssdk.services.iot.model.UpdateAccountAuditConfigurationRequest;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_CHECK_CONFIGURATIONS_V1_CFN;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_CFN;
@@ -14,36 +39,12 @@ import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ENABLED_
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ROLE_ARN;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationRequest;
-import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationResponse;
-import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.IotRequest;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.awssdk.services.iot.model.UpdateAccountAuditConfigurationRequest;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -150,13 +151,9 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(DESCRIBE_REQUEST), any()))
                 .thenReturn(describeResponseWithDifferentRoleArn);
 
-        ProgressEvent<ResourceModel, CallbackContext> actualResult =
-                handler.handleRequest(proxy, cfnRequest, null, logger);
-        ProgressEvent<ResourceModel, CallbackContext> expectedResult = ProgressEvent.failed(
-                model, null,
-                HandlerErrorCode.AlreadyExists,
-                "A configuration with different properties already exists.");
-        assertThat(actualResult).isEqualTo(expectedResult);
+        assertThatThrownBy(() ->
+                handler.handleRequest(proxy, cfnRequest, null, logger))
+                .isInstanceOf(CfnAlreadyExistsException.class);
     }
 
     @Test

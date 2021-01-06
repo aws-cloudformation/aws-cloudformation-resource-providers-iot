@@ -41,7 +41,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeDimensionResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeDimension);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 
@@ -52,7 +52,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         List<software.amazon.awssdk.services.iot.model.Tag> iotTags;
         try {
             iotTags = listTags(proxy, dimensionArn, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(model, e, logger);
         }
         logger.log(String.format("Called ListTags for %s.", dimensionArn));
