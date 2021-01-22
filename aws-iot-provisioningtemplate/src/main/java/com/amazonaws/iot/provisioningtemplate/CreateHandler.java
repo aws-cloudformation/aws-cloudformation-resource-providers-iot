@@ -121,7 +121,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         } catch (final InvalidRequestException e) {
             throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final LimitExceededException e) {
-            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.toString());
+            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());
         } catch (final InternalException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final ThrottlingException e) {

@@ -74,13 +74,13 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteCertificate);
             logger.log(String.format("%s [%s] deleted successfully", ResourceModel.TYPE_NAME, certificateId));
 
-        } catch (final CertificateStateException | ServiceUnavailableException e) {
+        } catch (final ServiceUnavailableException e) {
             throw new CfnGeneralServiceException(operation, e);
         } catch (final DeleteConflictException e) {
             throw new CfnResourceConflictException(ResourceModel.TYPE_NAME, certificateId, e.getMessage());
         } catch (final InternalFailureException e) {
             throw new CfnInternalFailureException(e);
-        } catch (final InvalidRequestException e) {
+        } catch (final InvalidRequestException | CertificateStateException e) {
             throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final ThrottlingException e) {
             throw new CfnThrottlingException(operation, e);
