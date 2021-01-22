@@ -6,7 +6,11 @@ import software.amazon.awssdk.services.iot.model.DescribeProvisioningTemplateRes
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
+import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
@@ -69,11 +73,15 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         } catch (final InternalFailureException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(templateRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final ResourceNotFoundException e) {
             throw new CfnNotFoundException(ResourceModel.TYPE_NAME, templateRequest.templateName());
         } catch (final ThrottlingException e) {
             throw new CfnThrottlingException(OPERATION, e);
+        } catch (final ServiceUnavailableException e) {
+            throw new CfnGeneralServiceException(OPERATION, e);
+        } catch (final UnauthorizedException e) {
+            throw new CfnAccessDeniedException(OPERATION, e);
         }
     }
 }

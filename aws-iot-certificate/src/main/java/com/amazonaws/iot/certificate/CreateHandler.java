@@ -6,7 +6,9 @@ import software.amazon.awssdk.services.iot.model.CreateCertificateFromCsrRespons
 import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
+import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.RegisterCertificateRequest;
 import software.amazon.awssdk.services.iot.model.RegisterCertificateResponse;
 import software.amazon.awssdk.services.iot.model.RegisterCertificateWithoutCaRequest;
@@ -21,6 +23,7 @@ import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -172,13 +175,15 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         } catch (final InternalFailureException|InternalException e) {
             throw new CfnServiceInternalErrorException(currentOperation, e);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(currentRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
+        } catch (final LimitExceededException e) {
+            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());
         } catch (final ServiceUnavailableException e) {
-            throw new CfnGeneralServiceException(currentRequest.toString(), e);
+            throw new CfnGeneralServiceException(currentOperation, e);
         } catch (final ThrottlingException e) {
             throw new CfnThrottlingException(currentOperation, e);
         } catch (final UnauthorizedException e) {
-            throw new CfnAccessDeniedException(ResourceModel.TYPE_NAME, e);
+            throw new CfnAccessDeniedException(currentOperation, e);
         }
     }
 }

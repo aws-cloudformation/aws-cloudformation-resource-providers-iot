@@ -69,7 +69,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         } catch (final InternalFailureException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(listRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final ServiceUnavailableException e) {
             throw new CfnGeneralServiceException(OPERATION, e);
         } catch (final ThrottlingException e) {

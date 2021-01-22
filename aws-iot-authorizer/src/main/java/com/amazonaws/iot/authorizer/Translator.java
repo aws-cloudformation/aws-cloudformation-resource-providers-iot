@@ -1,5 +1,6 @@
 package com.amazonaws.iot.authorizer;
 
+import com.amazonaws.util.StringUtils;
 import software.amazon.awssdk.services.iot.model.AuthorizerDescription;
 import software.amazon.awssdk.services.iot.model.ConflictingResourceUpdateException;
 import software.amazon.awssdk.services.iot.model.CreateAuthorizerRequest;
@@ -83,7 +84,6 @@ public class Translator {
     static BaseHandlerException translateIotExceptionToHandlerException(
             final IotException e,
             final String operation,
-            final String authorizerRequest,
             final String authorizerName
     ) {
         if (e instanceof ResourceAlreadyExistsException) {
@@ -91,9 +91,10 @@ public class Translator {
         } else if (e instanceof UnauthorizedException) {
             return new CfnAccessDeniedException(operation, e);
         } else if (e instanceof ResourceNotFoundException) {
+            if(StringUtils.isNullOrEmpty(authorizerName)) return new CfnNotFoundException(e);
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, authorizerName);
         } else if (e instanceof InvalidRequestException) {
-            return new CfnInvalidRequestException(authorizerRequest, e);
+            return new CfnInvalidRequestException(e.getMessage(), e);
         } else if (e instanceof ConflictingResourceUpdateException) {
             return new CfnResourceConflictException(e);
         } else if (e instanceof ThrottlingException) {
@@ -101,14 +102,14 @@ public class Translator {
         } else if (e instanceof ServiceUnavailableException) {
             throw new CfnGeneralServiceException(operation, e);
         } else if (e instanceof LimitExceededException) {
-            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.toString());
+            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());
         } else {
             return new CfnServiceInternalErrorException(operation, e);
         }
     }
 
     private static Collection<Tag> getTags(ResourceModel model) {
-        final List<Tags> modelTags = model.getTags();
+        final List<com.amazonaws.iot.authorizer.Tag> modelTags = model.getTags();
         return Objects.isNull(modelTags)
                 ? null
                 : modelTags.stream()

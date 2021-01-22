@@ -19,6 +19,7 @@ import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -129,7 +130,7 @@ public class DeleteHandlerTest extends DomainConfigurationTestBase {
                 .when(proxy)
                 .injectCredentialsAndInvokeV2(any(), any());
 
-        Assertions.assertThrows(CfnInternalFailureException.class, () -> handler.handleRequest(proxy, request, null, logger));
+        Assertions.assertThrows(CfnServiceInternalErrorException.class, () -> handler.handleRequest(proxy, request, null, logger));
     }
 
     @Test

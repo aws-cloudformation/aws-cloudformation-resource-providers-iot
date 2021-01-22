@@ -8,9 +8,13 @@ import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.ProvisioningHook;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
+import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
@@ -81,10 +85,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
      * @return A collection of tags or null
      */
     private static Collection<Tag> getTags(ResourceModel model) {
-        final List<Tags> modelTags = model.getTags();
+        final List<com.amazonaws.iot.provisioningtemplate.Tag> modelTags = model.getTags();
         return Objects.isNull(modelTags)
-            ? null
-            : modelTags.stream()
+                ? null
+                : modelTags.stream()
                 .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
                 .collect(Collectors.toList());
     }
@@ -115,13 +119,17 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         } catch (final ResourceAlreadyExistsException e) {
             throw new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, templateName);
         } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(templateRequest.toString(), e);
+            throw new CfnInvalidRequestException(e.getMessage(), e);
         } catch (final LimitExceededException e) {
-            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.toString());
+            throw new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());
         } catch (final InternalException e) {
             throw new CfnServiceInternalErrorException(OPERATION, e);
         } catch (final ThrottlingException e) {
             throw new CfnThrottlingException(OPERATION, e);
+        } catch (final ServiceUnavailableException e) {
+            throw new CfnGeneralServiceException(OPERATION, e);
+        } catch (final UnauthorizedException e) {
+            throw new CfnAccessDeniedException(OPERATION, e);
         }
 
         return ProgressEvent.defaultSuccessHandler(model);

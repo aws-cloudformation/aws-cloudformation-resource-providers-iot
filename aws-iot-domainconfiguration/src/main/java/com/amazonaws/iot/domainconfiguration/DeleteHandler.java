@@ -4,20 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DeleteDomainConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.DomainConfigurationStatus;
-import software.amazon.awssdk.services.iot.model.InternalFailureException;
-import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
-import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.UpdateDomainConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDomainConfigurationResponse;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -79,19 +68,8 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             proxy.injectCredentialsAndInvokeV2(deleteRequest, iotClient::deleteDomainConfiguration);
             logger.log(String.format("%s [%s] deleted successfully", ResourceModel.TYPE_NAME, domainConfigName));
 
-        } catch (final ThrottlingException e) {
-            throw new CfnThrottlingException(operation, e);
-        } catch (final UnauthorizedException e) {
-            throw new CfnAccessDeniedException(operation, e);
-        } catch (final ServiceUnavailableException e) {
-            throw new CfnGeneralServiceException(operation, e);
-        } catch (final InternalFailureException e) {
-            throw new CfnInternalFailureException(e);
-        } catch (final InvalidRequestException e) {
-            throw new CfnInvalidRequestException(String.format("Request: %s \n Message: %s", deleteRequest.toString(),
-                    e.getMessage()), e);
-        } catch (final ResourceNotFoundException e) {
-            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getDomainConfigurationName());
+        } catch (IotException e) {
+            throw ExceptionTranslator.translateIotExceptionToHandlerException(e, operation, domainConfigName);
         }
 
         return ProgressEvent.defaultSuccessHandler(null);

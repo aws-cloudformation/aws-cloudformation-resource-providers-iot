@@ -49,7 +49,6 @@ public class ReadHandler extends BaseHandlerStd {
             throw Translator.translateIotExceptionToHandlerException(
                     e,
                     OPERATION,
-                    request.toString(),
                     request.authorizerName());
         }
     }

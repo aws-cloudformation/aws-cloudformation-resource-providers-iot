@@ -14,24 +14,21 @@
         }
       }
     },
-    "Tags": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "Key": {
-            "type": "string"
-          },
-          "Value": {
-            "type": "string"
-          }
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string"
         },
-        "additionalProperties": false,
-        "required": [
-          "Key",
-          "Value"
-        ]
-      }
+        "Value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "Key",
+        "Value"
+      ]
     }
   },
   "properties": {
@@ -61,7 +58,10 @@
       "$ref": "#/definitions/ProvisioningHook"
     },
     "Tags": {
-      "$ref": "#/definitions/Tags"
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Tag"
+      }
     }
   },
   "additionalProperties": false,

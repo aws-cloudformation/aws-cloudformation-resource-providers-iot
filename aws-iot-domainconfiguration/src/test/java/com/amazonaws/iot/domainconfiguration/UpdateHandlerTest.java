@@ -27,6 +27,8 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -50,8 +52,9 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
 
     @Test
     public void handleRequest_SimpleInProgress() {
-        final ResourceModel model = defaultModelBuilder().build();
-        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
+        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString())
+                .serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenAnswer(invocationOnMock -> {
@@ -77,7 +80,7 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
 
     @Test
     public void handleRequest_SimpleSuccess() {
-        final ResourceModel model = defaultModelBuilder().build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
@@ -91,30 +94,17 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModel()).isEqualTo(defaultModelBuilder().build());
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
 
     @Test
-    public void handleRequest_ResourceNotUpdatable() {
-        final ResourceModel model = defaultModelBuilder().domainConfigurationName(DOMAIN_CONFIG_NAME_UPDATED).build();
-        final ResourceModel prevModel = defaultModelBuilder().build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
-
-        when(proxy.injectCredentialsAndInvokeV2(any(DescribeDomainConfigurationRequest.class), any()))
-                .thenReturn(DEFAULT_DESCRIBE_DOMAIN_CONFIGURATION_RESPONSE);
-
-
-
-        Assertions.assertThrows(CfnNotUpdatableException.class, () -> handler.handleRequest(proxy, request, null, logger));
-    }
-
-    @Test
     public void handleRequest_ResourceNotFound() {
-        final ResourceModel model = defaultModelBuilder().build();
-        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
+        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString())
+                .serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
         doThrow(ResourceNotFoundException.builder().build())
@@ -126,8 +116,9 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
 
     @Test
     public void handleRequest_InvalidRequest() {
-        final ResourceModel model = defaultModelBuilder().build();
-        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
+        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString())
+                .serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenAnswer(invocationOnMock -> {
@@ -143,8 +134,9 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
 
     @Test
     public void handleRequest_CertificateValidation() {
-        final ResourceModel model = defaultModelBuilder().build();
-        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
+        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString())
+                .serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenAnswer(invocationOnMock -> {
@@ -160,8 +152,9 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
 
     @Test
     public void handleRequest_Throttling() {
-        final ResourceModel model = defaultModelBuilder().build();
-        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
+        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString())
+                .serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenAnswer(invocationOnMock -> {
@@ -177,8 +170,9 @@ public class UpdateHandlerTest extends DomainConfigurationTestBase {
 
     @Test
     public void handleRequest_InternalFailure() {
-        final ResourceModel model = defaultModelBuilder().build();
-        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString()).build();
+        final ResourceModel model = defaultModelBuilder().serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
+        final ResourceModel prevModel = defaultModelBuilder().domainConfigurationStatus(DomainConfigurationStatus.DISABLED.toString())
+                .serverCertificateArns(Collections.singletonList(SERVER_CERT_ARN)).build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).previousResourceState(prevModel).build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenAnswer(invocationOnMock -> {
