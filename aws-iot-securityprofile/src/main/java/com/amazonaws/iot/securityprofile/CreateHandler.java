@@ -1,21 +1,22 @@
 package com.amazonaws.iot.securityprofile;
 
-import java.util.Map;
-import java.util.Set;
-
 import com.google.common.util.concurrent.RateLimiter;
-
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.AttachSecurityProfileRequest;
 import software.amazon.awssdk.services.iot.model.CreateSecurityProfileRequest;
 import software.amazon.awssdk.services.iot.model.CreateSecurityProfileResponse;
+import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
+
+import java.util.Map;
+import java.util.Set;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
@@ -50,7 +51,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createSecurityProfile);
-        } catch (Exception e) {
+        } catch (ResourceAlreadyExistsException e) {
+            logger.log(String.format("Resource already exists %s.", model.getSecurityProfileName()));
+            throw new CfnAlreadyExistsException(e);
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 
@@ -72,7 +76,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                         .build();
                 try {
                     proxy.injectCredentialsAndInvokeV2(attachRequest, iotClient::attachSecurityProfile);
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     return Translator.translateExceptionToProgressEvent(model, e, logger);
                 }
                 logger.log("Attached the security profile to " + targetArn);

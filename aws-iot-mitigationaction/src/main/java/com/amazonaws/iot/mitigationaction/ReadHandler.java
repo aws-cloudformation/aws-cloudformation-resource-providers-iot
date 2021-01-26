@@ -37,7 +37,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
         try {
             describeMitigationActionResponse = proxy.injectCredentialsAndInvokeV2(
                     describeRequest, iotClient::describeMitigationAction);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

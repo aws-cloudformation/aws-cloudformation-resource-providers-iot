@@ -54,21 +54,21 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         String securityProfileArn;
         try {
             securityProfileArn = updateSecurityProfile(proxy, desiredModel, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
         }
 
         // Security profile targets are managed by separate APIs, not UpdateSecurityProfile.
         try {
             updateTargetAttachments(proxy, desiredModel, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
         }
 
         // Same for tags.
         try {
             updateTags(proxy, request, securityProfileArn, logger);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(desiredModel, e, logger);
         }
 

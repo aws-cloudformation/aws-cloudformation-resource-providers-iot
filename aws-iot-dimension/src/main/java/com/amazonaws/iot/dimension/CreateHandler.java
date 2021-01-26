@@ -1,17 +1,19 @@
 package com.amazonaws.iot.dimension;
 
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateDimensionRequest;
 import software.amazon.awssdk.services.iot.model.CreateDimensionResponse;
+import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
+
+import java.util.Map;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
 
@@ -45,7 +47,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createDimensionResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createDimension);
-        } catch (Exception e) {
+        } catch (ResourceAlreadyExistsException e) {
+            logger.log(String.format("Resource already exists %s.", model.getName()));
+            throw new CfnAlreadyExistsException(e);
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToErrorCode(model, e, logger);
         }
 

@@ -5,6 +5,8 @@ import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateMitigationActionRequest;
 import software.amazon.awssdk.services.iot.model.CreateMitigationActionResponse;
 import software.amazon.awssdk.services.iot.model.MitigationActionParams;
+import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -55,7 +57,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         try {
             createMitigationActionResponse = proxy.injectCredentialsAndInvokeV2(
                     createRequest, iotClient::createMitigationAction);
-        } catch (Exception e) {
+        } catch (ResourceAlreadyExistsException e) {
+            logger.log(String.format("Resource already exists %s.", model.getActionName()));
+            throw new CfnAlreadyExistsException(e);
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(model, e, logger);
         }
 

@@ -1,19 +1,22 @@
 package com.amazonaws.iot.securityprofile;
 
+import com.google.common.collect.ImmutableSet;
+import org.junit.jupiter.api.Test;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
 import static com.amazonaws.iot.securityprofile.TestConstants.BEHAVIOR_NAME;
 import static com.amazonaws.iot.securityprofile.Translator.translateBehaviorListFromIotToCfn;
 import static com.amazonaws.iot.securityprofile.Translator.translateBehaviorSetFromCfnToIot;
 import static com.amazonaws.iot.securityprofile.Translator.translateMetricValueFromCfnToIot;
+import static com.amazonaws.iot.securityprofile.Translator.translateMetricValueFromIotToCfn;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.util.ArrayList;
-import java.util.Set;
-
-import com.google.common.collect.ImmutableSet;
-
-import org.junit.jupiter.api.Test;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TranslatorTest {
 
@@ -181,5 +184,48 @@ public class TranslatorTest {
                 .build();
         assertThatThrownBy(() -> translateMetricValueFromCfnToIot(cfnMetricValue))
                 .isInstanceOf(CfnInvalidRequestException.class);
+    }
+
+    @Test
+    void translateMetricValueFromCfnToIot_VerifyTranslation() {
+        Set<Double> setOfDoubles = ImmutableSet.of(123d, 456d);
+        Double numberDouble = 123d;
+        Set<String> setOfStrings = ImmutableSet.of("123", "456");
+        String stringCount = "123";
+        MetricValue cfnMetricValue = MetricValue.builder()
+                .count(stringCount)
+                .cidrs(setOfStrings)
+                .number(123d)
+                .numbers(setOfDoubles)
+                .strings(setOfStrings)
+                .build();
+        software.amazon.awssdk.services.iot.model.MetricValue metricValue =
+                translateMetricValueFromCfnToIot(cfnMetricValue);
+        assertTrue(metricValue.count().equals(Long.parseLong(stringCount)));
+        assertTrue(metricValue.number().equals(numberDouble));
+        assertTrue(metricValue.cidrs().size() == setOfStrings.size() && metricValue.cidrs().containsAll(setOfStrings));
+        assertTrue(metricValue.numbers().size() == setOfDoubles.size() && metricValue.numbers().containsAll(setOfDoubles));
+        assertTrue(metricValue.strings().size() == setOfStrings.size() && metricValue.strings().containsAll(setOfStrings));
+    }
+
+    @Test
+    void translateMetricValueFromIotToCfn_VerifyTranslation() {
+        List<String> listOfStrings = Arrays.asList("123", "456");
+        List<Double> listOfDoubles = Arrays.asList(123d, 456d);
+        Double numberDouble = 123d;
+        Long numberLong = 123l;
+        software.amazon.awssdk.services.iot.model.MetricValue iotMetricValue = software.amazon.awssdk.services.iot.model.MetricValue.builder()
+                .count(numberLong)
+                .number(numberDouble)
+                .numbers(listOfDoubles)
+                .cidrs(listOfStrings)
+                .strings(listOfStrings)
+                .build();
+        MetricValue metricValue = translateMetricValueFromIotToCfn(iotMetricValue);
+        assertTrue(metricValue.getCount().equals(numberLong.toString()));
+        assertTrue(metricValue.getNumber().equals(numberDouble));
+        assertTrue(metricValue.getNumbers().size() == listOfDoubles.size() && metricValue.getNumbers().containsAll(listOfDoubles));
+        assertTrue(metricValue.getCidrs().size() == listOfStrings.size() && metricValue.getCidrs().containsAll(listOfStrings));
+        assertTrue(metricValue.getStrings().size() == listOfStrings.size() && metricValue.getStrings().containsAll(listOfStrings));
     }
 }

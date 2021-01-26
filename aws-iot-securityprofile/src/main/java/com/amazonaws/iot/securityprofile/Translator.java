@@ -1,11 +1,5 @@
 package com.amazonaws.iot.securityprofile;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import lombok.NonNull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
@@ -21,6 +15,12 @@ import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Translator {
 
@@ -112,7 +112,7 @@ public class Translator {
                 countLong = Long.parseLong(countStringFromCfn);
             } catch (NumberFormatException e) {
                 throw new CfnInvalidRequestException("Invalid value for Behavior::MetricValue::Count: " +
-                                                     countStringFromCfn);
+                        countStringFromCfn);
             }
         }
 
@@ -120,6 +120,9 @@ public class Translator {
                 .count(countLong)
                 .cidrs(cfnMetricValue.getCidrs())
                 .ports(cfnMetricValue.getPorts())
+                .number(cfnMetricValue.getNumber())
+                .numbers(cfnMetricValue.getNumbers())
+                .strings(cfnMetricValue.getStrings())
                 .build();
     }
 
@@ -133,6 +136,9 @@ public class Translator {
         if (iotMetricValue.count() != null) {
             metricValueBuilder.count(iotMetricValue.count().toString());
         }
+        if (iotMetricValue.number() != null) {
+            metricValueBuilder.number(iotMetricValue.number());
+        }
         // For lists, we're using the .has* methods to differentiate between null and empty lists
         // from DescribeSecurityProfileResponse.
         // SDK converts nulls from Describe API to empty DefaultSdkAutoConstructLists,
@@ -143,7 +149,12 @@ public class Translator {
         if (iotMetricValue.hasPorts()) {
             metricValueBuilder.ports(new HashSet<>(iotMetricValue.ports()));
         }
-
+        if (iotMetricValue.hasNumbers()) {
+            metricValueBuilder.numbers(new HashSet<>(iotMetricValue.numbers()));
+        }
+        if (iotMetricValue.hasStrings()) {
+            metricValueBuilder.strings(new HashSet<>(iotMetricValue.strings()));
+        }
         return metricValueBuilder.build();
     }
 

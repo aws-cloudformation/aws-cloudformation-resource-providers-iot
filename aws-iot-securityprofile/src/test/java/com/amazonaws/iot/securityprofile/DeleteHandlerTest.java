@@ -1,12 +1,5 @@
 package com.amazonaws.iot.securityprofile;
 
-import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,6 +17,14 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 public class DeleteHandlerTest {
 
@@ -113,5 +114,23 @@ public class DeleteHandlerTest {
         ProgressEvent<ResourceModel, CallbackContext> progressEvent =
                 handler.handleRequest(proxy, request, null, logger);
         assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.InternalFailure);
+    }
+
+    @Test
+    public void handleRequest_InvalidName_ReturnNotFound() {
+
+        ResourceModel model = ResourceModel.builder()
+                .securityProfileName("Exclamation!")
+                .build();
+
+        ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+
+        verifyZeroInteractions(proxy);
+
+        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
+                handler.handleRequest(proxy, request, null, logger);
+        assertThat(progressEvent.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
     }
 }

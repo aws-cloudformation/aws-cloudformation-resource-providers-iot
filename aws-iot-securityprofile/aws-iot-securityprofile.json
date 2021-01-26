@@ -73,7 +73,9 @@
             "in-cidr-set",
             "not-in-cidr-set",
             "in-port-set",
-            "not-in-port-set"
+            "not-in-port-set",
+            "in-set",
+            "not-in-set"
           ]
         },
         "Value": {
@@ -128,6 +130,28 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 65535
+          }
+        },
+        "Number": {
+          "description": "The numeral value of a metric.",
+          "type": "number"
+        },
+        "Numbers": {
+          "description": "The numeral values of a metric.",
+          "type": "array",
+          "uniqueItems": true,
+          "insertionOrder": false,
+          "items": {
+            "type": "number"
+          }
+        },
+        "Strings": {
+          "description": "The string values of a metric.",
+          "type": "array",
+          "uniqueItems": true,
+          "insertionOrder": false,
+          "items": {
+            "type": "string"
           }
         }
       },

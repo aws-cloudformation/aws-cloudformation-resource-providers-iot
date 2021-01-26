@@ -35,7 +35,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
         try {
             listSecurityProfilesResponse = proxy.injectCredentialsAndInvokeV2(
                     listRequest, iotClient::listSecurityProfiles);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return Translator.translateExceptionToProgressEvent(request.getDesiredResourceState(), e, logger);
         }
 
