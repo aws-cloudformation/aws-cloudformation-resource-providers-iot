@@ -44,6 +44,23 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         this.iotClient = iotClient;
     }
 
+    /**
+     * Get the pre-provisioning hook associated with the resource model or null if it does not exist.
+     * @param model The desired resource state
+     * @return A converted ProvisioningHook or null
+     */
+    private static software.amazon.awssdk.services.iot.model.ProvisioningHook getPreProvisioningHook(final ResourceModel model) {
+        final ProvisioningHook hook = model.getPreProvisioningHook();
+        if (hook == null) {
+            return null;
+        }
+
+        return software.amazon.awssdk.services.iot.model.ProvisioningHook.builder()
+                .payloadVersion(hook.getPayloadVersion())
+                .targetArn(hook.getTargetArn())
+                .build();
+    }
+
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -107,6 +124,7 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                     .description(newModel.getDescription())
                     .enabled(newModel.getEnabled())
                     .provisioningRoleArn(newModel.getProvisioningRoleArn())
+                    .preProvisioningHook(getPreProvisioningHook(newModel))
                     .build();
             currentRequest = updateRequest;
             proxy.injectCredentialsAndInvokeV2(updateRequest, iotClient::updateProvisioningTemplate);
