@@ -1,7 +1,7 @@
 package com.amazonaws.iot.dimension;
 
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
-import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG_1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,7 +45,7 @@ public class HandlerUtilsTest {
                 .resourceArn(DIMENSION_ARN)
                 .build();
         ListTagsForResourceResponse listTagsForResourceResponse1 = ListTagsForResourceResponse.builder()
-                .tags(SDK_MODEL_TAG)
+                .tags(SDK_MODEL_TAG_1)
                 .nextToken("testToken")
                 .build();
         when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest1), any()))
@@ -55,7 +55,7 @@ public class HandlerUtilsTest {
                 .resourceArn(DIMENSION_ARN)
                 .nextToken("testToken")
                 .build();
-        software.amazon.awssdk.services.iot.model.Tag tag2 = SDK_MODEL_TAG.toBuilder().key("key2").build();
+        software.amazon.awssdk.services.iot.model.Tag tag2 = SDK_MODEL_TAG_1.toBuilder().key("key2").build();
         ListTagsForResourceResponse listTagsForResourceResponse2 = ListTagsForResourceResponse.builder()
                 .tags(tag2)
                 .build();
@@ -63,6 +63,6 @@ public class HandlerUtilsTest {
                 .thenReturn(listTagsForResourceResponse2);
 
         List<Tag> currentTags = HandlerUtils.listTags(iotClient, proxy, DIMENSION_ARN, logger);
-        assertThat(currentTags).isEqualTo(Arrays.asList(SDK_MODEL_TAG, tag2));
+        assertThat(currentTags).isEqualTo(Arrays.asList(SDK_MODEL_TAG_1, tag2));
     }
 }

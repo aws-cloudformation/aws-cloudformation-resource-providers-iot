@@ -13,6 +13,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
@@ -72,12 +73,18 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     request.getClientRequestToken(), GENERATED_NAME_MAX_LENGTH));
         }
 
-        // getDesiredResourceTags combines the model and stack-level tags.
-        // Reference: https://tinyurl.com/yyxtd7w6
-        Map<String, String> tags = request.getDesiredResourceTags();
-        // TODO: uncomment this after we update the service to allow these (only from CFN)
-        // SystemTags are the default stack-level tags with aws:cloudformation prefix
-        // tags.putAll(request.getSystemTags());
+        // Combine all tags in one map that we'll use for the request
+        Map<String, String> allTags = new HashMap<>();
+        if (request.getDesiredResourceTags() != null) {
+            // DesiredResourceTags includes both model and stack-level tags.
+            // Reference: https://tinyurl.com/yyxtd7w6
+            allTags.putAll(request.getDesiredResourceTags());
+        }
+        if (request.getSystemTags() != null) {
+            // There are also system tags provided separately.
+            // SystemTags are the default stack-level tags with aws:cloudformation prefix
+            allTags.putAll(request.getSystemTags());
+        }
 
         // Note that the handlers act as pass-through in terms of input validation.
         // We have some validations in the json model, but we delegate deeper checks to the service.
@@ -87,7 +94,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 .name(model.getName())
                 .type(model.getType())
                 .stringValues(model.getStringValues())
-                .tags(Translator.translateTagsToSdk(tags))
+                .tags(Translator.translateTagsToSdk(allTags))
                 // Note: using CFN's token here. Motivation: suppose CFN calls this handler, create call succeeds,
                 // but the handler dies right before returning success. Then CFN retries. The retry will contain the
                 // same token. If we don't set the clientRequestToken, the Create

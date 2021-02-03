@@ -52,10 +52,21 @@ public class TestConstants {
                     .key(TAG_1_KEY)
                     .value("TagValue1")
                     .build());
+    static final Set<Tag> TAG_1_AND_SYSTEM_TAG_CFN_SET = ImmutableSet.of(
+            Tag.builder()
+                    .key(TAG_1_KEY)
+                    .value("TagValue1")
+                    .build(),
+            Tag.builder()
+                    .key("aws:cloudformation:stack-name")
+                    .value("UnitTestStack")
+                    .build());
     static final Map<String, String> TAG_1_STRINGMAP = ImmutableMap.of(
             TAG_1_KEY, "TagValue1");
     static final Map<String, String> TAG_2_STRINGMAP = ImmutableMap.of(
             "TagKey2", "TagValue2");
+    static final Map<String, String> SYSTEM_TAG_MAP = ImmutableMap.of(
+            "aws:cloudformation:stack-name", "UnitTestStack");
     static final software.amazon.awssdk.services.iot.model.Tag TAG_1_IOT =
             software.amazon.awssdk.services.iot.model.Tag.builder()
                     .key(TAG_1_KEY)
@@ -66,8 +77,15 @@ public class TestConstants {
                     .key("TagKey2")
                     .value("TagValue2")
                     .build();
-    static final Set<software.amazon.awssdk.services.iot.model.Tag> TAG_1_IOT_SET = ImmutableSet.of(TAG_1_IOT);
-    static final List<software.amazon.awssdk.services.iot.model.Tag> TAG_2_IOT_LIST = ImmutableList.of(TAG_2_IOT);
+    static final software.amazon.awssdk.services.iot.model.Tag SYSTEM_TAG_IOT =
+            software.amazon.awssdk.services.iot.model.Tag.builder()
+                    .key("aws:cloudformation:stack-name")
+                    .value("UnitTestStack")
+                    .build();
+    static final Set<software.amazon.awssdk.services.iot.model.Tag> TAG_1_IOT_SET =
+            ImmutableSet.of(TAG_1_IOT);
+    static final List<software.amazon.awssdk.services.iot.model.Tag> TAG_2_IOT_LIST =
+            ImmutableList.of(TAG_2_IOT);
     static final Set<software.amazon.awssdk.services.iot.model.Tag> TAGS_IOT =
             ImmutableSet.of(TAG_1_IOT, TAG_2_IOT);
     static final software.amazon.awssdk.services.iot.model.SecurityProfileTarget SECURITY_PROFILE_TARGET_1 =

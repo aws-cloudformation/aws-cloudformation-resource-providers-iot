@@ -9,7 +9,9 @@ import static com.amazonaws.iot.securityprofile.TestConstants.BEHAVIOR_1_IOT_LIS
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_ARN;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_DESCRIPTION;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
-import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT_SET;
+import static com.amazonaws.iot.securityprofile.TestConstants.SYSTEM_TAG_IOT;
+import static com.amazonaws.iot.securityprofile.TestConstants.SYSTEM_TAG_MAP;
+import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_KEY;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_KEY_LIST;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_STRINGMAP;
@@ -97,12 +99,13 @@ public class UpdateHandlerTest {
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceState(desiredModel)
                 .desiredResourceTags(TAG_2_STRINGMAP)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         doReturn(TARGET_ARN_1_SET)
                 .when(handler)
                 .listTargetsForSecurityProfile(proxy, SECURITY_PROFILE_NAME);
-        doReturn(TAG_1_IOT_SET)
+        doReturn(ImmutableSet.of(TAG_1_IOT, SYSTEM_TAG_IOT))
                 .when(handler)
                 .listTags(proxy, SECURITY_PROFILE_ARN);
 
@@ -259,9 +262,10 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(desiredTagsCfn)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(TAG_1_IOT_SET)
+        doReturn(ImmutableSet.of(TAG_1_IOT, SYSTEM_TAG_IOT))
                 .when(handler)
                 .listTags(proxy, SECURITY_PROFILE_ARN);
 
@@ -282,9 +286,10 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(TAG_1_IOT_SET)
+        doReturn(ImmutableSet.of(TAG_1_IOT, SYSTEM_TAG_IOT))
                 .when(handler)
                 .listTags(proxy, SECURITY_PROFILE_ARN);
 
@@ -330,6 +335,7 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(TAG_1_STRINGMAP)
                 .desiredResourceTags(TAG_1_STRINGMAP)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))

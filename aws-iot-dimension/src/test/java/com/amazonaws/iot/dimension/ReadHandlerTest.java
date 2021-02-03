@@ -6,7 +6,7 @@ import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
 import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
-import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG_1;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -64,7 +64,7 @@ public class ReadHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(expectedDescribeRequest), any()))
                 .thenReturn(describeResponse);
 
-        doReturn(Collections.singletonList(SDK_MODEL_TAG))
+        doReturn(Collections.singletonList(SDK_MODEL_TAG_1))
                 .when(handler)
                 .listTags(proxy, DIMENSION_ARN, logger);
 

@@ -9,8 +9,9 @@ import static com.amazonaws.iot.securityprofile.TestConstants.BEHAVIOR_1_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_ARN;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_DESCRIPTION;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
-import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_CFN_SET;
-import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT_SET;
+import static com.amazonaws.iot.securityprofile.TestConstants.SYSTEM_TAG_IOT;
+import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_AND_SYSTEM_TAG_CFN_SET;
+import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.TARGET_ARN_1_SET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +22,8 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,7 +84,7 @@ public class ReadHandlerTest {
                 .when(handler)
                 .listTargetsForSecurityProfile(proxy, SECURITY_PROFILE_NAME);
 
-        doReturn(TAG_1_IOT_SET)
+        doReturn(ImmutableSet.of(TAG_1_IOT, SYSTEM_TAG_IOT))
                 .when(handler)
                 .listTags(proxy, SECURITY_PROFILE_ARN);
 
@@ -104,7 +107,7 @@ public class ReadHandlerTest {
                 .alertTargets(ALERT_TARGET_MAP_CFN)
                 .additionalMetricsToRetainV2(ADDITIONAL_METRICS_CFN)
                 .targetArns(TARGET_ARN_1_SET)
-                .tags(TAG_1_CFN_SET)
+                .tags(TAG_1_AND_SYSTEM_TAG_CFN_SET)
                 .build();
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
     }
@@ -127,7 +130,7 @@ public class ReadHandlerTest {
                 .additionalMetricsToRetainV2(additionalMetricsV2)
                 .build();
 
-        ResourceModel actualModel = handler.buildResourceModel(describeResponse, TARGET_ARN_1_SET, TAG_1_IOT_SET);
+        ResourceModel actualModel = handler.buildResourceModel(describeResponse, TARGET_ARN_1_SET, null);
 
         ResourceModel expectedModel = ResourceModel.builder()
                 .securityProfileName(SECURITY_PROFILE_NAME)
@@ -137,7 +140,6 @@ public class ReadHandlerTest {
                 .alertTargets(null)
                 .additionalMetricsToRetainV2(null)
                 .targetArns(TARGET_ARN_1_SET)
-                .tags(TAG_1_CFN_SET)
                 .build();
         assertThat(actualModel).isEqualTo(expectedModel);
     }
