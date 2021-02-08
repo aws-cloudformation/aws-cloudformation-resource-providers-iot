@@ -34,7 +34,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             CallbackContext callbackContext,
             Logger logger) {
 
-        CreateDimensionRequest createRequest = translateToCreateRequest(request);
+        CreateDimensionRequest createRequest = translateToCreateRequest(request, logger);
 
         ResourceModel model = request.getDesiredResourceState();
         if (!StringUtils.isEmpty(model.getArn())) {
@@ -61,7 +61,9 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(model);
     }
 
-    private CreateDimensionRequest translateToCreateRequest(ResourceHandlerRequest<ResourceModel> request) {
+    private CreateDimensionRequest translateToCreateRequest(
+            ResourceHandlerRequest<ResourceModel> request,
+            Logger logger) {
 
         ResourceModel model = request.getDesiredResourceState();
 
@@ -84,6 +86,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             // There are also system tags provided separately.
             // SystemTags are the default stack-level tags with aws:cloudformation prefix
             allTags.putAll(request.getSystemTags());
+        } else {
+            // System tags should always be present as long as the Handler is called by CloudFormation
+            logger.log("Unexpectedly, system tags are null in the create request for " +
+                       ResourceModel.TYPE_NAME + " " + model.getName());
         }
 
         // Note that the handlers act as pass-through in terms of input validation.
