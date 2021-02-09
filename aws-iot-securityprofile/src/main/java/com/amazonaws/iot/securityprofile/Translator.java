@@ -51,6 +51,7 @@ public class Translator {
                 .metric(cfnBehavior.getMetric())
                 .metricDimension(translateMetricDimensionFromCfnToIot(cfnBehavior.getMetricDimension()))
                 .criteria(translateBehaviorCriteriaFromCfnToIot(cfnBehavior.getCriteria()))
+                .suppressAlerts(cfnBehavior.getSuppressAlerts())
                 .build();
     }
 
@@ -61,6 +62,7 @@ public class Translator {
                 .metric(iotBehavior.metric())
                 .metricDimension(translateMetricDimensionFromIotToCfn(iotBehavior.metricDimension()))
                 .criteria(translateBehaviorCriteriaFromIotToCfn(iotBehavior.criteria()))
+                .suppressAlerts(iotBehavior.suppressAlerts())
                 .build();
     }
 
@@ -76,6 +78,7 @@ public class Translator {
                 .consecutiveDatapointsToAlarm(cfnCriteria.getConsecutiveDatapointsToAlarm())
                 .consecutiveDatapointsToClear(cfnCriteria.getConsecutiveDatapointsToClear())
                 .statisticalThreshold(translateStatisticalThresholdFromCfnToIot(cfnCriteria.getStatisticalThreshold()))
+                .mlDetectionConfig(translateMlDetectionConfigFromCfnToIot(cfnCriteria.getMlDetectionConfig()))
                 .build();
     }
 
@@ -91,6 +94,7 @@ public class Translator {
                 .consecutiveDatapointsToAlarm(iotCriteria.consecutiveDatapointsToAlarm())
                 .consecutiveDatapointsToClear(iotCriteria.consecutiveDatapointsToClear())
                 .statisticalThreshold(translateStatisticalThresholdFromIotToCfn(iotCriteria.statisticalThreshold()))
+                .mlDetectionConfig(translateMlDetectionConfigFromIotToCfn(iotCriteria.mlDetectionConfig()))
                 .build();
     }
 
@@ -190,6 +194,16 @@ public class Translator {
                 .build();
     }
 
+    private static software.amazon.awssdk.services.iot.model.MachineLearningDetectionConfig translateMlDetectionConfigFromCfnToIot(
+            MachineLearningDetectionConfig machineLearningDetectionConfig) {
+        if (machineLearningDetectionConfig == null) {
+            return null;
+        }
+        return software.amazon.awssdk.services.iot.model.MachineLearningDetectionConfig.builder()
+                .confidenceLevel(machineLearningDetectionConfig.getConfidenceLevel())
+                .build();
+    }
+
     private static StatisticalThreshold translateStatisticalThresholdFromIotToCfn(
             software.amazon.awssdk.services.iot.model.StatisticalThreshold iotThreshold) {
         if (iotThreshold == null) {
@@ -199,6 +213,17 @@ public class Translator {
                 .statistic(iotThreshold.statistic())
                 .build();
     }
+
+    private static MachineLearningDetectionConfig translateMlDetectionConfigFromIotToCfn(
+            software.amazon.awssdk.services.iot.model.MachineLearningDetectionConfig mlDetectionConfig) {
+        if (mlDetectionConfig == null) {
+            return null;
+        }
+        return MachineLearningDetectionConfig.builder()
+                .confidenceLevel(mlDetectionConfig.confidenceLevelAsString())
+                .build();
+    }
+
 
     static Map<String, software.amazon.awssdk.services.iot.model.AlertTarget> translateAlertTargetMapFromCfnToIot(
             Map<String, AlertTarget> cfnAlertTargetMap) {

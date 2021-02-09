@@ -26,6 +26,10 @@
         },
         "Criteria": {
           "$ref": "#/definitions/BehaviorCriteria"
+        },
+        "SuppressAlerts": {
+          "description": "Manage Detect alarm SNS notifications by setting behavior notification to on or suppressed. Detect will continue to performing device behavior evaluations. However, suppressed alarms wouldn't be forwarded for SNS notification.",
+          "type": "boolean"
         }
       },
       "required": [
@@ -99,6 +103,9 @@
         },
         "StatisticalThreshold": {
           "$ref": "#/definitions/StatisticalThreshold"
+        },
+        "MlDetectionConfig": {
+          "$ref": "#/definitions/MachineLearningDetectionConfig"
         }
       },
       "additionalProperties": false
@@ -177,6 +184,22 @@
             "p99.9",
             "p99.99",
             "p100"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "MachineLearningDetectionConfig": {
+      "description": "The configuration of an ML Detect Security Profile.",
+      "type": "object",
+      "properties": {
+        "ConfidenceLevel": {
+          "description": "The sensitivity of anomalous behavior evaluation. Can be Low, Medium, or High.",
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
           ]
         }
       },

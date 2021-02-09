@@ -125,11 +125,14 @@ public class TranslatorTest {
                 .comparisonOperator("greater-than")
                 .durationSeconds(300)
                 .statisticalThreshold(StatisticalThreshold.builder().statistic("p90").build())
+                .mlDetectionConfig(MachineLearningDetectionConfig
+                        .builder().confidenceLevel("HIGH").build())
                 .build();
         return Behavior.builder()
                 .name(BEHAVIOR_NAME)
                 .metric("aws:num-authorization-failures")
                 .criteria(behaviorCriteria)
+                .suppressAlerts(true)
                 .build();
     }
 
@@ -140,11 +143,14 @@ public class TranslatorTest {
                         .durationSeconds(300)
                         .statisticalThreshold(software.amazon.awssdk.services.iot.model.StatisticalThreshold
                                 .builder().statistic("p90").build())
+                        .mlDetectionConfig(software.amazon.awssdk.services.iot.model.MachineLearningDetectionConfig
+                                .builder().confidenceLevel("HIGH").build())
                         .build();
         return software.amazon.awssdk.services.iot.model.Behavior.builder()
                 .name(BEHAVIOR_NAME)
                 .metric("aws:num-authorization-failures")
                 .criteria(behaviorCriteria)
+                .suppressAlerts(true)
                 .build();
     }
 
@@ -154,11 +160,14 @@ public class TranslatorTest {
                 .durationSeconds(600)
                 .value(MetricValue
                         .builder().count("999999999999").build())
+                .mlDetectionConfig(MachineLearningDetectionConfig
+                        .builder().confidenceLevel("MEDIUM").build())
                 .build();
         return Behavior.builder()
                 .name(BEHAVIOR_NAME)
                 .metric("aws:num-messages-sent")
                 .criteria(behaviorCriteria)
+                .suppressAlerts(false)
                 .build();
     }
 
@@ -169,11 +178,14 @@ public class TranslatorTest {
                         .durationSeconds(600)
                         .value(software.amazon.awssdk.services.iot.model.MetricValue
                                 .builder().count(999999999999L).build())
+                        .mlDetectionConfig(software.amazon.awssdk.services.iot.model.MachineLearningDetectionConfig
+                                .builder().confidenceLevel("MEDIUM").build())
                         .build();
         return software.amazon.awssdk.services.iot.model.Behavior.builder()
                 .name(BEHAVIOR_NAME)
                 .metric("aws:num-messages-sent")
                 .criteria(behaviorCriteria)
+                .suppressAlerts(false)
                 .build();
     }
 
