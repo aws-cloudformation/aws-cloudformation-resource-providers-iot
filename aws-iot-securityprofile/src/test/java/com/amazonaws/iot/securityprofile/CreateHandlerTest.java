@@ -28,10 +28,13 @@ import static com.amazonaws.iot.securityprofile.TestConstants.CLIENT_REQUEST_TOK
 import static com.amazonaws.iot.securityprofile.TestConstants.LOGICAL_IDENTIFIER;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_ARN;
 import static com.amazonaws.iot.securityprofile.TestConstants.SECURITY_PROFILE_NAME;
+import static com.amazonaws.iot.securityprofile.TestConstants.SYSTEM_TAG_IOT;
+import static com.amazonaws.iot.securityprofile.TestConstants.SYSTEM_TAG_MAP;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_CFN_SET;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_IOT;
 import static com.amazonaws.iot.securityprofile.TestConstants.TAG_1_STRINGMAP;
 import static com.amazonaws.iot.securityprofile.TestConstants.TARGET_ARNS;
+import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,6 +68,7 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier(LOGICAL_IDENTIFIER)
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .desiredResourceTags(TAG_1_STRINGMAP)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         CreateSecurityProfileResponse createResponse = CreateSecurityProfileResponse.builder()
@@ -84,12 +88,10 @@ public class CreateHandlerTest {
 
         List<IotRequest> iotRequests = requestsCaptor.getAllValues();
         CreateSecurityProfileRequest actualCreateRequest = (CreateSecurityProfileRequest) iotRequests.get(0);
-        CreateSecurityProfileRequest expectedCreateRequest = CreateSecurityProfileRequest.builder()
-                .securityProfileName(SECURITY_PROFILE_NAME)
-                .additionalMetricsToRetainV2(ADDITIONAL_METRICS_IOT)
-                .tags(TAG_1_IOT)
-                .build();
-        assertThat(actualCreateRequest).isEqualTo(expectedCreateRequest);
+        // Order doesn't matter for tags, but they're modeled as a List, thus we have to check field by field.
+        assertThat(actualCreateRequest.tags()).containsExactlyInAnyOrder(TAG_1_IOT, SYSTEM_TAG_IOT);
+        assertEquals(SECURITY_PROFILE_NAME, actualCreateRequest.securityProfileName());
+        assertEquals(ADDITIONAL_METRICS_IOT, actualCreateRequest.additionalMetricsToRetainV2());
 
         AttachSecurityProfileRequest actualAttachRequest1 = (AttachSecurityProfileRequest) iotRequests.get(1);
         assertThat(actualAttachRequest1.securityProfileName()).isEqualTo(SECURITY_PROFILE_NAME);
@@ -237,6 +239,4 @@ public class CreateHandlerTest {
                 .tags(TAG_1_CFN_SET)
                 .build();
     }
-
-    // TODO: test system tags when the src code is ready
 }

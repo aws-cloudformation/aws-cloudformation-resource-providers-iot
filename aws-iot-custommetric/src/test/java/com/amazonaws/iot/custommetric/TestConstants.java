@@ -26,7 +26,8 @@ public class TestConstants {
                     .value("resourceTagValue")
                     .build());
     protected static final Map<String, String> DESIRED_TAGS = ImmutableMap.of(
-            "resourceTagKey", "resourceTagValue",
+            "resourceTagKey", "resourceTagValue");
+    static final Map<String, String> SYSTEM_TAG_MAP = ImmutableMap.of(
             "aws:cloudformation:stack-name", "UnitTestStack");
     protected static final software.amazon.awssdk.services.iot.model.Tag SDK_MODEL_TAG =
             software.amazon.awssdk.services.iot.model.Tag.builder()

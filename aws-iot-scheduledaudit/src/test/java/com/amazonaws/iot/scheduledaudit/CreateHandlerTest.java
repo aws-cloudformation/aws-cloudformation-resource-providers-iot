@@ -26,13 +26,16 @@ import static com.amazonaws.iot.scheduledaudit.TestConstants.SCHEDULED_AUDIT_ARN
 import static com.amazonaws.iot.scheduledaudit.TestConstants.SCHEDULED_AUDIT_NAME;
 import static com.amazonaws.iot.scheduledaudit.TestConstants.SDK_MODEL_TAG;
 import static com.amazonaws.iot.scheduledaudit.TestConstants.SDK_SYSTEM_TAG;
+import static com.amazonaws.iot.scheduledaudit.TestConstants.SYSTEM_TAG_MAP;
 import static com.amazonaws.iot.scheduledaudit.TestConstants.TARGET_CHECK_NAMES;
+import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.HashSet;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -67,20 +70,13 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier("TestScheduledAuditIdentifier")
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .desiredResourceTags(DESIRED_TAGS)
-                .build();
-
-        CreateScheduledAuditRequest expectedRequest = CreateScheduledAuditRequest.builder()
-                .scheduledAuditName(SCHEDULED_AUDIT_NAME)
-                .targetCheckNames(TARGET_CHECK_NAMES)
-                .frequency(FREQUENCY)
-                .dayOfWeek(DAY_OF_WEEK)
-                .tags(SDK_MODEL_TAG, SDK_SYSTEM_TAG)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         CreateScheduledAuditResponse createApiResponse = CreateScheduledAuditResponse.builder()
                 .scheduledAuditArn(SCHEDULED_AUDIT_ARN)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest), any()))
+        when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenReturn(createApiResponse);
 
         ProgressEvent<ResourceModel, CallbackContext> response
@@ -103,6 +99,16 @@ public class CreateHandlerTest {
                 .tags(MODEL_TAGS)
                 .build();
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+
+        ArgumentCaptor<CreateScheduledAuditRequest> requestCaptor = ArgumentCaptor.forClass(CreateScheduledAuditRequest.class);
+        verify(proxy).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
+        CreateScheduledAuditRequest actualRequest = requestCaptor.getValue();
+        // Order doesn't matter for tags, but they're modeled as a List, thus we have to check field by field.
+        assertThat(actualRequest.tags()).containsExactlyInAnyOrder(SDK_MODEL_TAG, SDK_SYSTEM_TAG);
+        assertEquals(SCHEDULED_AUDIT_NAME, actualRequest.scheduledAuditName());
+        assertEquals(TARGET_CHECK_NAMES, new HashSet<>(actualRequest.targetCheckNames()));
+        assertEquals(FREQUENCY, actualRequest.frequencyAsString());
+        assertEquals(DAY_OF_WEEK, actualRequest.dayOfWeekAsString());
     }
 
     @Test
@@ -121,6 +127,7 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier("TestScheduledAuditIdentifier")
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .desiredResourceTags(DESIRED_TAGS)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
@@ -146,6 +153,7 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier("MyResourceName")
                 .clientRequestToken("MyToken")
                 .desiredResourceTags(DESIRED_TAGS)
+                .systemTags(SYSTEM_TAG_MAP)
                 .stackId("arn:aws:cloudformation:us-east-1:123456789012:stack/my-stack-name/" +
                         "084c0bd1-082b-11eb-afdc-0a2fadfa68a5")
                 .build();
@@ -169,6 +177,4 @@ public class CreateHandlerTest {
         assertThat(submittedRequest.scheduledAuditName()).contains("MyRes");
         assertThat(submittedRequest.scheduledAuditName().length() > 20).isTrue();
     }
-
-    // TODO: test system tags when the src code is ready
 }

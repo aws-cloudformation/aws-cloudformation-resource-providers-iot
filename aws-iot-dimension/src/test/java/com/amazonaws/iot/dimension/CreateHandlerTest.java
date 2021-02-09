@@ -1,5 +1,25 @@
 package com.amazonaws.iot.dimension;
 
+import static com.amazonaws.iot.dimension.TestConstants.CLIENT_REQUEST_TOKEN;
+import static com.amazonaws.iot.dimension.TestConstants.DESIRED_TAGS;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
+import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
+import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG_1;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG_2;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_SYSTEM_TAG;
+import static com.amazonaws.iot.dimension.TestConstants.SYSTEM_TAG_MAP;
+import static junit.framework.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,23 +37,6 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
-import static com.amazonaws.iot.dimension.TestConstants.CLIENT_REQUEST_TOKEN;
-import static com.amazonaws.iot.dimension.TestConstants.DESIRED_TAGS;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_ARN;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
-import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
-import static com.amazonaws.iot.dimension.TestConstants.MODEL_TAGS;
-import static com.amazonaws.iot.dimension.TestConstants.SDK_MODEL_TAG;
-import static com.amazonaws.iot.dimension.TestConstants.SDK_SYSTEM_TAG;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
@@ -67,20 +70,14 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier("TestDimensionIdentifier")
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .desiredResourceTags(DESIRED_TAGS)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        CreateDimensionRequest expectedRequest = CreateDimensionRequest.builder()
-                .name(DIMENSION_NAME)
-                .type(DimensionType.TOPIC_FILTER)
-                .stringValues(DIMENSION_VALUE_IOT)
-                .clientRequestToken(CLIENT_REQUEST_TOKEN)
-                .tags(SDK_MODEL_TAG, SDK_SYSTEM_TAG)
-                .build();
         CreateDimensionResponse createApiResponse = CreateDimensionResponse.builder()
                 .name(DIMENSION_NAME)
                 .arn(DIMENSION_ARN)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest), any()))
+        when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenReturn(createApiResponse);
 
         ProgressEvent<ResourceModel, CallbackContext> response
@@ -102,6 +99,16 @@ public class CreateHandlerTest {
                 .arn(DIMENSION_ARN)
                 .build();
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+
+        ArgumentCaptor<CreateDimensionRequest> requestCaptor = ArgumentCaptor.forClass(CreateDimensionRequest.class);
+        verify(proxy).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
+        CreateDimensionRequest actualRequest = requestCaptor.getValue();
+        // Order doesn't matter for tags, but they're modeled as a List, thus we have to check field by field.
+        assertThat(actualRequest.tags()).containsExactlyInAnyOrder(SDK_MODEL_TAG_1, SDK_MODEL_TAG_2, SDK_SYSTEM_TAG);
+        assertEquals(DIMENSION_NAME, actualRequest.name());
+        assertEquals(DimensionType.TOPIC_FILTER, actualRequest.type());
+        assertEquals(DIMENSION_VALUE_IOT, actualRequest.stringValues());
+        assertEquals(CLIENT_REQUEST_TOKEN, actualRequest.clientRequestToken());
     }
 
     @Test
@@ -135,7 +142,7 @@ public class CreateHandlerTest {
         ResourceModel model = ResourceModel.builder()
                 .type(DIMENSION_TYPE)
                 .stringValues(DIMENSION_VALUE_CFN)
-                // Handler ignores these, uses desiredResourceTags which contain system tags
+                // Handler ignores these, uses desiredResourceTags
                 .tags(MODEL_TAGS)
                 .build();
 
@@ -167,6 +174,4 @@ public class CreateHandlerTest {
         assertThat(submittedRequest.name()).contains("MyRes");
         assertThat(submittedRequest.name().length() > 20).isTrue();
     }
-
-    // TODO: test system tags when the src code is ready
 }

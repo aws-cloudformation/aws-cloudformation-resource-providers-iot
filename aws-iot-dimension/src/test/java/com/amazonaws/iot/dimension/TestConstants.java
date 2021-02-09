@@ -19,20 +19,28 @@ public class TestConstants {
 
     protected static final Set<Tag> MODEL_TAGS = ImmutableSet.of(
             Tag.builder()
-                    .key("resourceTagKey")
-                    .value("resourceTagValue")
+                    .key("resourceTagKey1")
+                    .value("resourceTagValue1")
                     .build());
     protected static final Map<String, String> DESIRED_TAGS = ImmutableMap.of(
-            "resourceTagKey", "resourceTagValue",
-            "aws:cloudformation:stack-name", "UnitTestStack");
-    protected static final software.amazon.awssdk.services.iot.model.Tag SDK_MODEL_TAG =
+            "resourceTagKey1", "resourceTagValue1",
+            "resourceTagKey2", "resourceTagValue2");
+    protected static final software.amazon.awssdk.services.iot.model.Tag SDK_MODEL_TAG_1 =
             software.amazon.awssdk.services.iot.model.Tag.builder()
-                    .key("resourceTagKey")
-                    .value("resourceTagValue")
+                    .key("resourceTagKey1")
+                    .value("resourceTagValue1")
                     .build();
+    protected static final software.amazon.awssdk.services.iot.model.Tag SDK_MODEL_TAG_2 =
+            software.amazon.awssdk.services.iot.model.Tag.builder()
+                    .key("resourceTagKey2")
+                    .value("resourceTagValue2")
+                    .build();
+    protected static final Map<String, String> SYSTEM_TAG_MAP = ImmutableMap.of(
+            "aws:cloudformation:stack-name", "UnitTestStack");
     protected static final software.amazon.awssdk.services.iot.model.Tag SDK_SYSTEM_TAG =
             software.amazon.awssdk.services.iot.model.Tag.builder()
                     .key("aws:cloudformation:stack-name")
                     .value("UnitTestStack")
                     .build();
+
 }

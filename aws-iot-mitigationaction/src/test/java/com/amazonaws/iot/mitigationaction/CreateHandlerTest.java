@@ -29,10 +29,11 @@ import static com.amazonaws.iot.mitigationaction.TestConstants.MODEL_TAGS;
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY;
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_MODEL_TAG;
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_SYSTEM_TAG;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SYSTEM_TAG_MAP;
+import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -74,20 +75,14 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier("TestMitigationActionIdentifier")
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .desiredResourceTags(DESIRED_TAGS)
-                .build();
-
-        CreateMitigationActionRequest expectedRequest = CreateMitigationActionRequest.builder()
-                .actionName(MITIGATION_ACTION_NAME)
-                .roleArn(MITIGATION_ACTION_ROLE_ARN)
-                .actionParams(SDK_ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY)
-                .tags(SDK_MODEL_TAG, SDK_SYSTEM_TAG)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         CreateMitigationActionResponse createApiResponse = CreateMitigationActionResponse.builder()
                 .actionArn(ACTION_ARN)
                 .actionId(ACTION_ID)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest), any()))
+        when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenReturn(createApiResponse);
 
         ProgressEvent<ResourceModel, CallbackContext> response
@@ -110,6 +105,15 @@ public class CreateHandlerTest {
                 .tags(MODEL_TAGS)
                 .build();
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+
+        ArgumentCaptor<CreateMitigationActionRequest> requestCaptor = ArgumentCaptor.forClass(CreateMitigationActionRequest.class);
+        verify(proxy).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
+        CreateMitigationActionRequest actualRequest = requestCaptor.getValue();
+        // Order doesn't matter for tags, but they're modeled as a List, thus we have to check field by field.
+        assertThat(actualRequest.tags()).containsExactlyInAnyOrder(SDK_MODEL_TAG, SDK_SYSTEM_TAG);
+        assertEquals(MITIGATION_ACTION_NAME, actualRequest.actionName());
+        assertEquals(MITIGATION_ACTION_ROLE_ARN, actualRequest.roleArn());
+        assertEquals(SDK_ACTION_PARAMS_WITH_REPLACE_DEFAULT_POLICY, actualRequest.actionParams());
     }
 
     @Test

@@ -1,6 +1,8 @@
 package com.amazonaws.iot.mitigationaction;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +36,8 @@ import static com.amazonaws.iot.mitigationaction.TestConstants.ACTION_PARAMS_WIT
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_NAME;
 import static com.amazonaws.iot.mitigationaction.TestConstants.MITIGATION_ACTION_ROLE_ARN;
 import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_ACTION_PARAMS_WITH_PUBLISH_FINDING_TO_SNS;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SDK_SYSTEM_TAG;
+import static com.amazonaws.iot.mitigationaction.TestConstants.SYSTEM_TAG_MAP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,9 +94,10 @@ public class UpdateHandlerTest {
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceState(desiredModel)
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(Collections.singleton(PREVIOUS_SDK_RESOURCE_TAG))
+        doReturn(ImmutableSet.of(PREVIOUS_SDK_RESOURCE_TAG, SDK_SYSTEM_TAG))
                 .when(handler)
                 .listTags(proxy, ACTION_ARN, logger);
 
@@ -145,9 +150,10 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(Collections.singleton(previousTag))
+        doReturn(ImmutableSet.of(previousTag, SDK_SYSTEM_TAG))
                 .when(handler)
                 .listTags(proxy, ACTION_ARN, logger);
 
@@ -168,9 +174,10 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(Collections.singleton(PREVIOUS_SDK_RESOURCE_TAG))
+        doReturn(ImmutableSet.of(PREVIOUS_SDK_RESOURCE_TAG, SDK_SYSTEM_TAG))
                 .when(handler)
                 .listTags(proxy, ACTION_ARN, logger);
 
@@ -212,6 +219,7 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(ImmutableMap.of("DesiredTagKey", "DesiredTagValue"))
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))

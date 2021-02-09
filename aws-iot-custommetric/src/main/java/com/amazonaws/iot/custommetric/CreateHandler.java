@@ -13,6 +13,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
@@ -33,7 +34,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             CallbackContext callbackContext,
             Logger logger) {
 
-        CreateCustomMetricRequest createRequest = translateToCreateRequest(request);
+        CreateCustomMetricRequest createRequest = translateToCreateRequest(request, logger);
 
         ResourceModel model = request.getDesiredResourceState();
         if (!StringUtils.isEmpty(model.getMetricArn())) {
@@ -61,7 +62,9 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(model);
     }
 
-    private CreateCustomMetricRequest translateToCreateRequest(ResourceHandlerRequest<ResourceModel> request) {
+    private CreateCustomMetricRequest translateToCreateRequest(
+            ResourceHandlerRequest<ResourceModel> request,
+            Logger logger) {
 
         ResourceModel model = request.getDesiredResourceState();
 
@@ -73,18 +76,28 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     request.getClientRequestToken(), GENERATED_NAME_MAX_LENGTH));
         }
 
-        // getDesiredResourceTags combines the model and stack-level tags.
-        // Reference: https://tinyurl.com/yyxtd7w6
-        Map<String, String> tags = request.getDesiredResourceTags();
-        // TODO: uncomment this after we update the service to allow these (only from CFN)
-        // SystemTags are the default stack-level tags with aws:cloudformation prefix
-        // tags.putAll(request.getSystemTags());
+        // Combine all tags in one map that we'll use for the request
+        Map<String, String> allTags = new HashMap<>();
+        if (request.getDesiredResourceTags() != null) {
+            // DesiredResourceTags includes both model and stack-level tags.
+            // Reference: https://tinyurl.com/yyxtd7w6
+            allTags.putAll(request.getDesiredResourceTags());
+        }
+        if (request.getSystemTags() != null) {
+            // There are also system tags provided separately.
+            // SystemTags are the default stack-level tags with aws:cloudformation prefix
+            allTags.putAll(request.getSystemTags());
+        } else {
+            // System tags should always be present as long as the Handler is called by CloudFormation
+            logger.log("Unexpectedly, system tags are null in the create request for " +
+                       ResourceModel.TYPE_NAME + " " + model.getMetricName());
+        }
 
         return CreateCustomMetricRequest.builder()
                 .metricName(model.getMetricName())
                 .displayName(model.getDisplayName())
                 .metricType(model.getMetricType())
-                .tags(Translator.translateTagsToSdk(tags))
+                .tags(Translator.translateTagsToSdk(allTags))
                 // Note: using CFN's token here. Motivation: suppose CFN calls this handler, create call succeeds,
                 // but the handler dies right before returning success. Then CFN retries. The retry will contain the
                 // same token. If we don't set the clientRequestToken, the Create

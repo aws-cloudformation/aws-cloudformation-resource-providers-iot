@@ -5,6 +5,8 @@ import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_NAME;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_TYPE;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_CFN;
 import static com.amazonaws.iot.dimension.TestConstants.DIMENSION_VALUE_IOT;
+import static com.amazonaws.iot.dimension.TestConstants.SDK_SYSTEM_TAG;
+import static com.amazonaws.iot.dimension.TestConstants.SYSTEM_TAG_MAP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,9 +37,6 @@ import software.amazon.awssdk.services.iot.model.TagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDimensionRequest;
 import software.amazon.awssdk.services.iot.model.UpdateDimensionResponse;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -90,9 +89,10 @@ public class UpdateHandlerTest {
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceState(desiredModel)
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(Collections.singleton(PREVIOUS_SDK_RESOURCE_TAG))
+        doReturn(ImmutableSet.of(PREVIOUS_SDK_RESOURCE_TAG, SDK_SYSTEM_TAG))
                 .when(handler)
                 .listTags(proxy, DIMENSION_ARN, logger);
 
@@ -145,9 +145,10 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(Collections.singleton(previousTag))
+        doReturn(ImmutableSet.of(previousTag, SDK_SYSTEM_TAG))
                 .when(handler)
                 .listTags(proxy, DIMENSION_ARN, logger);
 
@@ -168,9 +169,10 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(desiredTags)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
-        doReturn(Collections.singleton(PREVIOUS_SDK_RESOURCE_TAG))
+        doReturn(ImmutableSet.of(PREVIOUS_SDK_RESOURCE_TAG, SDK_SYSTEM_TAG))
                 .when(handler)
                 .listTags(proxy, DIMENSION_ARN, logger);
 
@@ -201,6 +203,7 @@ public class UpdateHandlerTest {
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
@@ -218,6 +221,7 @@ public class UpdateHandlerTest {
                 .previousResourceState(ResourceModel.builder().build())
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .desiredResourceTags(ImmutableMap.of("DesiredTagKey", "DesiredTagValue"))
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any()))
@@ -247,6 +251,7 @@ public class UpdateHandlerTest {
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         // If the resource is already deleted, the update API throws ResourceNotFoundException. Mocking that here.
@@ -277,6 +282,7 @@ public class UpdateHandlerTest {
                 .previousResourceTags(ImmutableMap.of("doesn't", "matter"))
                 .previousResourceState(previousModel)
                 .desiredResourceState(desiredModel)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         ProgressEvent<ResourceModel, CallbackContext> result =
@@ -285,6 +291,4 @@ public class UpdateHandlerTest {
         assertThat(result).isEqualTo(ProgressEvent.failed(
                 desiredModel, null, HandlerErrorCode.InvalidRequest, "Arn cannot be updated."));
     }
-
-    // TODO: test system tags when the src code is ready
 }

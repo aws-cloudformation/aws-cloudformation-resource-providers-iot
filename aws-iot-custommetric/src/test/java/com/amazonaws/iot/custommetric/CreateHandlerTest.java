@@ -27,10 +27,11 @@ import static com.amazonaws.iot.custommetric.TestConstants.METRIC_TYPE;
 import static com.amazonaws.iot.custommetric.TestConstants.MODEL_TAGS;
 import static com.amazonaws.iot.custommetric.TestConstants.SDK_MODEL_TAG;
 import static com.amazonaws.iot.custommetric.TestConstants.SDK_SYSTEM_TAG;
+import static com.amazonaws.iot.custommetric.TestConstants.SYSTEM_TAG_MAP;
+import static junit.framework.Assert.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -72,21 +73,14 @@ public class CreateHandlerTest {
                 .logicalResourceIdentifier("TestCustomMetricIdentifier")
                 .clientRequestToken(CLIENT_REQUEST_TOKEN)
                 .desiredResourceTags(DESIRED_TAGS)
-                .build();
-
-        CreateCustomMetricRequest expectedRequest = CreateCustomMetricRequest.builder()
-                .metricName(CUSTOM_METRIC_NAME)
-                .metricType(METRIC_TYPE)
-                .displayName(DISPLAY_NAME)
-                .clientRequestToken(CLIENT_REQUEST_TOKEN)
-                .tags(SDK_MODEL_TAG, SDK_SYSTEM_TAG)
+                .systemTags(SYSTEM_TAG_MAP)
                 .build();
 
         CreateCustomMetricResponse createApiResponse = CreateCustomMetricResponse.builder()
                 .metricName(CUSTOM_METRIC_NAME)
                 .metricArn(CUSTOM_METRIC_ARN)
                 .build();
-        when(proxy.injectCredentialsAndInvokeV2(eq(expectedRequest), any()))
+        when(proxy.injectCredentialsAndInvokeV2(any(), any()))
                 .thenReturn(createApiResponse);
 
         ProgressEvent<ResourceModel, CallbackContext> response
@@ -108,6 +102,16 @@ public class CreateHandlerTest {
                 .tags(MODEL_TAGS)
                 .build();
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+
+        ArgumentCaptor<CreateCustomMetricRequest> requestCaptor = ArgumentCaptor.forClass(CreateCustomMetricRequest.class);
+        verify(proxy).injectCredentialsAndInvokeV2(requestCaptor.capture(), any());
+        CreateCustomMetricRequest actualRequest = requestCaptor.getValue();
+        // Order doesn't matter for tags, but they're modeled as a List, thus we have to check field by field.
+        assertThat(actualRequest.tags()).containsExactlyInAnyOrder(SDK_MODEL_TAG, SDK_SYSTEM_TAG);
+        assertEquals(CUSTOM_METRIC_NAME, actualRequest.metricName());
+        assertEquals(METRIC_TYPE, actualRequest.metricTypeAsString());
+        assertEquals(DISPLAY_NAME, actualRequest.displayName());
+        assertEquals(CLIENT_REQUEST_TOKEN, actualRequest.clientRequestToken());
     }
 
     @Test
@@ -173,6 +177,4 @@ public class CreateHandlerTest {
         assertThat(submittedRequest.metricName()).contains("MyRes");
         assertThat(submittedRequest.metricName().length() > 20).isTrue();
     }
-
-    // TODO: test system tags when the src code is ready
 }
