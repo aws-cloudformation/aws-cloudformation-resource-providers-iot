@@ -1,10 +1,10 @@
 {
   "AccountId": "{{AccountId}}",
   "AuditCheckConfigurations": {
-    "NON_EXISTENT_CHECK": {
+    "NonExistentCheck": {
       "Enabled": true
     },
-    "CA_CERTIFICATE_EXPIRING_CHECK": {
+    "CaCertificateExpiringCheck": {
       "Enabled": true
     }
   },

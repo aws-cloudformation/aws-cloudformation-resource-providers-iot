@@ -1,5 +1,18 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
+import software.amazon.cloudformation.proxy.OperationStatus;
+import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_CHECK_CONFIGURATIONS_V1_CFN;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_CFN;
@@ -11,32 +24,12 @@ import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ROLE_ARN
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.TARGET_ARN;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
-
 @ExtendWith(MockitoExtension.class)
 public class ReadHandlerTest {
-
     @Mock
     private AmazonWebServicesClientProxy proxy;
 
@@ -74,8 +67,9 @@ public class ReadHandlerTest {
         assertThat(actualResult.getMessage()).isNull();
         assertThat(actualResult.getErrorCode()).isNull();
 
-        Map<String, AuditNotificationTarget> expectedNotificationConfigurations = ImmutableMap.of("SNS",
-                AuditNotificationTarget.builder().targetArn(TARGET_ARN).enabled(true).roleArn(ROLE_ARN).build());
+        AuditNotificationTargetConfigurations expectedNotificationConfigurations =
+                AuditNotificationTargetConfigurations.builder()
+                        .sns(AuditNotificationTarget.builder().targetArn(TARGET_ARN).enabled(true).roleArn(ROLE_ARN).build()).build();
         ResourceModel expectedResult = ResourceModel.builder()
                 .accountId(ACCOUNT_ID)
                 .auditCheckConfigurations(DESCRIBE_RESPONSE_V1_STATE_CFN)

@@ -32,7 +32,6 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteHandlerTest {
-
     private static final ResourceModel MODEL_FOR_REQUEST = ResourceModel.builder()
             .accountId(ACCOUNT_ID)
             .roleArn("doesn't matter")

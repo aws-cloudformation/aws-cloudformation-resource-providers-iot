@@ -46,8 +46,47 @@
     "AuditCheckConfigurations": {
       "description": "Specifies which audit checks are enabled and disabled for this account.",
       "type": "object",
-      "patternProperties": {
-        "[A-Z_]+": {
+      "properties": {
+        "AuthenticatedCognitoRoleOverlyPermissiveCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "CaCertificateExpiringCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "CaCertificateKeyQualityCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "ConflictingClientIdsCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "DeviceCertificateExpiringCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "DeviceCertificateKeyQualityCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "DeviceCertificateSharedCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "IotPolicyOverlyPermissiveCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "IotRoleAliasAllowsAccessToUnusedServicesCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "IotRoleAliasOverlyPermissiveCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "LoggingDisabledCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "RevokedCaCertificateStillActiveCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "RevokedDeviceCertificateStillActiveCheck": {
+          "$ref": "#/definitions/AuditCheckConfiguration"
+        },
+        "UnauthenticatedCognitoRoleOverlyPermissiveCheck": {
           "$ref": "#/definitions/AuditCheckConfiguration"
         }
       },
@@ -56,8 +95,8 @@
     "AuditNotificationTargetConfigurations": {
       "description": "Information about the targets to which audit notifications are sent.",
       "type": "object",
-      "patternProperties": {
-        "[a-zA-Z0-9:_-]+": {
+      "properties": {
+        "Sns": {
           "$ref": "#/definitions/AuditNotificationTarget"
         }
       },

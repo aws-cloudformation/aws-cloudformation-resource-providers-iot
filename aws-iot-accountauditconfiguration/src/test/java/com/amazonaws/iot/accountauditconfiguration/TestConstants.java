@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurati
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public class TestConstants {
-
     static final String ACCOUNT_ID = "123456789012";
     static final String ROLE_ARN = "testRoleArn";
     static final String TARGET_ARN = "testTargetArn";
@@ -18,19 +17,22 @@ public class TestConstants {
             AuditCheckConfiguration.builder().enabled(true).build();
     static final AuditCheckConfiguration DISABLED_CFN =
             AuditCheckConfiguration.builder().enabled(false).build();
-    static final Map<String, AuditCheckConfiguration> AUDIT_CHECK_CONFIGURATIONS_V1_CFN = ImmutableMap.of(
-            "LOGGING_DISABLED_CHECK", ENABLED_CFN,
-            "CA_CERTIFICATE_EXPIRING_CHECK", ENABLED_CFN);
-    static final Map<String, AuditCheckConfiguration> AUDIT_CHECK_CONFIGURATIONS_V2_CFN = ImmutableMap.of(
-            "LOGGING_DISABLED_CHECK", ENABLED_CFN,
-            "DEVICE_CERTIFICATE_EXPIRING_CHECK", ENABLED_CFN,
-            "CA_CERTIFICATE_EXPIRING_CHECK", DISABLED_CFN);
-    static final Map<String, AuditNotificationTarget> AUDIT_NOTIFICATION_TARGET_CFN = ImmutableMap.of(
-            "SNS", AuditNotificationTarget.builder().enabled(true)
-                    .targetArn(TARGET_ARN).roleArn(ROLE_ARN).build());
-    static final Map<String, AuditNotificationTarget> AUDIT_NOTIFICATION_TARGET_V2_CFN = ImmutableMap.of(
-            "SNS", AuditNotificationTarget.builder().enabled(true)
-                    .targetArn(TARGET_ARN + "_v2").roleArn(ROLE_ARN).build());
+    static final AuditCheckConfigurations AUDIT_CHECK_CONFIGURATIONS_V1_CFN = AuditCheckConfigurations.builder()
+            .loggingDisabledCheck(AuditCheckConfiguration.builder().enabled(true).build())
+            .caCertificateExpiringCheck(AuditCheckConfiguration.builder().enabled(true).build())
+            .build();
+    static final AuditCheckConfigurations AUDIT_CHECK_CONFIGURATIONS_V2_CFN = AuditCheckConfigurations.builder()
+            .loggingDisabledCheck(AuditCheckConfiguration.builder().enabled(true).build())
+            .deviceCertificateExpiringCheck(AuditCheckConfiguration.builder().enabled(true).build())
+            .caCertificateExpiringCheck(AuditCheckConfiguration.builder().enabled(false).build())
+            .build();
+    static final AuditNotificationTargetConfigurations AUDIT_NOTIFICATION_TARGET_CFN =
+            AuditNotificationTargetConfigurations.builder()
+            .sns(AuditNotificationTarget.builder().enabled(true)
+                    .targetArn(TARGET_ARN).roleArn(ROLE_ARN).build())
+            .build();
+    static final AuditNotificationTargetConfigurations AUDIT_NOTIFICATION_TARGET_V2_CFN =
+            AuditNotificationTargetConfigurations.builder().sns(AuditNotificationTarget.builder().enabled(true).targetArn(TARGET_ARN + "_v2").roleArn(ROLE_ARN).build()).build();
 
     static final software.amazon.awssdk.services.iot.model.AuditCheckConfiguration ENABLED_IOT =
             software.amazon.awssdk.services.iot.model.AuditCheckConfiguration.builder().enabled(true).build();
@@ -70,13 +72,31 @@ public class TestConstants {
                     .auditNotificationTargetConfigurationsWithStrings(AUDIT_NOTIFICATION_TARGET_IOT)
                     .roleArn(ROLE_ARN)
                     .build();
-    static final Map<String, AuditCheckConfiguration> DESCRIBE_RESPONSE_V1_STATE_CFN = ImmutableMap.of(
-            "LOGGING_DISABLED_CHECK", ENABLED_CFN,
-            "CA_CERTIFICATE_EXPIRING_CHECK", ENABLED_CFN,
-            "CONFLICTING_CLIENT_IDS_CHECK", DISABLED_CFN,
-            "CA_CERTIFICATE_KEY_QUALITY_CHECK", DISABLED_CFN,
-            "DEVICE_CERTIFICATE_EXPIRING_CHECK", DISABLED_CFN);
-
+    static final AuditCheckConfigurations DESCRIBE_RESPONSE_V1_STATE_CFN = AuditCheckConfigurations.builder()
+            .loggingDisabledCheck(ENABLED_CFN)
+            .caCertificateExpiringCheck(ENABLED_CFN)
+            .conflictingClientIdsCheck(DISABLED_CFN)
+            .caCertificateKeyQualityCheck(DISABLED_CFN)
+            .deviceCertificateExpiringCheck(DISABLED_CFN)
+            .build();
+    static final DescribeAccountAuditConfigurationResponse DESCRIBE_RESPONSE_V1_STATE_WITH_NON_EXISTENT_KEY =
+            DescribeAccountAuditConfigurationResponse.builder()
+                    .auditCheckConfigurations(ImmutableMap.of(
+                            "LOGGING_DISABLED_CHECK", ENABLED_IOT,
+                            "CA_CERTIFICATE_EXPIRING_CHECK", ENABLED_IOT,
+                            "CONFLICTING_CLIENT_IDS_CHECK", DISABLED_IOT,
+                            "CA_CERTIFICATE_KEY_QUALITY_CHECK", DISABLED_IOT,
+                            "NON_EXISTENT_KEY", DISABLED_IOT))
+                    .auditNotificationTargetConfigurationsWithStrings(AUDIT_NOTIFICATION_TARGET_IOT)
+                    .roleArn(ROLE_ARN)
+                    .build();
+    static final AuditCheckConfigurations DESCRIBE_RESPONSE_V1_STATE_NON_EXISTENT_KEY_INGNORED_CFN =
+            AuditCheckConfigurations.builder()
+            .loggingDisabledCheck(ENABLED_CFN)
+            .caCertificateExpiringCheck(ENABLED_CFN)
+            .conflictingClientIdsCheck(DISABLED_CFN)
+            .caCertificateKeyQualityCheck(DISABLED_CFN)
+            .build();
     static software.amazon.awssdk.services.iot.model.AuditNotificationTarget.Builder
     getNotificationBuilderIot() {
         return software.amazon.awssdk.services.iot.model.AuditNotificationTarget.builder();

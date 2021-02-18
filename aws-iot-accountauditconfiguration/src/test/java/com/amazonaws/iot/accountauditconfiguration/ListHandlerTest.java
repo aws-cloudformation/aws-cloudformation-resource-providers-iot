@@ -1,26 +1,11 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_REQUEST;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
@@ -28,9 +13,21 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collections;
+import java.util.List;
+
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_REQUEST;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class ListHandlerTest {
-
     @Mock
     private AmazonWebServicesClientProxy proxy;
 

@@ -4,6 +4,8 @@ import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NO
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_IOT;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE_CFN;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE_NON_EXISTENT_KEY_INGNORED_CFN;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE_WITH_NON_EXISTENT_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -16,7 +18,6 @@ import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 
 public class TranslatorTest {
-
     @Test
     public void translateExceptionToErrorCode_IRE_Translated() {
         HandlerErrorCode result = Translator.translateExceptionToErrorCode(
@@ -48,6 +49,13 @@ public class TranslatorTest {
     }
 
     @Test
+    void translateChecksFromIotToCfn_NonExistentKeyFromIot_VerifyIgnoredInTranslation() {
+        Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> input =
+                DESCRIBE_RESPONSE_V1_STATE_WITH_NON_EXISTENT_KEY.auditCheckConfigurations();
+        assertThat(Translator.translateChecksFromIotToCfn(input)).isEqualTo(DESCRIBE_RESPONSE_V1_STATE_NON_EXISTENT_KEY_INGNORED_CFN);
+    }
+
+    @Test
     void translateNotificationsFromCfnToIot_NonEmpty() {
         ResourceModel input = ResourceModel.builder()
                 .auditNotificationTargetConfigurations(AUDIT_NOTIFICATION_TARGET_CFN).build();
@@ -69,6 +77,6 @@ public class TranslatorTest {
 
     @Test
     void translateNotificationsFromIotToCfn_NullIn_EmptyOut() {
-        assertThat(Translator.translateNotificationsFromIotToCfn(null)).isEmpty();
+        assertThat(Translator.translateNotificationsFromIotToCfn(null)).isNull();
     }
 }

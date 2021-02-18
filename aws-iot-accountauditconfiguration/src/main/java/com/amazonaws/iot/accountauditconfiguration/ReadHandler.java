@@ -54,10 +54,10 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     "The configuration for your account has not been set up or was deleted.");
         }
 
-        Map<String, AuditCheckConfiguration> auditCheckConfigurationsCfn = Translator.translateChecksFromIotToCfn(
+        AuditCheckConfigurations auditCheckConfigurationsCfn = Translator.translateChecksFromIotToCfn(
                 describeResponse.auditCheckConfigurations());
 
-        Map<String, AuditNotificationTarget> notificationTargetsCfn = Translator.translateNotificationsFromIotToCfn(
+        AuditNotificationTargetConfigurations notificationTargetsCfn = Translator.translateNotificationsFromIotToCfn(
                 describeResponse.auditNotificationTargetConfigurationsAsStrings());
 
         ResourceModel model = ResourceModel.builder()
