@@ -1,9 +1,5 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
@@ -14,6 +10,10 @@ import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Translator {
 
@@ -61,11 +61,13 @@ public class Translator {
 
     static Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> translateChecksFromCfnToIot(ResourceModel model) {
 
-        // TODO: test empty template
 
         Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> iotMap = new HashMap<>();
 
         AuditCheckConfigurations auditCheckConfigurations = model.getAuditCheckConfigurations();
+        if (auditCheckConfigurations == null) {
+            return Collections.emptyMap();
+        }
 
         if (auditCheckConfigurations.getAuthenticatedCognitoRoleOverlyPermissiveCheck() != null) {
             iotMap.put("AUTHENTICATED_COGNITO_ROLE_OVERLY_PERMISSIVE_CHECK", translateCheckConfigurationFromCfnToIot(

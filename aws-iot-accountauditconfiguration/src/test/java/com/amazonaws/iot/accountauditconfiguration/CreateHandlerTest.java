@@ -65,7 +65,7 @@ public class CreateHandlerTest {
 
         ResourceModel model = ResourceModel.builder()
                 .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations((AUDIT_CHECK_CONFIGURATIONS_V1_CFN))
+                .auditCheckConfigurations(AUDIT_CHECK_CONFIGURATIONS_V1_CFN)
                 .auditNotificationTargetConfigurations(AUDIT_NOTIFICATION_TARGET_CFN)
                 .roleArn(ROLE_ARN)
                 .build();
@@ -96,6 +96,7 @@ public class CreateHandlerTest {
         assertThat(handlerResponse.getResourceModel()).isEqualTo(model);
     }
 
+    // CreateHandler throws RAE as soon as it sees a RoleArn already present, no matter whether it's the same or not.
     @Test
     public void handleRequest_DescribeShowsSameRoleArn_ExpectRAE() {
 
@@ -115,6 +116,7 @@ public class CreateHandlerTest {
                 .isInstanceOf(CfnAlreadyExistsException.class);
     }
 
+    // CreateHandler throws RAE as soon as it sees a RoleArn already present, no matter whether it's the same or not.
     @Test
     public void handleRequest_DescribeShowsDifferentRoleArn_ExpectRAE() {
 
