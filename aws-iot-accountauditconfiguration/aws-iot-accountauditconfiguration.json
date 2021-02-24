@@ -3,46 +3,6 @@
   "description": "Configures the Device Defender audit settings for this account. Settings include how audit notifications are sent and which audit checks are enabled or disabled.",
   "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-iot.git",
   "definitions": {
-    "AuditCheckConfiguration": {
-      "description": "The configuration for a specific audit check.",
-      "type": "object",
-      "properties": {
-        "Enabled": {
-          "description": "True if the check is enabled.",
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    },
-    "AuditNotificationTarget": {
-      "type": "object",
-      "properties": {
-        "TargetArn": {
-          "description": "The ARN of the target (SNS topic) to which audit notifications are sent.",
-          "type": "string",
-          "maxLength": 2048
-        },
-        "RoleArn": {
-          "description": "The ARN of the role that grants permission to send notifications to the target.",
-          "type": "string",
-          "minLength": 20,
-          "maxLength": 2048
-        },
-        "Enabled": {
-          "description": "True if notifications to the target are enabled.",
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false
-    }
-  },
-  "properties": {
-    "AccountId": {
-      "description": "Your 12-digit account ID (used as the primary identifier for the CloudFormation resource).",
-      "type": "string",
-      "minLength": 12,
-      "maxLength": 12
-    },
     "AuditCheckConfigurations": {
       "description": "Specifies which audit checks are enabled and disabled for this account.",
       "type": "object",
@@ -101,6 +61,52 @@
         }
       },
       "additionalProperties": false
+    },
+    "AuditCheckConfiguration": {
+      "description": "The configuration for a specific audit check.",
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "description": "True if the check is enabled.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuditNotificationTarget": {
+      "type": "object",
+      "properties": {
+        "TargetArn": {
+          "description": "The ARN of the target (SNS topic) to which audit notifications are sent.",
+          "type": "string",
+          "maxLength": 2048
+        },
+        "RoleArn": {
+          "description": "The ARN of the role that grants permission to send notifications to the target.",
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 2048
+        },
+        "Enabled": {
+          "description": "True if notifications to the target are enabled.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "AccountId": {
+      "description": "Your 12-digit account ID (used as the primary identifier for the CloudFormation resource).",
+      "type": "string",
+      "minLength": 12,
+      "maxLength": 12
+    },
+    "AuditCheckConfigurations": {
+      "$ref": "#/definitions/AuditCheckConfigurations"
+    },
+    "AuditNotificationTargetConfigurations": {
+      "$ref": "#/definitions/AuditNotificationTargetConfigurations"
     },
     "RoleArn": {
       "description": "The ARN of the role that grants permission to AWS IoT to access information about your devices, policies, certificates and other items as required when performing an audit.",
