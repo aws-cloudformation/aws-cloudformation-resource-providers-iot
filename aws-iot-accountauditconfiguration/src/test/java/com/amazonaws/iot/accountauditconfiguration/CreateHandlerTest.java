@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.DescribeAccountAuditConfigurationResponse;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotRequest;
@@ -21,8 +20,6 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
@@ -32,9 +29,6 @@ import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NO
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_REQUEST;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE_CHECKS;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DISABLED_IOT;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ENABLED_CFN;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ENABLED_IOT;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ROLE_ARN;
 import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
@@ -48,7 +42,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CreateHandlerTest {
-
     Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration>
             CHECK_CONFIGURATION_FROM_EXPECTED_UPDATE_REQUEST = ImmutableMap.of(
             "LOGGING_DISABLED_CHECK", ENABLED_IOT,
@@ -103,8 +96,9 @@ public class CreateHandlerTest {
         assertThat(handlerResponse.getResourceModel()).isEqualTo(model);
     }
 
+    // CreateHandler throws RAE as soon as it sees a RoleArn already present, no matter whether it's the same or not.
     @Test
-    public void handleRequest_DescribeShowsIdenticalConfig_ExpectSuccess_NoUpdateCall() {
+    public void handleRequest_DescribeShowsSameRoleArn_ExpectRAE() {
 
         ResourceModel model = ResourceModel.builder()
                 .accountId(ACCOUNT_ID)
@@ -117,24 +111,12 @@ public class CreateHandlerTest {
         when(proxy.injectCredentialsAndInvokeV2(eq(DESCRIBE_REQUEST), any()))
                 .thenReturn(DESCRIBE_RESPONSE_V1_STATE);
 
-        ProgressEvent<ResourceModel, CallbackContext> handlerResponse =
-                handler.handleRequest(proxy, cfnRequest, null, logger);
-
-        ArgumentCaptor<IotRequest> iotRequestCaptor = ArgumentCaptor.forClass(IotRequest.class);
-        verify(proxy).injectCredentialsAndInvokeV2(iotRequestCaptor.capture(), any());
-        assertThat(iotRequestCaptor.getAllValues()).isEqualTo(
-                Collections.singletonList(DescribeAccountAuditConfigurationRequest.builder().build()));
-
-        assertThat(handlerResponse).isNotNull();
-        assertThat(handlerResponse.getStatus()).isEqualTo(OperationStatus.SUCCESS);
-        assertThat(handlerResponse.getCallbackContext()).isNull();
-        assertThat(handlerResponse.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(handlerResponse.getResourceModels()).isNull();
-        assertThat(handlerResponse.getMessage()).isNull();
-        assertThat(handlerResponse.getErrorCode()).isNull();
-        assertThat(handlerResponse.getResourceModel()).isEqualTo(model);
+        assertThatThrownBy(() ->
+                handler.handleRequest(proxy, cfnRequest, null, logger))
+                .isInstanceOf(CfnAlreadyExistsException.class);
     }
 
+    // CreateHandler throws RAE as soon as it sees a RoleArn already present, no matter whether it's the same or not.
     @Test
     public void handleRequest_DescribeShowsDifferentRoleArn_ExpectRAE() {
 
@@ -154,98 +136,6 @@ public class CreateHandlerTest {
         assertThatThrownBy(() ->
                 handler.handleRequest(proxy, cfnRequest, null, logger))
                 .isInstanceOf(CfnAlreadyExistsException.class);
-    }
-
-    @Test
-    public void areCheckConfigurationsEquivalent_DescribeHasMoreDisabledChecks_ExpectTrue() {
-
-        ResourceModel model = ResourceModel.builder()
-                .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations(AUDIT_CHECK_CONFIGURATIONS_V1_CFN)
-                .auditNotificationTargetConfigurations(AUDIT_NOTIFICATION_TARGET_CFN)
-                .roleArn(ROLE_ARN)
-                .build();
-        Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> mapWithMoreChecksDisabled =
-                new HashMap<>(CHECK_CONFIGURATION_FROM_EXPECTED_UPDATE_REQUEST);
-        mapWithMoreChecksDisabled.put("CONFLICTING_CLIENT_IDS_CHECK", DISABLED_IOT);
-        DescribeAccountAuditConfigurationResponse describeResponse =
-                DESCRIBE_RESPONSE_V1_STATE.toBuilder()
-                        .auditCheckConfigurations(mapWithMoreChecksDisabled)
-                        .build();
-
-        assertThat(handler.areCheckConfigurationsEquivalent(model, describeResponse)).isTrue();
-    }
-
-    @Test
-    public void areCheckConfigurationsEquivalent_DescribeHasOneMoreEnabled_ExpectFalse() {
-
-        ResourceModel model = ResourceModel.builder()
-                .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations(AUDIT_CHECK_CONFIGURATIONS_V1_CFN)
-                .auditNotificationTargetConfigurations(AUDIT_NOTIFICATION_TARGET_CFN)
-                .roleArn(ROLE_ARN)
-                .build();
-        Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> mapWithMoreChecksEnabled =
-                new HashMap<>(DESCRIBE_RESPONSE_ZERO_STATE_CHECKS);
-        mapWithMoreChecksEnabled.put("CONFLICTING_CLIENT_IDS_CHECK", ENABLED_IOT);
-        DescribeAccountAuditConfigurationResponse describeResponse =
-                DESCRIBE_RESPONSE_V1_STATE.toBuilder()
-                        .auditCheckConfigurations(mapWithMoreChecksEnabled)
-                        .build();
-
-        assertThat(handler.areCheckConfigurationsEquivalent(model, describeResponse)).isFalse();
-    }
-
-    @Test
-    public void areCheckConfigurationsEquivalent_ModelHasOneMoreEnabled_ExpectFalse() {
-
-        Map<String, AuditCheckConfiguration> mapWithOneMoreCheckEnabled =
-                new HashMap<>(AUDIT_CHECK_CONFIGURATIONS_V1_CFN);
-        mapWithOneMoreCheckEnabled.put("CA_CERTIFICATE_KEY_QUALITY_CHECK", ENABLED_CFN);
-        ResourceModel model = ResourceModel.builder()
-                .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations(mapWithOneMoreCheckEnabled)
-                .auditNotificationTargetConfigurations(AUDIT_NOTIFICATION_TARGET_CFN)
-                .roleArn(ROLE_ARN)
-                .build();
-
-        assertThat(handler.areCheckConfigurationsEquivalent(model, DESCRIBE_RESPONSE_V1_STATE)).isFalse();
-    }
-
-    @Test
-    public void areNotificationTargetsEquivalent_DescribeHasNull_ExpectFalse() {
-        ResourceModel model = ResourceModel.builder()
-                .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations(AUDIT_CHECK_CONFIGURATIONS_V1_CFN)
-                .auditNotificationTargetConfigurations(AUDIT_NOTIFICATION_TARGET_CFN)
-                .roleArn(ROLE_ARN)
-                .build();
-        assertThat(handler.areNotificationTargetsEquivalent(model, DESCRIBE_RESPONSE_ZERO_STATE)).isFalse();
-    }
-
-    @Test
-    public void areNotificationTargetsEquivalent_ModelHasNull_ExpectFalse() {
-        ResourceModel model = ResourceModel.builder()
-                .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations(AUDIT_CHECK_CONFIGURATIONS_V1_CFN)
-                .auditNotificationTargetConfigurations(null)
-                .roleArn(ROLE_ARN)
-                .build();
-        assertThat(handler.areNotificationTargetsEquivalent(model, DESCRIBE_RESPONSE_V1_STATE)).isFalse();
-    }
-
-    @Test
-    public void areNotificationTargetsEquivalent_DifferentTargetArns_ExpectFalse() {
-        Map<String, AuditNotificationTarget> mapWithDifferentTargetArn = ImmutableMap.of(
-                "SNS", AuditNotificationTarget.builder().enabled(true)
-                        .targetArn("differentTargetArn").roleArn(ROLE_ARN).build());
-        ResourceModel model = ResourceModel.builder()
-                .accountId(ACCOUNT_ID)
-                .auditCheckConfigurations(AUDIT_CHECK_CONFIGURATIONS_V1_CFN)
-                .auditNotificationTargetConfigurations(mapWithDifferentTargetArn)
-                .roleArn(ROLE_ARN)
-                .build();
-        assertThat(handler.areNotificationTargetsEquivalent(model, DESCRIBE_RESPONSE_V1_STATE)).isFalse();
     }
 
     @Test

@@ -94,8 +94,9 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         Map<String, AuditCheckConfiguration> checkConfigurationsForUpdate = new HashMap<>();
         describeResponse.auditCheckConfigurations().keySet().forEach(k ->
                 checkConfigurationsForUpdate.put(k, AuditCheckConfiguration.builder().enabled(false).build()));
-        model.getAuditCheckConfigurations().forEach((key, value) ->
-                checkConfigurationsForUpdate.put(key, Translator.translateCheckConfigurationFromCfnToIot(value)));
+        Map<String, AuditCheckConfiguration> translatedCheckConfigurations =
+                Translator.translateChecksFromCfnToIot(model);
+        translatedCheckConfigurations.forEach(checkConfigurationsForUpdate::put);
         return checkConfigurationsForUpdate;
     }
 
@@ -114,5 +115,4 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
                 .forEach(notificationTargetConfigurationsForUpdate::put);
         return notificationTargetConfigurationsForUpdate;
     }
-
 }

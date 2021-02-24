@@ -1,30 +1,6 @@
 package com.amazonaws.iot.accountauditconfiguration;
 
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_CHECK_CONFIGURATIONS_V2_CFN;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_V2_CFN;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_V2_IOT;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_REQUEST;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DISABLED_CFN;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DISABLED_IOT;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ENABLED_IOT;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ROLE_ARN;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
-import static com.amazonaws.iot.accountauditconfiguration.TestConstants.getNotificationBuilderIot;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,9 +18,29 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Map;
+
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ACCOUNT_ID;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_CHECK_CONFIGURATIONS_V2_CFN;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_V2_CFN;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.AUDIT_NOTIFICATION_TARGET_V2_IOT;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_REQUEST;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_V1_STATE;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DESCRIBE_RESPONSE_ZERO_STATE;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.DISABLED_IOT;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ENABLED_IOT;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.ROLE_ARN;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.createCfnRequest;
+import static com.amazonaws.iot.accountauditconfiguration.TestConstants.getNotificationBuilderIot;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class UpdateHandlerTest {
-
     private static final Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> CHECK_CONFIGURATION_FROM_EXPECTED_UPDATE_REQUEST =
             ImmutableMap.of(
                     // enable 1, disable 1
@@ -121,25 +117,6 @@ public class UpdateHandlerTest {
     }
 
     @Test
-    public void buildCheckConfigurationsForUpdate_RequestHasNonExistentCheck_ExpectRetention() {
-
-        Map<String, AuditCheckConfiguration> checks = new HashMap<>(AUDIT_CHECK_CONFIGURATIONS_V2_CFN);
-        checks.put("NonExistentCheck", DISABLED_CFN);
-        ResourceModel model = ResourceModel.builder()
-                .auditCheckConfigurations(checks)
-                .build();
-
-        Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> actualResult =
-                handler.buildCheckConfigurationsForUpdate(model, DESCRIBE_RESPONSE_V1_STATE);
-
-        Map<String, software.amazon.awssdk.services.iot.model.AuditCheckConfiguration> expected =
-                new HashMap<>(CHECK_CONFIGURATION_FROM_EXPECTED_UPDATE_REQUEST);
-        expected.put("NonExistentCheck", DISABLED_IOT);
-
-        assertThat(actualResult).isEqualTo(expected);
-    }
-
-    @Test
     public void buildNotificationTargetConfigurationsForUpdate_NoneInModel_DisabledInResult() {
 
         ResourceModel model = ResourceModel.builder()
@@ -148,24 +125,6 @@ public class UpdateHandlerTest {
 
         Map<String, software.amazon.awssdk.services.iot.model.AuditNotificationTarget> expectedResult =
                 ImmutableMap.of("SNS", getNotificationBuilderIot().enabled(false).build());
-        Map<String, software.amazon.awssdk.services.iot.model.AuditNotificationTarget> actualResult =
-                handler.buildNotificationTargetConfigurationsForUpdate(model);
-        assertThat(actualResult).isEqualTo(expectedResult);
-    }
-
-    @Test
-    public void buildNotificationTargetConfigurationsForUpdate_NonExistentTarget_ExpectRetention() {
-
-        ImmutableMap<String, AuditNotificationTarget> notifications = ImmutableMap.of(
-                "NonExistent", AuditNotificationTarget.builder().enabled(false).build());
-        ResourceModel model = ResourceModel.builder()
-                .auditNotificationTargetConfigurations(notifications)
-                .build();
-
-        Map<String, software.amazon.awssdk.services.iot.model.AuditNotificationTarget> expectedResult =
-                ImmutableMap.of(
-                        "SNS", getNotificationBuilderIot().enabled(false).build(),
-                        "NonExistent", getNotificationBuilderIot().enabled(false).build());
         Map<String, software.amazon.awssdk.services.iot.model.AuditNotificationTarget> actualResult =
                 handler.buildNotificationTargetConfigurationsForUpdate(model);
         assertThat(actualResult).isEqualTo(expectedResult);

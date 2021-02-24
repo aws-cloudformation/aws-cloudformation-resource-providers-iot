@@ -1,11 +1,47 @@
 {
   "AccountId": "{{AccountId}}",
   "AuditCheckConfigurations": {
-    "LOGGING_DISABLED_CHECK": {
+    "AuthenticatedCognitoRoleOverlyPermissiveCheck": {
+      "Enabled": false
+    },
+    "CaCertificateExpiringCheck": {
+      "Enabled": false
+    },
+    "CaCertificateKeyQualityCheck": {
+      "Enabled": false
+    },
+    "ConflictingClientIdsCheck": {
       "Enabled": true
     },
-    "CA_CERTIFICATE_EXPIRING_CHECK": {
+    "DeviceCertificateExpiringCheck": {
+      "Enabled": false
+    },
+    "DeviceCertificateKeyQualityCheck": {
+      "Enabled": false
+    },
+    "DeviceCertificateSharedCheck": {
+      "Enabled": false
+    },
+    "IotPolicyOverlyPermissiveCheck": {
+      "Enabled": false
+    },
+    "IotRoleAliasAllowsAccessToUnusedServicesCheck": {
+      "Enabled": false
+    },
+    "IotRoleAliasOverlyPermissiveCheck": {
+      "Enabled": false
+    },
+    "LoggingDisabledCheck": {
       "Enabled": true
+    },
+    "RevokedCaCertificateStillActiveCheck": {
+      "Enabled": false
+    },
+    "RevokedDeviceCertificateStillActiveCheck": {
+      "Enabled": false
+    },
+    "UnauthenticatedCognitoRoleOverlyPermissiveCheck": {
+      "Enabled": false
     }
   },
   "RoleArn": "{{RoleForDeviceDefenderAuditArn}}"
