@@ -3,6 +3,7 @@ package com.amazonaws.iot.mitigationaction;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.MitigationActionParams;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
@@ -74,6 +75,8 @@ public class Translator {
             return HandlerErrorCode.Throttling;
         } else if (e instanceof ResourceNotFoundException) {
             return HandlerErrorCode.NotFound;
+        } else if (e instanceof IotException && ((IotException) e).statusCode() == 403) {
+            return HandlerErrorCode.AccessDenied;
         } else {
             logger.log(String.format("Unexpected exception \"%s\", stack trace: %s",
                     e.getMessage(), ExceptionUtils.getStackTrace(e)));
