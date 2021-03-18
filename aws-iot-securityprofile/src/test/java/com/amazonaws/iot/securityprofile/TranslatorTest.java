@@ -2,6 +2,7 @@ package com.amazonaws.iot.securityprofile;
 
 import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 
 import java.util.ArrayList;
@@ -14,6 +15,9 @@ import static com.amazonaws.iot.securityprofile.Translator.translateBehaviorList
 import static com.amazonaws.iot.securityprofile.Translator.translateBehaviorSetFromCfnToIot;
 import static com.amazonaws.iot.securityprofile.Translator.translateMetricValueFromCfnToIot;
 import static com.amazonaws.iot.securityprofile.Translator.translateMetricValueFromIotToCfn;
+import static org.mockito.Mockito.mock;
+import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.proxy.Logger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,6 +54,18 @@ public class TranslatorTest {
 
         Set<Behavior> actualCfnBehaviors = translateBehaviorListFromIotToCfn(new ArrayList<>(iotBehaviors));
         assertThat(actualCfnBehaviors).isEqualTo(cfnBehaviors);
+    }
+
+    @Test
+    public void translateIotExceptionToCfn_AccessDeniedErrorCode() {
+
+        HandlerErrorCode result =
+                Translator.translateExceptionToErrorCode(IotException.builder().statusCode(403)
+                        .message("User not authorised to perform on resource with an explicit deny " +
+                                "(Service: Iot, Status Code: 403, Request ID: dummy, " +
+                                "Extended Request ID: null), stack trace")
+                        .build(), mock(Logger.class));
+        assertThat(result).isEqualByComparingTo(HandlerErrorCode.AccessDenied);
     }
 
     private Behavior buildSourceIpBehaviorCfn() {

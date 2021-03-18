@@ -4,6 +4,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -328,7 +329,7 @@ public class Translator {
     static ProgressEvent<ResourceModel, CallbackContext> translateExceptionToProgressEvent(
             ResourceModel model, Exception e, Logger logger) {
 
-        HandlerErrorCode errorCode = translateExceptionToProgressEvent(e, logger);
+        HandlerErrorCode errorCode = translateExceptionToErrorCode(e, logger);
         ProgressEvent<ResourceModel, CallbackContext> progressEvent =
                 ProgressEvent.<ResourceModel, CallbackContext>builder()
                         .resourceModel(model)
@@ -341,7 +342,7 @@ public class Translator {
         return progressEvent;
     }
 
-    private static HandlerErrorCode translateExceptionToProgressEvent(Exception e, Logger logger) {
+    static HandlerErrorCode translateExceptionToErrorCode(Exception e, Logger logger) {
 
         logger.log(String.format("Translating exception \"%s\", stack trace: %s",
                 e.getMessage(), ExceptionUtils.getStackTrace(e)));
@@ -370,6 +371,8 @@ public class Translator {
             return HandlerErrorCode.Throttling;
         } else if (e instanceof ResourceNotFoundException) {
             return HandlerErrorCode.NotFound;
+        } else if (e instanceof IotException && ((IotException) e).statusCode() == 403) {
+            return HandlerErrorCode.AccessDenied;
         } else {
             logger.log(String.format("Unexpected exception \"%s\", stack trace: %s",
                     e.getMessage(), ExceptionUtils.getStackTrace(e)));

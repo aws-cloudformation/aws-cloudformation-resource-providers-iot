@@ -3,6 +3,7 @@ package com.amazonaws.iot.accountauditconfiguration;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.utils.CollectionUtils;
@@ -51,6 +52,8 @@ public class Translator {
             return HandlerErrorCode.InternalFailure;
         } else if (e instanceof ThrottlingException) {
             return HandlerErrorCode.Throttling;
+        } else if (e instanceof IotException && ((IotException) e).statusCode() == 403) {
+            return HandlerErrorCode.AccessDenied;
         } else {
             logger.log(String.format("Unexpected exception \"%s\", stack trace: %s",
                     e.getMessage(), ExceptionUtils.getStackTrace(e)));
