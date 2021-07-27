@@ -59,14 +59,14 @@ public class HandlerTestBase {
     }
 
     DescribeJobTemplateResponse getDescribeResponse() {
-        final software.amazon.awssdk.services.iot.model.AbortCriteria c = software.amazon.awssdk.services.iot.model.AbortCriteria.builder()
+        final software.amazon.awssdk.services.iot.model.AbortCriteria criteria = software.amazon.awssdk.services.iot.model.AbortCriteria.builder()
                 .action(ACTION)
                 .failureType(FAILURE_TYPE)
                 .minNumberOfExecutedThings(minNumberOfExecutedThings)
                 .thresholdPercentage(thresholdPercentage)
                 .build();
         final software.amazon.awssdk.services.iot.model.AbortConfig abortConfig = software.amazon.awssdk.services.iot.model.AbortConfig.builder()
-                .criteriaList(c)
+                .criteriaList(criteria)
                 .build();
         final software.amazon.awssdk.services.iot.model.RateIncreaseCriteria rateIncreaseCriteria = software.amazon.awssdk.services.iot.model.RateIncreaseCriteria.builder()
                 .numberOfNotifiedThings(numberOfNotifiedThings)

@@ -17,9 +17,9 @@ public class Translator {
         if(model == null || model.getAbortConfig() == null || model.getAbortConfig().getCriteriaList().isEmpty()) {
             return null;
         }
-        List<software.amazon.iot.jobtemplate.AbortCriteria> listModelCriteria = model.getAbortConfig().getCriteriaList();
+        List<software.amazon.iot.jobtemplate.AbortCriteria> modelCriteriaList = model.getAbortConfig().getCriteriaList();
 
-        List<software.amazon.awssdk.services.iot.model.AbortCriteria> listSdkCriteria = listModelCriteria.stream().map( modelCriteria -> {
+        List<software.amazon.awssdk.services.iot.model.AbortCriteria> sdkCriteriaList = modelCriteriaList.stream().map( modelCriteria -> {
             return software.amazon.awssdk.services.iot.model.AbortCriteria.builder()
                     .action(modelCriteria.getAction())
                     .failureType(modelCriteria.getFailureType())
@@ -28,7 +28,7 @@ public class Translator {
                     .build();
         }).collect(Collectors.toList());
         return  AbortConfig.builder()
-                .criteriaList(listSdkCriteria)
+                .criteriaList(sdkCriteriaList)
                 .build();
     }
 
@@ -38,7 +38,7 @@ public class Translator {
         }
         List<software.amazon.awssdk.services.iot.model.AbortCriteria> sdkCriteriaList = config.criteriaList();
 
-        List<AbortCriteria> listModelCriteria = sdkCriteriaList.stream().map( sdkCriteria -> {
+        List<AbortCriteria> modelCriteriaList = sdkCriteriaList.stream().map( sdkCriteria -> {
             return AbortCriteria.builder()
                     .action(sdkCriteria.actionAsString())
                     .failureType(sdkCriteria.failureTypeAsString())
@@ -48,7 +48,7 @@ public class Translator {
         }).collect(Collectors.toList());
 
         return software.amazon.iot.jobtemplate.AbortConfig.builder()
-                .criteriaList(listModelCriteria)
+                .criteriaList(modelCriteriaList)
                 .build();
     }
 

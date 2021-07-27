@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
@@ -81,7 +82,7 @@ public class CreateHandlerTest extends HandlerTestBase{
     }
 
     @Test
-    public void handleRequest_ResourceAlreadyExists() {
+    public void handleRequest_ConflictException() {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -96,7 +97,7 @@ public class CreateHandlerTest extends HandlerTestBase{
     }
 
     @Test
-    public void handleRequest_InvalidRequest() {
+    public void handleRequest_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -111,7 +112,7 @@ public class CreateHandlerTest extends HandlerTestBase{
     }
 
     @Test
-    public void handleRequest_LimitExceeded() {
+    public void handleRequest_LimitExceededException() {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -126,7 +127,7 @@ public class CreateHandlerTest extends HandlerTestBase{
     }
 
     @Test
-    public void handleRequest_InternalError() {
+    public void handleRequest_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -156,7 +157,7 @@ public class CreateHandlerTest extends HandlerTestBase{
     }
 
     @Test
-    public void handleRequest_ServiceUnavailable() {
+    public void handleRequest_ServiceUnavailableException() {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -171,7 +172,7 @@ public class CreateHandlerTest extends HandlerTestBase{
     }
 
     @Test
-    public void handleRequest_Unauthorized() {
+    public void handleRequest_UnauthorizedException() {
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -184,4 +185,20 @@ public class CreateHandlerTest extends HandlerTestBase{
 
         Assertions.assertThrows(CfnAccessDeniedException.class, () -> handler.handleRequest(proxy, request, null, logger));
     }
+
+    @Test
+    public void handleRequest_UnexpectedException() {
+        final ResourceModel model = ResourceModel.builder().build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+
+        doThrow(RuntimeException.class)
+                .when(proxy)
+                .injectCredentialsAndInvokeV2(any(), any());
+
+        Assertions.assertThrows(CfnInternalFailureException.class, () -> handler.handleRequest(proxy, request, null, logger));
+    }
+
 }
