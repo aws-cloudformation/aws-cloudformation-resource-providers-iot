@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
@@ -160,5 +161,20 @@ public class ListHandlerTest extends HandlerTestBase{
                 .injectCredentialsAndInvokeV2(any(), any());
 
         Assertions.assertThrows(CfnAccessDeniedException.class, () -> handler.handleRequest(proxy, request, null, logger));
+    }
+
+    @Test
+    public void handleRequest_UnexpectedException() {
+        final ResourceModel model = ResourceModel.builder().build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+
+        doThrow(NullPointerException.class)
+                .when(proxy)
+                .injectCredentialsAndInvokeV2(any(), any());
+
+        Assertions.assertThrows(CfnInternalFailureException.class, () -> handler.handleRequest(proxy, request, null, logger));
     }
 }
