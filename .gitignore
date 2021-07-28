@@ -37,3 +37,4 @@ build/
 .settings/
 .gradle/
 docs/
+.idea/
