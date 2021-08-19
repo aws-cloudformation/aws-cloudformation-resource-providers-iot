@@ -25,8 +25,8 @@ Resources:
                 Action:
                 - "iot:CreateJobTemplate"
                 - "iot:DeleteJobTemplate"
-                - "iot:DescribeJobTemplates"
-                - "iot:ListJobTemplate"
+                - "iot:DescribeJobTemplate"
+                - "iot:ListJobTemplates"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
