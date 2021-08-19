@@ -23,10 +23,10 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "iot:CreateJobTemplates"
-                - "iot:DeleteJobTemplates"
+                - "iot:CreateJobTemplate"
+                - "iot:DeleteJobTemplate"
                 - "iot:DescribeJobTemplates"
-                - "iot:ListJobTemplates"
+                - "iot:ListJobTemplate"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:
