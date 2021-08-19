@@ -173,11 +173,13 @@
     "Description": {
       "description": "A description of the Job Template.",
       "type": "string",
+      "pattern": "[^\\p{C}]+",
       "maxLength": 2028
     },
     "Document": {
       "description": "The job document. Required if you don't specify a value for documentSource.",
-      "type": "string"
+      "type": "string",
+      "maxLength": 32768
     },
     "DocumentSource": {
       "description": "An S3 link to the job document to use in the template. Required if you don't specify a value for document.",
@@ -219,8 +221,8 @@
       "properties": {
         "CriteriaList": {
           "type": "array",
+          "insertionOrder": false,
           "minItems": 1,
-          "maxItems": 1,
           "items": {
             "$ref": "#/definitions/AbortCriteria"
           }
@@ -275,17 +277,17 @@
   "handlers": {
     "create": {
       "permissions": [
-        "iot:CreateJobTemplates"
+        "iot:CreateJobTemplate"
       ]
     },
     "read": {
       "permissions": [
-        "iot:DescribeJobTemplates"
+        "iot:DescribeJobTemplate"
       ]
     },
     "delete": {
       "permissions": [
-        "iot:DeleteJobTemplates"
+        "iot:DeleteJobTemplate"
       ]
     },
     "list": {

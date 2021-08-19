@@ -23,9 +23,9 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "iot:CreateJobTemplates"
-                - "iot:DeleteJobTemplates"
-                - "iot:DescribeJobTemplates"
+                - "iot:CreateJobTemplate"
+                - "iot:DeleteJobTemplate"
+                - "iot:DescribeJobTemplate"
                 - "iot:ListJobTemplates"
                 Resource: "*"
 Outputs:
