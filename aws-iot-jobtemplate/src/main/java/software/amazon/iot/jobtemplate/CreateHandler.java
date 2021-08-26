@@ -5,13 +5,11 @@ import software.amazon.awssdk.services.iot.model.AbortConfig;
 import software.amazon.awssdk.services.iot.model.ConflictException;
 import software.amazon.awssdk.services.iot.model.CreateJobTemplateRequest;
 import software.amazon.awssdk.services.iot.model.CreateJobTemplateResponse;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.PresignedUrlConfig;
-import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.Tag;
@@ -85,6 +83,13 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
                     .jobTemplateArn(response.jobTemplateArn())
                     .jobTemplateId(response.jobTemplateId())
+                    .abortConfig(model.getAbortConfig())
+                    .description(model.getDescription())
+                    .document(model.getDocument())
+                    .documentSource(model.getDocumentSource())
+                    .jobExecutionsRolloutConfig(model.getJobExecutionsRolloutConfig())
+                    .presignedUrlConfig(model.getPresignedUrlConfig())
+                    .timeoutConfig(model.getTimeoutConfig())
                     .build());
 
         } catch (final ConflictException e){

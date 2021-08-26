@@ -2,8 +2,6 @@ package software.amazon.iot.jobtemplate;
 
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DeleteJobTemplateRequest;
-import software.amazon.awssdk.services.iot.model.DeleteJobTemplateResponse;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -20,7 +18,6 @@ import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 public class DeleteHandler extends BaseHandler<CallbackContext> {
@@ -64,9 +61,6 @@ public class DeleteHandler extends BaseHandler<CallbackContext> {
             throw new CfnInternalFailureException(e);
         }
 
-        return ProgressEvent.<ResourceModel, CallbackContext>builder()
-            .resourceModel(model)
-            .status(OperationStatus.SUCCESS)
-            .build();
+        return ProgressEvent.defaultSuccessHandler(null);
     }
 }
