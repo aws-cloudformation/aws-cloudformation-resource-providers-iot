@@ -1,7 +1,6 @@
 package software.amazon.iot.jobtemplate;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ListJobTemplatesRequest;

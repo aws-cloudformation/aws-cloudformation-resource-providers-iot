@@ -1,21 +1,16 @@
 package software.amazon.iot.jobtemplate;
 
-import org.checkerframework.checker.units.qual.A;
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.AbortCriteria;
 import software.amazon.awssdk.services.iot.model.DescribeJobTemplateRequest;
 import software.amazon.awssdk.services.iot.model.DescribeJobTemplateResponse;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
-import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -26,10 +21,8 @@ import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
-import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.List;
 
 import static software.amazon.iot.jobtemplate.Translator.getAbortConfig;
 import static software.amazon.iot.jobtemplate.Translator.getJobExecutionsRolloutConfig;

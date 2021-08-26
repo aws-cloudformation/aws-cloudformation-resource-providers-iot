@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.iot.model.RateIncreaseCriteria;
 import software.amazon.awssdk.services.iot.model.TimeoutConfig;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

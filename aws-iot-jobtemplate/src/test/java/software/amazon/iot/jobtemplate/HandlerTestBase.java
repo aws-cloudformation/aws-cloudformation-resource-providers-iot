@@ -3,9 +3,10 @@ package software.amazon.iot.jobtemplate;
 import org.mockito.Mock;
 import software.amazon.awssdk.services.iot.model.CreateJobTemplateResponse;
 import software.amazon.awssdk.services.iot.model.DescribeJobTemplateResponse;
-import software.amazon.awssdk.services.iot.model.Job;
+import software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig;
 import software.amazon.awssdk.services.iot.model.JobTemplateSummary;
 import software.amazon.awssdk.services.iot.model.ListJobTemplatesResponse;
+import software.amazon.awssdk.services.iot.model.PresignedUrlConfig;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
@@ -18,7 +19,6 @@ public class HandlerTestBase {
     final static String ROLE_ARN = "TEST";
     final static String JOB_TEMPLATE_ID = "JobTemplate-Test";
     final static String JOB_TEMPLATE_ARN = "test-jobtemplate-arn";
-    final static String JOB_ARN = "test-job-arn";
     final static String JOB_TEMPLATE_DESCRIPTION = "test";
 
     final static int minNumberOfExecutedThings = 1;
@@ -59,35 +59,10 @@ public class HandlerTestBase {
     }
 
     DescribeJobTemplateResponse getDescribeResponse() {
-        final software.amazon.awssdk.services.iot.model.AbortCriteria criteria = software.amazon.awssdk.services.iot.model.AbortCriteria.builder()
-                .action(ACTION)
-                .failureType(FAILURE_TYPE)
-                .minNumberOfExecutedThings(minNumberOfExecutedThings)
-                .thresholdPercentage(thresholdPercentage)
-                .build();
-        final software.amazon.awssdk.services.iot.model.AbortConfig abortConfig = software.amazon.awssdk.services.iot.model.AbortConfig.builder()
-                .criteriaList(criteria)
-                .build();
-        final software.amazon.awssdk.services.iot.model.RateIncreaseCriteria rateIncreaseCriteria = software.amazon.awssdk.services.iot.model.RateIncreaseCriteria.builder()
-                .numberOfNotifiedThings(numberOfNotifiedThings)
-                .numberOfSucceededThings(numberOfSucceededThings)
-                .build();
-        final software.amazon.awssdk.services.iot.model.ExponentialRolloutRate exponentialRolloutRate = software.amazon.awssdk.services.iot.model.ExponentialRolloutRate.builder()
-                .rateIncreaseCriteria(rateIncreaseCriteria)
-                .incrementFactor(incrementFactor)
-                .baseRatePerMinute(baseRatePerMinute)
-                .build();
-        final software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig jobExecutionsRolloutConfig = software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig.builder()
-                .exponentialRate(exponentialRolloutRate)
-                .maximumPerMinute(maximumPerMinute)
-                .build();
-        final software.amazon.awssdk.services.iot.model.PresignedUrlConfig presignedUrlConfig = software.amazon.awssdk.services.iot.model.PresignedUrlConfig.builder()
-                .expiresInSec((long)expiresInSec)
-                .roleArn(ROLE_ARN)
-                .build();
-        final software.amazon.awssdk.services.iot.model.TimeoutConfig timeoutConfig = software.amazon.awssdk.services.iot.model.TimeoutConfig.builder()
-                .inProgressTimeoutInMinutes((long)inProgressTimeoutInMinutes)
-                .build();
+        final software.amazon.awssdk.services.iot.model.AbortConfig abortConfig = getAbortConfig();
+        final JobExecutionsRolloutConfig jobExecutionsRolloutConfig = getJobExecutionsRolloutConfig();
+        final PresignedUrlConfig presignedUrlConfig = getPresignedUrlConfig();
+        final software.amazon.awssdk.services.iot.model.TimeoutConfig timeoutConfig = getTimeoutConfig();
 
         return DescribeJobTemplateResponse.builder()
                 .jobTemplateId(JOB_TEMPLATE_ID)
@@ -97,6 +72,47 @@ public class HandlerTestBase {
                 .jobExecutionsRolloutConfig(jobExecutionsRolloutConfig)
                 .presignedUrlConfig(presignedUrlConfig)
                 .timeoutConfig(timeoutConfig)
+                .build();
+    }
+
+    protected software.amazon.awssdk.services.iot.model.AbortConfig getAbortConfig() {
+        final software.amazon.awssdk.services.iot.model.AbortCriteria criteria = software.amazon.awssdk.services.iot.model.AbortCriteria.builder()
+                .action(ACTION)
+                .failureType(FAILURE_TYPE)
+                .minNumberOfExecutedThings(minNumberOfExecutedThings)
+                .thresholdPercentage(thresholdPercentage)
+                .build();
+        return software.amazon.awssdk.services.iot.model.AbortConfig.builder()
+                .criteriaList(criteria)
+                .build();
+    }
+
+    protected software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig getJobExecutionsRolloutConfig() {
+        final software.amazon.awssdk.services.iot.model.RateIncreaseCriteria rateIncreaseCriteria = software.amazon.awssdk.services.iot.model.RateIncreaseCriteria.builder()
+                .numberOfNotifiedThings(numberOfNotifiedThings)
+                .numberOfSucceededThings(numberOfSucceededThings)
+                .build();
+        final software.amazon.awssdk.services.iot.model.ExponentialRolloutRate exponentialRolloutRate = software.amazon.awssdk.services.iot.model.ExponentialRolloutRate.builder()
+                .rateIncreaseCriteria(rateIncreaseCriteria)
+                .incrementFactor(incrementFactor)
+                .baseRatePerMinute(baseRatePerMinute)
+                .build();
+        return software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig.builder()
+                .exponentialRate(exponentialRolloutRate)
+                .maximumPerMinute(maximumPerMinute)
+                .build();
+    }
+
+    protected software.amazon.awssdk.services.iot.model.PresignedUrlConfig getPresignedUrlConfig() {
+        return software.amazon.awssdk.services.iot.model.PresignedUrlConfig.builder()
+                .expiresInSec((long)expiresInSec)
+                .roleArn(ROLE_ARN)
+                .build();
+    }
+
+    protected software.amazon.awssdk.services.iot.model.TimeoutConfig getTimeoutConfig() {
+        return software.amazon.awssdk.services.iot.model.TimeoutConfig.builder()
+                .inProgressTimeoutInMinutes((long)inProgressTimeoutInMinutes)
                 .build();
     }
 }

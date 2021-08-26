@@ -1,10 +1,8 @@
 package software.amazon.iot.jobtemplate;
 
 import org.junit.jupiter.api.Assertions;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
-import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
@@ -15,7 +13,6 @@ import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
@@ -66,7 +63,6 @@ public class DeleteHandlerTest {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();

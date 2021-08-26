@@ -267,9 +267,21 @@
   "readOnlyProperties": [
     "/properties/JobTemplateArn"
   ],
+  "writeOnlyProperties": [
+    "/properties/JobArn",
+    "/properties/Tags"
+  ],
   "createOnlyProperties": [
     "/properties/JobTemplateId",
-    "/properties/JobArn"
+    "/properties/JobArn",
+    "/properties/Description",
+    "/properties/Document",
+    "/properties/DocumentSource",
+    "/properties/TimeoutConfig",
+    "/properties/JobExecutionsRolloutConfig",
+    "/properties/AbortConfig",
+    "/properties/PresignedUrlConfig",
+    "/properties/Tags"
   ],
   "primaryIdentifier": [
     "/properties/JobTemplateId"

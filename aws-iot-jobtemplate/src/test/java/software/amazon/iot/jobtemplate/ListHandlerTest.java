@@ -1,7 +1,6 @@
 package software.amazon.iot.jobtemplate;
 
 import org.junit.jupiter.api.Assertions;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.JobTemplateSummary;
