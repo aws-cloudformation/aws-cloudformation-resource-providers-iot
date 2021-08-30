@@ -67,7 +67,7 @@ public class ListHandlerTest extends HandlerTestBase{
         for(JobTemplateSummary summary : expectedResponse.jobTemplates()) {
             expectedModels.add(ResourceModel.builder()
                     .jobTemplateId(summary.jobTemplateId())
-                    .jobTemplateArn(summary.jobTemplateArn())
+                    .arn(summary.jobTemplateArn())
                     .build());
         }
 

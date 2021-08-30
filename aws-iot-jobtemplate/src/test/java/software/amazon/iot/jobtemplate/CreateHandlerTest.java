@@ -62,7 +62,7 @@ public class CreateHandlerTest extends HandlerTestBase{
         final CreateJobTemplateResponse expectedResponse = getCreateResponse();
 
         final ResourceModel expectedModel = ResourceModel.builder()
-                .jobTemplateArn(JOB_TEMPLATE_ARN)
+                .arn(JOB_TEMPLATE_ARN)
                 .jobTemplateId(JOB_TEMPLATE_ID)
                 .description(JOB_TEMPLATE_DESCRIPTION)
                 .build();
@@ -100,7 +100,7 @@ public class CreateHandlerTest extends HandlerTestBase{
 
         final ResourceModel expectedModel = ResourceModel.builder()
                 .jobTemplateId(JOB_TEMPLATE_ID)
-                .jobTemplateArn(JOB_TEMPLATE_ARN)
+                .arn(JOB_TEMPLATE_ARN)
                 .description(JOB_TEMPLATE_DESCRIPTION)
                 .abortConfig(model.getAbortConfig())
                 .jobExecutionsRolloutConfig(model.getJobExecutionsRolloutConfig())

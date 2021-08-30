@@ -63,7 +63,7 @@ public class ReadHandlerTest extends HandlerTestBase{
 
         final ResourceModel expectedModel = ResourceModel.builder()
                 .jobTemplateId(JOB_TEMPLATE_ID)
-                .jobTemplateArn(JOB_TEMPLATE_ARN)
+                .arn(JOB_TEMPLATE_ARN)
                 .description(JOB_TEMPLATE_DESCRIPTION)
                 .abortConfig(Translator.getAbortConfig(expectedResponse.abortConfig()))
                 .jobExecutionsRolloutConfig(Translator.getJobExecutionsRolloutConfig(expectedResponse.jobExecutionsRolloutConfig()))

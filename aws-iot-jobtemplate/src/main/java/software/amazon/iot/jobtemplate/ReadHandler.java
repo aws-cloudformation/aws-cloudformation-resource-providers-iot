@@ -61,7 +61,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
 
             return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
-                    .jobTemplateArn(response.jobTemplateArn())
+                    .arn(response.jobTemplateArn())
                     .jobTemplateId(response.jobTemplateId())
                     .abortConfig(abortConfig)
                     .description(response.description())

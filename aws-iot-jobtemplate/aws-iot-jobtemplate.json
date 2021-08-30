@@ -157,7 +157,7 @@
     }
   },
   "properties": {
-    "JobTemplateArn": {
+    "Arn": {
       "type": "string"
     },
     "JobArn": {
@@ -229,7 +229,7 @@
         }
       },
       "required": [
-        "AbortCriteria"
+        "CriteriaList"
       ],
       "additionalProperties": false
     },
@@ -265,7 +265,7 @@
   ],
   "additionalProperties": false,
   "readOnlyProperties": [
-    "/properties/JobTemplateArn"
+    "/properties/Arn"
   ],
   "writeOnlyProperties": [
     "/properties/JobArn",
@@ -289,7 +289,9 @@
   "handlers": {
     "create": {
       "permissions": [
-        "iot:CreateJobTemplate"
+        "iot:CreateJobTemplate",
+        "iam:PassRole",
+        "s3:GetObject"
       ]
     },
     "read": {
