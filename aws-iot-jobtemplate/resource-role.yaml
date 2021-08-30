@@ -23,10 +23,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "iam:PassRole"
                 - "iot:CreateJobTemplate"
                 - "iot:DeleteJobTemplate"
                 - "iot:DescribeJobTemplate"
                 - "iot:ListJobTemplates"
+                - "s3:GetObject"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

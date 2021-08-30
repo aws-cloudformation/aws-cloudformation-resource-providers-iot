@@ -49,7 +49,7 @@ public class ListHandler extends BaseHandler<CallbackContext> {
             final List<ResourceModel> models = response.jobTemplates().stream()
                     .map(jobTemplateSummary -> ResourceModel.builder()
                             .jobTemplateId(jobTemplateSummary.jobTemplateId())
-                            .jobTemplateArn(jobTemplateSummary.jobTemplateArn())
+                            .arn(jobTemplateSummary.jobTemplateArn())
                             .description(jobTemplateSummary.description())
                             .build()
                     )

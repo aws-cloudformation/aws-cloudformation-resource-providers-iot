@@ -81,7 +81,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
             logger.log(String.format("%s [%s] created successfully", ResourceModel.TYPE_NAME, model.getJobTemplateId()));
 
             return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
-                    .jobTemplateArn(response.jobTemplateArn())
+                    .arn(response.jobTemplateArn())
                     .jobTemplateId(response.jobTemplateId())
                     .abortConfig(model.getAbortConfig())
                     .description(model.getDescription())
