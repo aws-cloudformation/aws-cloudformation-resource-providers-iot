@@ -179,7 +179,7 @@
     "Document": {
       "description": "The job document. Required if you don't specify a value for documentSource.",
       "type": "string",
-      "maxLength": 32768
+      "maxLength": 4096
     },
     "DocumentSource": {
       "description": "An S3 link to the job document to use in the template. Required if you don't specify a value for document.",
