@@ -1,0 +1,15 @@
+{
+  "RuleName": "ContractTestRule",
+  "TopicRulePayload": {
+    "RuleDisabled": "false",
+    "Sql": "SELECT temp FROM 'someTopic' WHERE temp > 60",
+    "Actions": [
+      {
+        "Republish": {
+          "Topic": "",
+          "RoleArn": "arn:aws:iam:us-east-1:123456789012:role/role123"
+        }
+      }
+    ]
+  }
+}
