@@ -1,0 +1,16 @@
+{
+  "RuleName": "ContractTestRule",
+  "TopicRulePayload": {
+    "AwsIotSqlVersion": "2015-10-08",
+    "RuleDisabled": false,
+    "Sql": "SELECT temp FROM 'someTopic' WHERE temp > 60",
+    "Actions": [
+      {
+        "Republish": {
+          "Topic": "republish/topic",
+          "RoleArn": "{{ContractTestRoleArn}}"
+        }
+      }
+    ]
+  }
+}
