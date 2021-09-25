@@ -263,6 +263,7 @@
     "JobTemplateId",
     "Description"
   ],
+  "taggable": true,
   "additionalProperties": false,
   "readOnlyProperties": [
     "/properties/Arn"
