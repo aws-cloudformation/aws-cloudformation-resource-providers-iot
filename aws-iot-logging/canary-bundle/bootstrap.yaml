@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Resources for running the iotLogging canary tests'
+Resources:
+  RoleForIoTLoggingCanary:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "iot.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+Outputs:
+  Role:
+    Value: !GetAtt RoleForIoTLoggingCanary.Arn
+    Export:
+      Name: RoleForIoTLoggingCanaryArn
