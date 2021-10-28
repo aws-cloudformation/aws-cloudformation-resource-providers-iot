@@ -86,4 +86,3 @@ public class UpdateHandler extends BaseHandler<CallbackContext> {
         return ProgressEvent.defaultSuccessHandler(model);
     }
 }
-

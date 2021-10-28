@@ -1,5 +1,5 @@
 {
-    "LogLevel": "ERROR",
-    "TargetType": "THING_GROUP",
-    "TargetName": "CFNContractTestThingGroup"
+  "LogLevel": "ERROR",
+  "TargetType": "THING_GROUP",
+  "TargetName": "CFNContractTestThingGroup"
 }

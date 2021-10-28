@@ -1,5 +1,5 @@
 {
-    "LogLevel": "DEBUG",
-    "TargetType": "THING_GROUP",
-    "TargetName": "CFNContractTestThingGroup"
+  "LogLevel": "DEBUG",
+  "TargetType": "THING_GROUP",
+  "TargetName": "CFNContractTestThingGroup"
 }
