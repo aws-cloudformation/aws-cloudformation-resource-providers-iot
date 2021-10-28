@@ -1,0 +1,7 @@
+{
+  "FasPolicyPath": {
+    "aws": "/policies/AuthRuntime/authNPolicy/cloudformation/aws-iot-logging.2021-10-05-07-57-01",
+    "aws-cn": "/policies/AuthRuntime/authNPolicy/cloudformation/aws-iot-logging.2021-10-21-18-36-43-BJS",
+    "aws-us-gov": "/policies/AuthRuntime/authNPolicy/cloudformation/aws-iot-logging.2021-10-21-18-38-42-PDT"
+  }
+}

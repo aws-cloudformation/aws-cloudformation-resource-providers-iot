@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Resources for running the iotLogging contract tests'
+Resources:
+  RoleForIoTLogging:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "iot.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+Outputs:
+  RoleForIoTLoggingOutput:
+    Value:
+      Fn::GetAtt: [RoleForIoTLogging, Arn]
+    Export:
+      Name: RoleForIoTLoggingArn
+  AccountIdOutput:
+    Value:
+      Fn::Sub: "${AWS::AccountId}"
+    Export:
+      Name: AccountId
