@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  IoTResourceSpecificLoggingCanaryTest:
+    Type: AWS::IoT::ResourceSpecificLogging
+    Properties:
+      LogLevel: "ERROR"
+      TargetType: "THING_GROUP"
+      TargetName: "CFNCanaryThingGroup"
