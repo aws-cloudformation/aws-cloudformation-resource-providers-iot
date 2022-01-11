@@ -1,0 +1,12 @@
+{
+  "BillingGroupName": "CfnContractTestBillingGroup",
+  "BillingGroupProperties": {
+    "BillingGroupDescription": "test BillingGroup for Cfn Contract Tests"
+  },
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}

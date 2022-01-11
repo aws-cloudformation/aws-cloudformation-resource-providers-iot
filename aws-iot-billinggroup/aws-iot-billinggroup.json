@@ -1,0 +1,114 @@
+{
+  "typeName": "AWS::IoT::BillingGroup",
+  "description": "Resource Type definition for AWS::IoT::BillingGroup",
+  "additionalProperties": false,
+  "properties": {
+    "Id": {
+      "type": "string"
+    },
+    "Arn": {
+      "type": "string"
+    },
+    "BillingGroupName": {
+      "type": "string",
+      "pattern": "[a-zA-Z0-9]+",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "Tags": {
+      "description": "An array of key-value pairs to apply to this resource.",
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "insertionOrder": false,
+      "items": {
+        "$ref": "#/definitions/Tag"
+      }
+    },
+    "BillingGroupProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "BillingGroupDescription": {
+          "type": "string",
+          "maxLength": 2028
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Tag": {
+      "description": "A key-value pair to associate with a resource.",
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "string",
+          "description": "The key name of the tag. You can specify a value that is 1 to 127 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+          "minLength": 1,
+          "maxLength": 127
+        },
+        "Value": {
+          "type": "string",
+          "description": "The value for the tag. You can specify a value that is 1 to 255 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      },
+      "required": [
+        "Key",
+        "Value"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "taggable": true,
+  "readOnlyProperties": [
+    "/properties/Arn",
+    "/properties/Id"
+  ],
+  "writeOnlyProperties": [
+    "/properties/BillingGroupProperties"
+  ],
+  "createOnlyProperties": [
+    "/properties/BillingGroupName"
+  ],
+  "primaryIdentifier": [
+    "/properties/BillingGroupName"
+  ],
+  "handlers": {
+    "create": {
+      "permissions": [
+        "iot:DescribeBillingGroup",
+        "iot:ListTagsForResource",
+        "iot:CreateBillingGroup"
+      ]
+    },
+    "delete": {
+      "permissions": [
+        "iot:DescribeBillingGroup",
+        "iot:DeleteBillingGroup"
+      ]
+    },
+    "list": {
+      "permissions": [
+        "iot:ListBillingGroups",
+        "iot:ListTagsForResource"
+      ]
+    },
+    "read": {
+      "permissions": [
+        "iot:DescribeBillingGroup",
+        "iot:ListTagsForResource"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "iot:DescribeBillingGroup",
+        "iot:UpdateBillingGroup",
+        "iot:ListTagsForResource",
+        "iot:TagResource",
+        "iot:UntagResource"
+      ]
+    }
+  }
+}
