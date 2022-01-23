@@ -25,16 +25,6 @@ import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UpdateThingGroupRequest;
-import software.amazon.cloudformation.exceptions.BaseHandlerException;
-import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
-import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
-import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -112,30 +102,6 @@ public class Translator {
                     e.getMessage(), ExceptionUtils.getStackTrace(e)));
             // Any other exception at this point is unexpected.
             return HandlerErrorCode.InternalFailure;
-        }
-    }
-
-    static BaseHandlerException translateIotExceptionToHandlerException(IotException e) {
-        if (e instanceof ResourceAlreadyExistsException) {
-            return new CfnAlreadyExistsException(e);
-        } else if (e instanceof UnauthorizedException) {
-            return new CfnAccessDeniedException(e);
-        } else if (e instanceof InvalidRequestException) {
-            return new CfnInvalidRequestException(e);
-        } else if (e instanceof ConflictingResourceUpdateException | e instanceof DeleteConflictException) {
-            return new CfnResourceConflictException(e);
-        } else if (e instanceof ThrottlingException) {
-            return new CfnThrottlingException(e);
-        } else if (e instanceof InternalFailureException) {
-            return new CfnInternalFailureException(e);
-        } else if (e instanceof InternalException) {
-            return new CfnServiceInternalErrorException(e);
-        }else if (e instanceof ServiceUnavailableException) {
-            return new CfnGeneralServiceException(e);
-        } else if (e instanceof ResourceNotFoundException) {
-            return new CfnNotFoundException(e);
-        } else {
-            return new CfnGeneralServiceException(e);
         }
     }
 
