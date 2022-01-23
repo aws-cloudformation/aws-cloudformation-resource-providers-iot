@@ -62,7 +62,7 @@ public class Translator {
                 e.getMessage(), ExceptionUtils.getStackTrace(e)));
 
         // We're handling all the exceptions documented in API docs
-        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingGroup.html#API_CreateThingGroup_Errors
+        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThing.html#API_CreateThing_Errors
         // (+same pages for other APIs)
         // For Throttling and InternalFailure, we want CloudFormation to retry, and it will do so based on the error code.
         // Reference with Retryable/Terminal in comments for each: https://tinyurl.com/y378qdno
