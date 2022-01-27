@@ -11,7 +11,7 @@
     },
     "BillingGroupName": {
       "type": "string",
-      "pattern": "[a-zA-Z0-9]+",
+      "pattern": "[a-zA-Z0-9:_-]+",
       "minLength": 1,
       "maxLength": 128
     },
@@ -31,7 +31,8 @@
       "properties": {
         "BillingGroupDescription": {
           "type": "string",
-          "maxLength": 2028
+          "maxLength": 2028,
+          "pattern": "[\\p{Graph}\\x20]*"
         }
       }
     }
@@ -43,15 +44,15 @@
       "properties": {
         "Key": {
           "type": "string",
-          "description": "The key name of the tag. You can specify a value that is 1 to 127 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+          "description": "The key name of the tag. You can specify a value that is 1 to 128 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
           "minLength": 1,
-          "maxLength": 127
+          "maxLength": 128
         },
         "Value": {
           "type": "string",
-          "description": "The value for the tag. You can specify a value that is 1 to 255 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+          "description": "The value for the tag. You can specify a value that is 1 to 256 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
           "minLength": 1,
-          "maxLength": 255
+          "maxLength": 256
         }
       },
       "required": [
@@ -80,7 +81,8 @@
       "permissions": [
         "iot:DescribeBillingGroup",
         "iot:ListTagsForResource",
-        "iot:CreateBillingGroup"
+        "iot:CreateBillingGroup",
+        "iot:TagResource"
       ]
     },
     "delete": {
