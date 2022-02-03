@@ -56,8 +56,8 @@ public class CreateHandlerTest extends HandlerTestBase{
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
-            .build();
+                .desiredResourceState(model)
+                .build();
 
         final CreateJobTemplateResponse expectedResponse = getCreateResponse();
 
@@ -70,7 +70,7 @@ public class CreateHandlerTest extends HandlerTestBase{
         Mockito.when(proxy.injectCredentialsAndInvokeV2(any(CreateJobTemplateRequest.class),any())).thenReturn(expectedResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
@@ -90,6 +90,7 @@ public class CreateHandlerTest extends HandlerTestBase{
                 .jobExecutionsRolloutConfig(Translator.getJobExecutionsRolloutConfig(getJobExecutionsRolloutConfig()))
                 .presignedUrlConfig(Translator.getPresignedUrlConfig(getPresignedUrlConfig()))
                 .timeoutConfig(Translator.getTimeoutConfig(getTimeoutConfig()))
+                .jobExecutionsRetryConfig(Translator.getRetryConfig(getRetryConfig()))
                 .build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
@@ -106,6 +107,7 @@ public class CreateHandlerTest extends HandlerTestBase{
                 .jobExecutionsRolloutConfig(model.getJobExecutionsRolloutConfig())
                 .presignedUrlConfig(model.getPresignedUrlConfig())
                 .timeoutConfig(model.getTimeoutConfig())
+                .jobExecutionsRetryConfig(model.getJobExecutionsRetryConfig())
                 .build();
 
         Mockito.when(proxy.injectCredentialsAndInvokeV2(any(CreateJobTemplateRequest.class),any())).thenReturn(expectedResponse);
