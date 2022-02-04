@@ -7,11 +7,14 @@ import software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig;
 import software.amazon.awssdk.services.iot.model.JobTemplateSummary;
 import software.amazon.awssdk.services.iot.model.ListJobTemplatesResponse;
 import software.amazon.awssdk.services.iot.model.PresignedUrlConfig;
+import software.amazon.awssdk.services.iot.model.RetryCriteria;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static software.amazon.iot.jobtemplate.Translator.getRetryConfig;
 
 public class HandlerTestBase {
     final static String ACTION = "CANCEL";
@@ -28,6 +31,7 @@ public class HandlerTestBase {
     final static double incrementFactor = 2.0;
     final static int baseRatePerMinute = 5;
     final static int maximumPerMinute = 1000;
+    final static int numberOfRetries = 1;
     final int expiresInSec = 10;
     final int inProgressTimeoutInMinutes = 15;
 
@@ -63,6 +67,7 @@ public class HandlerTestBase {
         final JobExecutionsRolloutConfig jobExecutionsRolloutConfig = getJobExecutionsRolloutConfig();
         final PresignedUrlConfig presignedUrlConfig = getPresignedUrlConfig();
         final software.amazon.awssdk.services.iot.model.TimeoutConfig timeoutConfig = getTimeoutConfig();
+        final software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig retryConfig = getRetryConfig();
 
         return DescribeJobTemplateResponse.builder()
                 .jobTemplateId(JOB_TEMPLATE_ID)
@@ -72,6 +77,7 @@ public class HandlerTestBase {
                 .jobExecutionsRolloutConfig(jobExecutionsRolloutConfig)
                 .presignedUrlConfig(presignedUrlConfig)
                 .timeoutConfig(timeoutConfig)
+                .jobExecutionsRetryConfig(retryConfig)
                 .build();
     }
 
@@ -113,6 +119,16 @@ public class HandlerTestBase {
     protected software.amazon.awssdk.services.iot.model.TimeoutConfig getTimeoutConfig() {
         return software.amazon.awssdk.services.iot.model.TimeoutConfig.builder()
                 .inProgressTimeoutInMinutes((long)inProgressTimeoutInMinutes)
+                .build();
+    }
+
+    protected software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig getRetryConfig() {
+        software.amazon.awssdk.services.iot.model.RetryCriteria retryCriteria = RetryCriteria.builder()
+                .failureType(FAILURE_TYPE)
+                .numberOfRetries(numberOfRetries)
+                .build();
+        return software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig.builder()
+                .criteriaList(retryCriteria)
                 .build();
     }
 }
