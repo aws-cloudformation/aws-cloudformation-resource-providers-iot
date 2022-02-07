@@ -132,6 +132,29 @@
       "minimum": 60,
       "maximum": 3600
     },
+    "RetryCriteria": {
+      "description": "Specifies how many times a failure type should be retried.",
+      "type": "object",
+      "properties": {
+        "NumberOfRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "FailureType": {
+          "$ref": "#/definitions/JobRetryFailureType"
+        }
+      },
+      "additionalProperties": false
+    },
+    "JobRetryFailureType": {
+      "type": "string",
+      "enum": [
+        "FAILED",
+        "TIMED_OUT",
+        "ALL"
+      ]
+    },
     "Tag": {
       "description": "A key-value pair to associate with a resource.",
       "type": "object",
@@ -247,6 +270,21 @@
       "required": [
         "RoleArn"
       ],
+      "additionalProperties": false
+    },
+    "JobExecutionsRetryConfig": {
+      "type": "object",
+      "properties": {
+        "RetryCriteriaList": {
+          "type": "array",
+          "insertionOrder": false,
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/RetryCriteria"
+          }
+        }
+      },
       "additionalProperties": false
     },
     "Tags": {
