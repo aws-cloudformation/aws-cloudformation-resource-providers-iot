@@ -1,6 +1,7 @@
 package software.amazon.iot.jobtemplate;
 
 import software.amazon.awssdk.services.iot.model.AbortConfig;
+import software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig;
 import software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig;
 import software.amazon.awssdk.services.iot.model.PresignedUrlConfig;
 import software.amazon.awssdk.services.iot.model.RateIncreaseCriteria;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 public class Translator {
 
     static software.amazon.awssdk.services.iot.model.AbortConfig getAbortConfig(ResourceModel model) {
-        if(model == null || model.getAbortConfig() == null || model.getAbortConfig().getCriteriaList().isEmpty()) {
+        if(model == null || model.getAbortConfig() == null) {
             return null;
         }
         List<software.amazon.iot.jobtemplate.AbortCriteria> modelCriteriaList = model.getAbortConfig().getCriteriaList();
@@ -133,7 +134,44 @@ public class Translator {
                 .build();
     }
 
-     static List<software.amazon.awssdk.services.iot.model.Tag> getTags(ResourceModel model) {
+    static software.amazon.iot.jobtemplate.JobExecutionsRetryConfig getRetryConfig(JobExecutionsRetryConfig config) {
+        if(config == null) {
+            return null;
+        }
+
+        List<software.amazon.awssdk.services.iot.model.RetryCriteria> sdkCriteriaList = config.criteriaList();
+
+        List<software.amazon.iot.jobtemplate.RetryCriteria> modelCriteriaList = sdkCriteriaList.stream().map( sdkCriteria -> {
+            return software.amazon.iot.jobtemplate.RetryCriteria.builder()
+                    .numberOfRetries(sdkCriteria.numberOfRetries())
+                    .failureType(sdkCriteria.failureTypeAsString())
+                    .build();
+        }).collect(Collectors.toList());
+
+        return software.amazon.iot.jobtemplate.JobExecutionsRetryConfig.builder()
+                .retryCriteriaList(modelCriteriaList)
+                .build();
+    }
+
+
+    static software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig getRetryConfig(ResourceModel model) {
+        if(model == null || model.getJobExecutionsRetryConfig() == null) {
+            return null;
+        }
+        List<software.amazon.iot.jobtemplate.RetryCriteria> retryCriteriaList = model.getJobExecutionsRetryConfig().getRetryCriteriaList();
+
+        List<software.amazon.awssdk.services.iot.model.RetryCriteria> sdkCriteriaList = retryCriteriaList.stream().map( modelCriteria -> {
+            return software.amazon.awssdk.services.iot.model.RetryCriteria.builder()
+                    .numberOfRetries(modelCriteria.getNumberOfRetries())
+                    .failureType(modelCriteria.getFailureType())
+                    .build();
+        }).collect(Collectors.toList());
+        return JobExecutionsRetryConfig.builder()
+                .criteriaList(sdkCriteriaList)
+                .build();
+    }
+
+    static List<software.amazon.awssdk.services.iot.model.Tag> getTags(ResourceModel model) {
         if(model == null || model.getTags() == null || model.getTags().isEmpty()) {
             return null;
         }
