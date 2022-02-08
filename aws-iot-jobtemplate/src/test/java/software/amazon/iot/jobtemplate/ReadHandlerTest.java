@@ -56,8 +56,8 @@ public class ReadHandlerTest extends HandlerTestBase{
         final ResourceModel model = ResourceModel.builder().build();
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
-            .build();
+                .desiredResourceState(model)
+                .build();
 
         final DescribeJobTemplateResponse expectedResponse = getDescribeResponse();
 
@@ -69,12 +69,13 @@ public class ReadHandlerTest extends HandlerTestBase{
                 .jobExecutionsRolloutConfig(Translator.getJobExecutionsRolloutConfig(expectedResponse.jobExecutionsRolloutConfig()))
                 .presignedUrlConfig(Translator.getPresignedUrlConfig(expectedResponse.presignedUrlConfig()))
                 .timeoutConfig(Translator.getTimeoutConfig(expectedResponse.timeoutConfig()))
+                .jobExecutionsRetryConfig(Translator.getRetryConfig(expectedResponse.jobExecutionsRetryConfig()))
                 .build();
 
         when(proxy.injectCredentialsAndInvokeV2(any(), any())).thenReturn(expectedResponse);
 
         final ProgressEvent<ResourceModel, CallbackContext> response
-            = handler.handleRequest(proxy, request, null, logger);
+                = handler.handleRequest(proxy, request, null, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);

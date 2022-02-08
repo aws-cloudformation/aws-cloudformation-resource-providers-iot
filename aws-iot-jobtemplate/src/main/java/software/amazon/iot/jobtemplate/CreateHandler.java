@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.iot.model.CreateJobTemplateRequest;
 import software.amazon.awssdk.services.iot.model.CreateJobTemplateResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig;
 import software.amazon.awssdk.services.iot.model.JobExecutionsRolloutConfig;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.PresignedUrlConfig;
@@ -35,8 +36,10 @@ import java.util.List;
 import static software.amazon.iot.jobtemplate.Translator.getAbortConfig;
 import static software.amazon.iot.jobtemplate.Translator.getJobExecutionsRolloutConfig;
 import static software.amazon.iot.jobtemplate.Translator.getPresignedUrlConfig;
+import static software.amazon.iot.jobtemplate.Translator.getRetryConfig;
 import static software.amazon.iot.jobtemplate.Translator.getTags;
 import static software.amazon.iot.jobtemplate.Translator.getTimeoutConfig;
+
 
 public class CreateHandler extends BaseHandler<CallbackContext> {
     private final static String OPERATION = "CreateJobTemplate";
@@ -49,10 +52,10 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
 
         final ResourceModel model = request.getDesiredResourceState();
 
@@ -60,6 +63,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
         JobExecutionsRolloutConfig rolloutConfig = getJobExecutionsRolloutConfig(model);
         PresignedUrlConfig presignedUrlConfig = getPresignedUrlConfig(model);
         TimeoutConfig timeoutConfig = getTimeoutConfig(model);
+        JobExecutionsRetryConfig retryConfig = getRetryConfig(model);
         List<Tag> tags = getTags(model);
 
 
@@ -73,6 +77,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                 .jobExecutionsRolloutConfig(rolloutConfig)
                 .presignedUrlConfig(presignedUrlConfig)
                 .timeoutConfig(timeoutConfig)
+                .jobExecutionsRetryConfig(retryConfig)
                 .tags(tags)
                 .build();
 
@@ -90,6 +95,7 @@ public class CreateHandler extends BaseHandler<CallbackContext> {
                     .jobExecutionsRolloutConfig(model.getJobExecutionsRolloutConfig())
                     .presignedUrlConfig(model.getPresignedUrlConfig())
                     .timeoutConfig(model.getTimeoutConfig())
+                    .jobExecutionsRetryConfig(model.getJobExecutionsRetryConfig())
                     .build());
 
         } catch (final ConflictException e){

@@ -23,11 +23,12 @@ import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-
 import static software.amazon.iot.jobtemplate.Translator.getAbortConfig;
 import static software.amazon.iot.jobtemplate.Translator.getJobExecutionsRolloutConfig;
 import static software.amazon.iot.jobtemplate.Translator.getPresignedUrlConfig;
+import static software.amazon.iot.jobtemplate.Translator.getRetryConfig;
 import static software.amazon.iot.jobtemplate.Translator.getTimeoutConfig;
+
 
 public class ReadHandler extends BaseHandler<CallbackContext> {
     private final static String OPERATION = "DescribeJobTemplate";
@@ -39,10 +40,10 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
 
     @Override
     public ProgressEvent<ResourceModel, CallbackContext> handleRequest(
-        final AmazonWebServicesClientProxy proxy,
-        final ResourceHandlerRequest<ResourceModel> request,
-        final CallbackContext callbackContext,
-        final Logger logger) {
+            final AmazonWebServicesClientProxy proxy,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final CallbackContext callbackContext,
+            final Logger logger) {
 
         final ResourceModel model = request.getDesiredResourceState();
 
@@ -58,7 +59,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
             JobExecutionsRolloutConfig rolloutConfig = getJobExecutionsRolloutConfig(response.jobExecutionsRolloutConfig());
             PresignedUrlConfig presignedUrlConfig = getPresignedUrlConfig(response.presignedUrlConfig());
             TimeoutConfig timeoutConfig = getTimeoutConfig(response.timeoutConfig());
-
+            JobExecutionsRetryConfig retryConfig = getRetryConfig(response.jobExecutionsRetryConfig());
 
             return ProgressEvent.defaultSuccessHandler(ResourceModel.builder()
                     .arn(response.jobTemplateArn())
@@ -71,6 +72,7 @@ public class ReadHandler extends BaseHandler<CallbackContext> {
                     .jobTemplateId(response.jobTemplateId())
                     .presignedUrlConfig(presignedUrlConfig)
                     .timeoutConfig(timeoutConfig)
+                    .jobExecutionsRetryConfig(retryConfig)
                     .build());
         } catch (final ResourceNotFoundException e){
             throw new CfnNotFoundException(ResourceModel.TYPE_NAME, model.getJobTemplateId());
