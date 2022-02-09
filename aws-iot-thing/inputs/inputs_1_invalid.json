@@ -1,0 +1,8 @@
+{
+  "ThingName": "CfnContractTestThing@",
+  "AttributePayload": {
+    "Attributes": {
+      "testAttribute1": "testAttributeValue1"
+    }
+  }
+}

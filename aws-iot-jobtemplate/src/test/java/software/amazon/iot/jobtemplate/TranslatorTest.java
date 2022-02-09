@@ -22,6 +22,7 @@ class TranslatorTest {
     final static double incrementFactor = 2.0;
     final static int baseRatePerMinute = 5;
     final static int maximumPerMinute = 1000;
+    final static int numberOfRetries = 1;
     final int expiresInSec = 10;
     final int inProgressTimeoutInMinutes = 15;
     final static List<software.amazon.awssdk.services.iot.model.Tag> expectedTags;
@@ -31,6 +32,44 @@ class TranslatorTest {
         expectedTags.add(software.amazon.awssdk.services.iot.model.Tag.builder().key("key1").value("value1").build());
         expectedTags.add(software.amazon.awssdk.services.iot.model.Tag.builder().key("key1").value("value1").build());
         expectedTags.add(software.amazon.awssdk.services.iot.model.Tag.builder().key("key1").value("value1").build());
+    }
+
+    @Test
+    void getRetryConfigModelToSDK() {
+        final software.amazon.iot.jobtemplate.RetryCriteria criteria = software.amazon.iot.jobtemplate.RetryCriteria.builder()
+                .failureType(FAILURE_TYPE)
+                .numberOfRetries(numberOfRetries)
+                .build();
+        final software.amazon.iot.jobtemplate.JobExecutionsRetryConfig retryConfig = software.amazon.iot.jobtemplate.JobExecutionsRetryConfig.builder()
+                .retryCriteriaList(Collections.singletonList(criteria))
+                .build();
+        final ResourceModel model = ResourceModel.builder()
+                .jobExecutionsRetryConfig(retryConfig)
+                .build();
+
+        final software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig sdkRetryConfig = Translator.getRetryConfig(model);
+        final software.amazon.awssdk.services.iot.model.RetryCriteria retryCriteria = sdkRetryConfig.criteriaList().get(0);
+
+        assertNotNull(sdkRetryConfig);
+        assertEquals(FAILURE_TYPE, retryCriteria.failureTypeAsString());
+        assertEquals(numberOfRetries, retryCriteria.numberOfRetries());
+    }
+
+    @Test
+    void GetRetryConfigSDKtoModel() {
+        final software.amazon.awssdk.services.iot.model.RetryCriteria criteria = software.amazon.awssdk.services.iot.model.RetryCriteria.builder()
+                .failureType(FAILURE_TYPE)
+                .numberOfRetries(numberOfRetries)
+                .build();
+        final software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig retryConfig = software.amazon.awssdk.services.iot.model.JobExecutionsRetryConfig.builder()
+                .criteriaList(Collections.singletonList(criteria))
+                .build();
+        final software.amazon.iot.jobtemplate.JobExecutionsRetryConfig modelRetryConfig = Translator.getRetryConfig(retryConfig);
+        final software.amazon.iot.jobtemplate.RetryCriteria retryCriteria = modelRetryConfig.getRetryCriteriaList().get(0);
+
+        assertNotNull(modelRetryConfig);
+        assertEquals(FAILURE_TYPE, retryCriteria.getFailureType());
+        assertEquals(numberOfRetries, retryCriteria.getNumberOfRetries());
     }
 
     @Test
