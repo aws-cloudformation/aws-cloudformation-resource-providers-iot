@@ -1,0 +1,12 @@
+{
+  "ThingGroupName": "CfnContractTestThingGroup@",
+  "ThingGroupProperties": {
+    "ThingGroupDescription": "test ThingGroup for Cfn Contract Tests"
+  },
+  "Tags": [
+    {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+    }
+  ]
+}
