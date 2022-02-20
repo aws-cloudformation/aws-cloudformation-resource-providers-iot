@@ -44,7 +44,7 @@ public class ListHandlerTest extends AbstractTestBase{
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
-        org.assertj.core.api.Assertions.assertThat(response.getResourceModels()).isNotNull();
+        assertThat(response.getResourceModels()).isNotNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }

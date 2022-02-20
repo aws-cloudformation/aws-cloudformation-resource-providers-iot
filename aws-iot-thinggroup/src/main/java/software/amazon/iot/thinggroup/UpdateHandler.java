@@ -7,7 +7,9 @@ import software.amazon.awssdk.services.iot.model.DescribeThingGroupResponse;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.Tag;
+import software.amazon.awssdk.services.iot.model.UpdateDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.UpdateThingGroupRequest;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -24,6 +26,8 @@ import java.util.Set;
  * ListTagsForResource: To retrieve old tags associated with ThingGroup
  * UntagResource: To remove old tags
  * TagResource: To add new tags
+ *
+ * (Thing-Group cannot be converted to Dynamic-Thing-Group and vice-versa)
  */
 public class UpdateHandler extends BaseHandlerStd {
 
@@ -41,7 +45,6 @@ public class UpdateHandler extends BaseHandlerStd {
         final ResourceModel resourceModel = request.getDesiredResourceState();
         final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
         final DescribeThingGroupRequest describeThingGroupRequest = Translator.translateToReadRequest(resourceModel);
-        final UpdateThingGroupRequest updateThingGroupRequest = Translator.translateToUpdateRequest(resourceModel);
 
         try {
             // check whether the resource exists - ResourceNotFound is thrown otherwise.
@@ -53,13 +56,36 @@ public class UpdateHandler extends BaseHandlerStd {
                     ResourceModel.TYPE_NAME, describeThingGroupRequest.thingGroupName()));
             resourceModel.setArn(describeThingGroupResponse.thingGroupArn());
 
+            // check for thing-group and dynamic-thing-group conversion case
+            if (resourceModel.getQueryString() == null && isDynamicThingGroup(describeThingGroupResponse)) {
+                throw new CfnInvalidRequestException("Dynamic Thing Group cannot be converted to a Static Thing Group");
+            }
+            if (resourceModel.getQueryString() != null && !isDynamicThingGroup(describeThingGroupResponse)) {
+                throw new CfnInvalidRequestException("Static Thing Group cannot be converted to a Dynamic Thing Group");
+            }
+
             // update changes
-            proxyClient.injectCredentialsAndInvokeV2(
-                    updateThingGroupRequest,
-                    proxyClient.client()::updateThingGroup
-            );
-            logger.log(String.format("%s %s has successfully been updated.",
-                    ResourceModel.TYPE_NAME, updateThingGroupRequest.thingGroupName()));
+            if (isDynamicThingGroup(describeThingGroupResponse)) {
+                final UpdateDynamicThingGroupRequest updateDynamicThingGroupRequest =
+                        Translator.translateToFirstDynamicThingGroupUpdateRequest(resourceModel);
+
+                proxyClient.injectCredentialsAndInvokeV2(
+                        updateDynamicThingGroupRequest,
+                        proxyClient.client()::updateDynamicThingGroup
+                );
+                logger.log(String.format("%s %s (DynamicThingGroup) has successfully been updated.",
+                        ResourceModel.TYPE_NAME, updateDynamicThingGroupRequest.thingGroupName()));
+            } else {
+                final UpdateThingGroupRequest updateThingGroupRequest =
+                        Translator.translateToUpdateThingGroupRequest(resourceModel);
+
+                proxyClient.injectCredentialsAndInvokeV2(
+                        updateThingGroupRequest,
+                        proxyClient.client()::updateThingGroup
+                );
+                logger.log(String.format("%s %s has successfully been updated.",
+                        ResourceModel.TYPE_NAME, updateThingGroupRequest.thingGroupName()));
+            }
 
             // update the Tags as specified in the resource model by generating a diff of current and desired Tags
             updateTags(proxyClient, resourceModel, desiredTags);

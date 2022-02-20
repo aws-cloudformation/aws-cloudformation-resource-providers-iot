@@ -74,7 +74,7 @@ public class ReadHandlerTest extends AbstractTestBase {
         assertThat(response.getCallbackContext()).isNull();
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(expectedModel);
-        org.assertj.core.api.Assertions.assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
