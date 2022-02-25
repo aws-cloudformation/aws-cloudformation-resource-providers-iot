@@ -3,12 +3,15 @@ package software.amazon.iot.thinggroup;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import software.amazon.awssdk.services.iot.model.AttributePayload;
 import software.amazon.awssdk.services.iot.model.ConflictingResourceUpdateException;
+import software.amazon.awssdk.services.iot.model.CreateDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.CreateThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DeleteConflictException;
+import software.amazon.awssdk.services.iot.model.DeleteDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DeleteThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
+import software.amazon.awssdk.services.iot.model.InvalidQueryException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
@@ -24,7 +27,10 @@ import software.amazon.awssdk.services.iot.model.ThingGroupProperties;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
+import software.amazon.awssdk.services.iot.model.UpdateDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.UpdateThingGroupRequest;
+import software.amazon.awssdk.services.iot.model.VersionConflictException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -79,6 +85,10 @@ public class Translator {
             return HandlerErrorCode.AlreadyExists;
         } else if (e instanceof InvalidRequestException) {
             return HandlerErrorCode.InvalidRequest;
+        } else if (e instanceof CfnInvalidRequestException) {
+            return HandlerErrorCode.InvalidRequest;
+        } else if (e instanceof InvalidQueryException) {
+            return HandlerErrorCode.InvalidRequest;
         } else if (e instanceof LimitExceededException) {
             return HandlerErrorCode.ServiceLimitExceeded;
         } else if (e instanceof UnauthorizedException) {
@@ -93,6 +103,8 @@ public class Translator {
             return HandlerErrorCode.Throttling;
         } else if (e instanceof ResourceNotFoundException) {
             return HandlerErrorCode.NotFound;
+        } else if (e instanceof VersionConflictException) {
+            return HandlerErrorCode.ResourceConflict;
         } else if (e instanceof ConflictingResourceUpdateException | e instanceof DeleteConflictException) {
             return HandlerErrorCode.ResourceConflict;
         } else if (e instanceof IotException && ((IotException) e).statusCode() == 403) {
@@ -105,7 +117,7 @@ public class Translator {
         }
     }
 
-    static CreateThingGroupRequest translateToCreateRequest(final ResourceModel model, final Map<String,String> tags) {
+    static CreateThingGroupRequest translateToCreateThingGroupRequest(final ResourceModel model, final Map<String,String> tags) {
         software.amazon.iot.thinggroup.ThingGroupProperties thingGroupProperties =
                 new software.amazon.iot.thinggroup.ThingGroupProperties();
         if(model.getThingGroupProperties() != null)
@@ -115,6 +127,19 @@ public class Translator {
                 .parentGroupName(model.getParentGroupName())
                 .tags(translateTagsToSdk(tags))
                 .thingGroupProperties(translateModelThingGroupPropertiesToObject(thingGroupProperties))
+                .build();
+    }
+
+    static CreateDynamicThingGroupRequest translateToCreateDynamicThingGroupRequest(final ResourceModel model, final Map<String,String> tags) {
+        software.amazon.iot.thinggroup.ThingGroupProperties thingGroupProperties =
+                new software.amazon.iot.thinggroup.ThingGroupProperties();
+        if(model.getThingGroupProperties() != null)
+            thingGroupProperties = model.getThingGroupProperties();
+        return CreateDynamicThingGroupRequest.builder()
+                .thingGroupName(model.getThingGroupName())
+                .tags(translateTagsToSdk(tags))
+                .thingGroupProperties(translateModelThingGroupPropertiesToObject(thingGroupProperties))
+                .queryString(model.getQueryString())
                 .build();
     }
 
@@ -169,13 +194,19 @@ public class Translator {
                 .build();
     }
 
-    static DeleteThingGroupRequest translateToDeleteRequest(final ResourceModel model) {
+    static DeleteThingGroupRequest translateToDeleteThingGroupRequest(final ResourceModel model) {
         return DeleteThingGroupRequest.builder()
                 .thingGroupName(model.getThingGroupName())
                 .build();
     }
 
-    static UpdateThingGroupRequest translateToUpdateRequest(final ResourceModel model) {
+    static DeleteDynamicThingGroupRequest translateToDeleteDynamicThingGroupRequest(final ResourceModel model) {
+        return DeleteDynamicThingGroupRequest.builder()
+                .thingGroupName(model.getThingGroupName())
+                .build();
+    }
+
+    static UpdateThingGroupRequest translateToUpdateThingGroupRequest(final ResourceModel model) {
         software.amazon.iot.thinggroup.ThingGroupProperties thingGroupProperties =
                 new software.amazon.iot.thinggroup.ThingGroupProperties();
         if(model.getThingGroupProperties() != null)
@@ -183,6 +214,18 @@ public class Translator {
         return UpdateThingGroupRequest.builder()
                 .thingGroupName(model.getThingGroupName())
                 .thingGroupProperties(translateModelThingGroupPropertiesToObject(thingGroupProperties))
+                .build();
+    }
+
+    static UpdateDynamicThingGroupRequest translateToFirstDynamicThingGroupUpdateRequest(final ResourceModel model) {
+        software.amazon.iot.thinggroup.ThingGroupProperties thingGroupProperties =
+                new software.amazon.iot.thinggroup.ThingGroupProperties();
+        if(model.getThingGroupProperties() != null)
+            thingGroupProperties = model.getThingGroupProperties();
+        return UpdateDynamicThingGroupRequest.builder()
+                .thingGroupName(model.getThingGroupName())
+                .thingGroupProperties(translateModelThingGroupPropertiesToObject(thingGroupProperties))
+                .queryString(model.getQueryString())
                 .build();
     }
 

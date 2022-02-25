@@ -1,11 +1,10 @@
 package software.amazon.iot.thinggroup;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.DeleteDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DeleteThingGroupRequest;
-import software.amazon.awssdk.services.iot.model.DeleteThingGroupResponse;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupRequest;
-import software.amazon.awssdk.services.iot.model.IotException;
-import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.iot.model.DescribeThingGroupResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -15,6 +14,10 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 /**
  * API Calls for DeleteHandler:
  * DeleteThingGroup: To delete a ThingGroup
+ * DeleteDynamicThingGroup: To delete a Dynamic ThingGroup
+ * DescribeThingGroup: used for the following purpose -
+ *  - To verify whether the thing group exists
+ *  - To check whether the ThingGroup to be deleted has a queryString; Dynamic Thing group would have the param set
  */
 public class DeleteHandler extends BaseHandlerStd {
 
@@ -31,11 +34,10 @@ public class DeleteHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
         final DescribeThingGroupRequest describeThingGroupRequest = Translator.translateToReadRequest(resourceModel);
-        final DeleteThingGroupRequest deleteThingGroupRequest = Translator.translateToDeleteRequest(resourceModel);
 
         try {
             // check whether the resource exists - ResourceNotFound is thrown otherwise.
-            proxyClient.injectCredentialsAndInvokeV2(
+            DescribeThingGroupResponse describeThingGroupResponse = proxyClient.injectCredentialsAndInvokeV2(
                     describeThingGroupRequest,
                     proxyClient.client()::describeThingGroup
             );
@@ -43,12 +45,27 @@ public class DeleteHandler extends BaseHandlerStd {
                     ResourceModel.TYPE_NAME, describeThingGroupRequest.thingGroupName()));
 
             // perform delete operation
-            proxyClient.injectCredentialsAndInvokeV2(
-                    deleteThingGroupRequest,
-                    proxyClient.client()::deleteThingGroup
-            );
-            logger.log(String.format("%s %s successfully deleted.",
-                    ResourceModel.TYPE_NAME, deleteThingGroupRequest.thingGroupName()));
+            if (isDynamicThingGroup(describeThingGroupResponse)) {
+                final DeleteDynamicThingGroupRequest deleteDynamicThingGroupRequest =
+                        Translator.translateToDeleteDynamicThingGroupRequest(resourceModel);
+
+                proxyClient.injectCredentialsAndInvokeV2(
+                        deleteDynamicThingGroupRequest,
+                        proxyClient.client()::deleteDynamicThingGroup
+                );
+                logger.log(String.format("%s %s (DynamicThingGroup) successfully deleted.",
+                        ResourceModel.TYPE_NAME, deleteDynamicThingGroupRequest.thingGroupName()));
+            } else {
+                final DeleteThingGroupRequest deleteThingGroupRequest =
+                        Translator.translateToDeleteThingGroupRequest(resourceModel);
+
+                proxyClient.injectCredentialsAndInvokeV2(
+                        deleteThingGroupRequest,
+                        proxyClient.client()::deleteThingGroup
+                );
+                logger.log(String.format("%s %s successfully deleted.",
+                        ResourceModel.TYPE_NAME, deleteThingGroupRequest.thingGroupName()));
+            }
         } catch (final Exception e) {
             return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
         }

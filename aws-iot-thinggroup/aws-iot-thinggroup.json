@@ -21,6 +21,11 @@
       "minLength": 1,
       "maxLength": 128
     },
+    "QueryString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
     "ThingGroupProperties": {
       "type": "object",
       "additionalProperties": false,
@@ -106,13 +111,15 @@
         "iot:DescribeThingGroup",
         "iot:ListTagsForResource",
         "iot:CreateThingGroup",
+        "iot:CreateDynamicThingGroup",
         "iot:TagResource"
       ]
     },
     "delete": {
       "permissions": [
         "iot:DescribeThingGroup",
-        "iot:DeleteThingGroup"
+        "iot:DeleteThingGroup",
+        "iot:DeleteDynamicThingGroup"
       ]
     },
     "list": {
@@ -132,6 +139,7 @@
         "iot:ListTagsForResource",
         "iot:DescribeThingGroup",
         "iot:UpdateThingGroup",
+        "iot:UpdateDynamicThingGroup",
         "iot:TagResource",
         "iot:UntagResource"
       ]

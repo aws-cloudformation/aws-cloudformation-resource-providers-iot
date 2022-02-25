@@ -2,6 +2,7 @@ package software.amazon.iot.thinggroup;
 
 import org.apache.commons.collections.MapUtils;
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.CreateDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.CreateThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -18,6 +19,8 @@ import java.util.Map;
 /**
  * API Calls for CreateHandler:
  * CreateThingGroup: To create a new ThingGroup
+ * CreateDynamicThingGroup: To create a new Dynamic Thing Group (if queryString is provided in the resource template)
+ * DescribeThingGroup: To verify whether the resource already exists
  */
 public class CreateHandler extends BaseHandlerStd {
 
@@ -41,7 +44,6 @@ public class CreateHandler extends BaseHandlerStd {
         }
 
         final DescribeThingGroupRequest describeThingGroupRequest = Translator.translateToReadRequest(resourceModel);
-        final CreateThingGroupRequest createThingGroupRequest = Translator.translateToCreateRequest(resourceModel, tags);
 
         try {
             try {
@@ -60,10 +62,24 @@ public class CreateHandler extends BaseHandlerStd {
                         ResourceModel.TYPE_NAME, describeThingGroupRequest.thingGroupName()));
             }
 
-            proxyClient.injectCredentialsAndInvokeV2(
-                    createThingGroupRequest, proxyClient.client()::createThingGroup);
-            logger.log(String.format("%s %s successfully created.",
-                    ResourceModel.TYPE_NAME, createThingGroupRequest.thingGroupName()));
+            // route the create request based on whether dynamic group related attributes are provided
+            if (isDynamicThingGroup(resourceModel)) {
+                final CreateDynamicThingGroupRequest createDynamicThingGroupRequest =
+                        Translator.translateToCreateDynamicThingGroupRequest(resourceModel, tags);
+
+                proxyClient.injectCredentialsAndInvokeV2(
+                        createDynamicThingGroupRequest, proxyClient.client()::createDynamicThingGroup);
+                logger.log(String.format("%s %s (DynamicThingGroup) successfully created.",
+                        ResourceModel.TYPE_NAME, createDynamicThingGroupRequest.thingGroupName()));
+            } else {
+                final CreateThingGroupRequest createThingGroupRequest =
+                        Translator.translateToCreateThingGroupRequest(resourceModel, tags);
+
+                proxyClient.injectCredentialsAndInvokeV2(
+                        createThingGroupRequest, proxyClient.client()::createThingGroup);
+                logger.log(String.format("%s %s successfully created.",
+                        ResourceModel.TYPE_NAME, createThingGroupRequest.thingGroupName()));
+            }
         } catch (Exception e) {
             return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
         }
@@ -76,8 +92,9 @@ public class CreateHandler extends BaseHandlerStd {
         identifierPrefix.append((request.getSystemTags() != null &&
                 MapUtils.isNotEmpty(request.getSystemTags())) ?
                 request.getSystemTags().get("aws:cloudformation:stack-name") + "-" : "");
+        String resourceType = (isDynamicThingGroup(request.getDesiredResourceState())) ? "DYNAMIC_THING_GROUP" : "THING_GROUP";
         identifierPrefix.append(request.getLogicalResourceIdentifier() == null ?
-                "THING_GROUP" :
+                resourceType :
                 request.getLogicalResourceIdentifier());
         return IdentifierUtils.generateResourceIdentifier(
                 identifierPrefix.toString(),

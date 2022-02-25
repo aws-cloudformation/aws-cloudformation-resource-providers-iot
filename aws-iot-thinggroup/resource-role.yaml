@@ -23,13 +23,16 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                - "iot:CreateDynamicThingGroup"
                 - "iot:CreateThingGroup"
+                - "iot:DeleteDynamicThingGroup"
                 - "iot:DeleteThingGroup"
                 - "iot:DescribeThingGroup"
                 - "iot:ListTagsForResource"
                 - "iot:ListThingGroups"
                 - "iot:TagResource"
                 - "iot:UntagResource"
+                - "iot:UpdateDynamicThingGroup"
                 - "iot:UpdateThingGroup"
                 Resource: "*"
 Outputs:
