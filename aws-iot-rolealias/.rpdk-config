@@ -1,0 +1,25 @@
+{
+    "artifact_type": "RESOURCE",
+    "typeName": "AWS::IoT::RoleAlias",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "com.amazonaws.iot.rolealias.HandlerWrapper::handleRequest",
+    "testEntrypoint": "com.amazonaws.iot.rolealias.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "version": false,
+        "subparser_name": null,
+        "verbose": 0,
+        "force": false,
+        "type_name": null,
+        "artifact_type": null,
+        "namespace": [
+            "com",
+            "amazonaws",
+            "iot",
+            "rolealias"
+        ],
+        "codegen_template_path": "default",
+        "protocolVersion": "2.0.0"
+    },
+    "executableEntrypoint": "com.amazonaws.iot.rolealias.HandlerWrapperExecutable"
+}
