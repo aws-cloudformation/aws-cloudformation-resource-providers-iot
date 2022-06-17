@@ -21,4 +21,3 @@ Resources:
       Handler: com.amazonaws.iot.cacertificate.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-iot-cacertificate-1.0.jar
-
