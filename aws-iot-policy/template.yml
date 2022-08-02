@@ -21,4 +21,3 @@ Resources:
       Handler: com.amazonaws.iot.policy.HandlerWrapper::testEntrypoint
       Runtime: java8
       CodeUri: ./target/aws-iot-policy-1.0.jar
-
