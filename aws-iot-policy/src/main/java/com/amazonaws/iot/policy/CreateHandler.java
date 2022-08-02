@@ -25,6 +25,7 @@ import java.util.Map;
 public class CreateHandler extends BaseHandlerStd{
     private static final String OPERATION = "CreatePolicy";
     private static final String CALL_GRAPH = "AWS-IoT-Policy::Create";
+    private static final int MAX_POLICY_NAME = 128;
     private Logger logger;
 
     @Override
@@ -38,6 +39,12 @@ public class CreateHandler extends BaseHandlerStd{
         this.logger = logger;
 
         ResourceModel model = request.getDesiredResourceState();
+
+        if (StringUtils.isNullOrEmpty(model.getPolicyName())) {
+            model.setPolicyName(generateName(request));
+        }
+
+        model.setId(model.getPolicyName());
 
         return ProgressEvent.progress(model, callbackContext)
                 .then(progress ->
@@ -69,6 +76,13 @@ public class CreateHandler extends BaseHandlerStd{
                     OPERATION,
                     request.policyName());
         }
+    }
+
+    private String generateName(final ResourceHandlerRequest<ResourceModel> request) {
+        return IdentifierUtils.generateResourceIdentifier(
+                StringUtils.isNullOrEmpty(request.getLogicalResourceIdentifier()) ? "Policy" : request.getLogicalResourceIdentifier(),
+                request.getClientRequestToken(),
+                MAX_POLICY_NAME).replace("-", "_");
     }
 
 

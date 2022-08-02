@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.iot.model.ConflictingResourceUpdateException;
 import software.amazon.awssdk.services.iot.model.CreatePolicyRequest;
+import software.amazon.awssdk.services.iot.model.CreatePolicyVersionRequest;
 import software.amazon.awssdk.services.iot.model.DeleteConflictException;
 import software.amazon.awssdk.services.iot.model.DeletePolicyRequest;
 import software.amazon.awssdk.services.iot.model.DeletePolicyVersionRequest;
@@ -54,6 +55,14 @@ public class Translator {
                 .build();
     }
 
+    public static CreatePolicyVersionRequest translateToCreateVersionRequest(ResourceModel model) {
+        return CreatePolicyVersionRequest.builder()
+                .policyName(model.getPolicyName())
+                .policyDocument(convertPolicyDocumentMapToJSONString(model.getPolicyDocument()))
+                .setAsDefault(true)
+                .build();
+    }
+
 
 
     public static ResourceModel translateFromReadResponse(GetPolicyResponse response) {
@@ -66,7 +75,7 @@ public class Translator {
     }
 
 
-    private static String convertPolicyDocumentMapToJSONString(Map<String, Object> policyDocumentMap) {
+    public static String convertPolicyDocumentMapToJSONString(Map<String, Object> policyDocumentMap) {
         ObjectMapper policyDocumentMapper = new ObjectMapper();
         try {
             return policyDocumentMapper.writeValueAsString(policyDocumentMap);
@@ -76,7 +85,7 @@ public class Translator {
     }
 
 
-    private static Map<String, Object> convertPolicyDocumentJSONStringToMap(final String policyDocument) {
+    public static Map<String, Object> convertPolicyDocumentJSONStringToMap(final String policyDocument) {
         ObjectMapper policyDocumentMapper = new ObjectMapper();
         try {
             TypeReference<Map<String,Object>> typeRef
@@ -118,3 +127,4 @@ public class Translator {
         }
     }
 }
+

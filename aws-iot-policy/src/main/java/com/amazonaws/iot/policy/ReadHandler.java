@@ -35,7 +35,7 @@ public class ReadHandler extends BaseHandlerStd {
 
 
         if (model.getPolicyName() == null) {
-            return ProgressEvent.defaultFailureHandler(new Exception("Policy name must be specified"), HandlerErrorCode.NotFound);
+            model.setPolicyName(model.getId());
         }
 
         return proxy.initiate(CALL_GRAPH, proxyClient, model, callbackContext)
