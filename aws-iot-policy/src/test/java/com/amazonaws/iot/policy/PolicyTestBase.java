@@ -31,6 +31,7 @@ public class PolicyTestBase {
     protected final static String LOGICAL_ID = "MyPolicy";
     protected final static String POLICY_NAME = "SamplePolicyName";
     protected final static String POLICY_DOCUMENT = "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Effect\": \"Allow\", \"Action\":  \"iot:UpdateCertificate\", \"Resource\": \"*\" } ] }";
+    protected final static String UPDATE_POLICY_DOCUMENT = "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Effect\": \"Allow\", \"Action\":  [\"iot:UpdateCertificate\", \"iot:GetPolicy\"], \"Resource\": \"*\" } ] }";
     protected final static String POLICY_ARN = "arn:aws:iot:us-east-1:0123456789:policy/mypolicy";
     protected IotClient iotClient;
     protected final static GetPolicyResponse TEST_GET_POLICY_RESPONSE = getPolicyResponse();
