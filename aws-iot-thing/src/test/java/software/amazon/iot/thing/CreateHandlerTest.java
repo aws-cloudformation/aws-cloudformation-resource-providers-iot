@@ -7,12 +7,19 @@ import software.amazon.awssdk.services.iot.model.CreateThingRequest;
 import software.amazon.awssdk.services.iot.model.CreateThingResponse;
 import software.amazon.awssdk.services.iot.model.DescribeThingRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingResponse;
-import software.amazon.awssdk.services.iot.model.InternalException;
+import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -21,7 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -132,7 +141,7 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_ResourceConflictFails() {
+    public void handleRequest_Create_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
@@ -141,38 +150,16 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(iotClient.describeThing(any(DescribeThingRequest.class)))
                 .thenThrow(ResourceNotFoundException.builder().build());
         when(iotClient.createThing(any(CreateThingRequest.class)))
-                .thenThrow(ResourceAlreadyExistsException.builder().resourceId(T_ID).build());
+                .thenThrow(InternalFailureException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+        verify(iotClient).createThing(any(CreateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_ResourceAlreadyExistsWithSamePropertyFails() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingName(T_Name)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
-    }
-
-    @Test
-    public void handleRequest_InvalidRequestFails() {
+    public void handleRequest_Create_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
@@ -183,17 +170,14 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(iotClient.createThing(any(CreateThingRequest.class)))
                 .thenThrow(InvalidRequestException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+        verify(iotClient).createThing(any(CreateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_InternalExceptionFails() {
+    public void handleRequest_Create_ResourceAlreadyExistsException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
@@ -202,19 +186,34 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(iotClient.describeThing(any(DescribeThingRequest.class)))
                 .thenThrow(ResourceNotFoundException.builder().build());
         when(iotClient.createThing(any(CreateThingRequest.class)))
-                .thenThrow(InternalException.builder().build());
+                .thenThrow(ResourceAlreadyExistsException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnAlreadyExistsException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+        verify(iotClient).createThing(any(CreateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_ThrottlingFails() {
+    public void handleRequest_Create_ServiceUnavailableException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenThrow(ResourceNotFoundException.builder().build());
+        when(iotClient.createThing(any(CreateThingRequest.class)))
+                .thenThrow(ServiceUnavailableException.builder().build());
+
+        assertThrows(CfnGeneralServiceException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+        verify(iotClient).createThing(any(CreateThingRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Create_ThrottlingException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
@@ -225,12 +224,102 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(iotClient.createThing(any(CreateThingRequest.class)))
                 .thenThrow(ThrottlingException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+        verify(iotClient).createThing(any(CreateThingRequest.class));
+    }
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+    @Test
+    public void handleRequest_Create_UnauthorizedException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenThrow(ResourceNotFoundException.builder().build());
+        when(iotClient.createThing(any(CreateThingRequest.class)))
+                .thenThrow(UnauthorizedException.builder().build());
+
+        assertThrows(CfnNotFoundException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+        verify(iotClient).createThing(any(CreateThingRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_ThingAlreadyExists() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
+
+        assertThrows(CfnAlreadyExistsException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_InternalFailureException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenThrow(InternalFailureException.builder().build());
+
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_InvalidRequestException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenThrow(InvalidRequestException.builder().build());
+
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_ServiceUnavailableException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenThrow(ServiceUnavailableException.builder().build());
+
+        assertThrows(CfnGeneralServiceException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_ThrottlingException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThing(any(DescribeThingRequest.class)))
+                .thenThrow(ThrottlingException.builder().build());
+
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThing(any(DescribeThingRequest.class));
     }
 }

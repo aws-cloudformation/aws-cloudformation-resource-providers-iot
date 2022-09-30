@@ -1,12 +1,14 @@
 package software.amazon.iot.thing;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.awssdk.services.iot.model.AttributePayload;
 import software.amazon.awssdk.services.iot.model.ConflictingResourceUpdateException;
 import software.amazon.awssdk.services.iot.model.CreateThingRequest;
 import software.amazon.awssdk.services.iot.model.DeleteConflictException;
 import software.amazon.awssdk.services.iot.model.DeleteThingRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingRequest;
+import software.amazon.awssdk.services.iot.model.DescribeThingResponse;
 import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
@@ -20,6 +22,17 @@ import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UpdateThingRequest;
+import software.amazon.awssdk.services.iot.model.VersionConflictException;
+import software.amazon.cloudformation.exceptions.BaseHandlerException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.HandlerErrorCode;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -40,6 +53,30 @@ import java.util.stream.Stream;
  * mapping exceptions to appropriate Cloudformation exceptions
  */
 public class Translator {
+
+    static BaseHandlerException translateIotExceptionToHandlerException(
+            String resourceIdentifier, String operationName, IotException e) {
+        if (e instanceof ResourceAlreadyExistsException) {
+            return new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
+        } else if (e instanceof UnauthorizedException || e instanceof ResourceNotFoundException) {
+            return new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
+        } else if (e instanceof InternalFailureException) {
+            return new CfnInternalFailureException(e);
+        } else if (e instanceof ServiceUnavailableException) {
+            return new CfnGeneralServiceException(operationName, e);
+        } else if (e instanceof InvalidRequestException) {
+            return new CfnInvalidRequestException(e);
+        } else if (e instanceof ConflictingResourceUpdateException || e instanceof VersionConflictException) {
+            return new CfnResourceConflictException(ResourceModel.TYPE_NAME, resourceIdentifier, e.getMessage(), e);
+        } else if (e instanceof ThrottlingException) {
+            return new CfnThrottlingException(operationName, e);
+        } else if (e.statusCode() == HttpStatusCode.FORBIDDEN) {
+            return new CfnAccessDeniedException(operationName, e);
+        } else {
+            return new CfnServiceInternalErrorException(operationName, e);
+        }
+    }
+
     static ProgressEvent<ResourceModel, CallbackContext> translateExceptionToProgressEvent(
             ResourceModel model, Exception e, Logger logger) {
 
@@ -151,7 +188,7 @@ public class Translator {
                 .build();
     }
 
-    static List<ResourceModel> translateFromListRequest(final ListThingsResponse listThingsResponse) {
+    static List<ResourceModel> translateFromListResponse(final ListThingsResponse listThingsResponse) {
         return streamOfOrEmpty(listThingsResponse.things())
                 .map(resource -> ResourceModel.builder()
                         // include only primary identifier
@@ -164,5 +201,19 @@ public class Translator {
         return Optional.ofNullable(collection)
                 .map(Collection::stream)
                 .orElseGet(Stream::empty);
+    }
+
+    /**
+     * Translates resource object from sdk into a resource model
+     * @param describeThingResponse the aws service describe resource response
+     * @return model resource model
+     */
+    public static ResourceModel translateFromReadResponse(final DescribeThingResponse describeThingResponse) {
+        return ResourceModel.builder()
+                .arn(describeThingResponse.thingArn())
+                .id(describeThingResponse.thingId())
+                .thingName(describeThingResponse.thingName())
+                .attributePayload(translateToModelAttributePayload(describeThingResponse.attributes()))
+                .build();
     }
 }
