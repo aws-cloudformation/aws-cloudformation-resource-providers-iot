@@ -1,0 +1,22 @@
+{
+  "CreateInputs": {
+    "ThingGroupName": "CfnContractTestThingGroup",
+    "ParentGroupName": "CfnContractTestThingGroupParent",
+    "ThingGroupProperties": {
+      "ThingGroupDescription": "test ThingGroup for Cfn Contract Tests"
+    },
+    "Tags": [
+      {
+        "Key": "testTagKey",
+        "Value": "tagValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/ThingGroupProperties/ThingGroupDescription",
+      "value": "updated test ThingGroup for Cfn Contract Tests"
+    }
+  ]
+}

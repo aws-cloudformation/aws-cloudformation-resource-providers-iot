@@ -3,7 +3,6 @@ package software.amazon.iot.thinggroup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.iot.model.DeleteConflictException;
 import software.amazon.awssdk.services.iot.model.DeleteDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DeleteDynamicThingGroupResponse;
 import software.amazon.awssdk.services.iot.model.DeleteThingGroupRequest;
@@ -13,17 +12,21 @@ import software.amazon.awssdk.services.iot.model.DescribeThingGroupResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.VersionConflictException;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +42,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
+                .thenReturn(DescribeThingGroupResponse.builder().build())
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
                 .thenReturn(DeleteThingGroupResponse.builder()
                         .build());
@@ -57,151 +61,139 @@ public class DeleteHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_ResourceConflictException() {
+    public void handleRequest_Delete_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
+                .thenReturn(DescribeThingGroupResponse.builder().build())
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(DeleteConflictException.builder().build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteThingGroup(any(DeleteThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InternalFailureException() {
+    public void handleRequest_Delete_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
+                .thenReturn(DescribeThingGroupResponse.builder().build())
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(InternalFailureException.builder().build());
+                .thenThrow(InvalidRequestException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteThingGroup(any(DeleteThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InvalidRequestException() {
+    public void handleRequest_Delete_ThrottlingException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
+                .thenReturn(DescribeThingGroupResponse.builder().build())
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(InvalidRequestException.builder().build());
+                .thenThrow(ThrottlingException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
-    }
-
-
-    @Test
-    public void handleRequest_ResourceNotFound() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
-        when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteThingGroup(any(DeleteThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_GeneralServiceExceptionUnavailable() {
+    public void handleRequest_Delete_VersionConflictException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
+                .thenReturn(DescribeThingGroupResponse.builder().build())
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(ServiceUnavailableException.builder().build());
+                .thenThrow(VersionConflictException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnResourceConflictException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteThingGroup(any(DeleteThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ThrottlingException() {
+    public void handleRequest_Describe_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
-        when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(ThrottlingException.builder().build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_AccessDeniedException() {
+    public void handleRequest_Describe_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().build());
-        when(iotClient.deleteThingGroup(any(DeleteThingGroupRequest.class)))
-                .thenThrow(UnauthorizedException.builder().build());
+                .thenThrow(InvalidRequestException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+    }
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
+    @Test
+    public void handleRequest_Describe_ResourceNotFoundException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
+                .thenThrow(ResourceNotFoundException.class);
+
+        assertThrows(CfnNotFoundException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_ThrottlingException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
+                .thenThrow(ThrottlingException.class);
+
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
     }
 
     @Test
@@ -215,7 +207,8 @@ public class DeleteHandlerTest extends AbstractTestBase {
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
                 .thenReturn(DescribeThingGroupResponse.builder()
                         .queryString(DG_QUERYSTRING)
-                        .build());
+                        .build())
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
                 .thenReturn(DeleteDynamicThingGroupResponse.builder().build());
 
@@ -232,7 +225,7 @@ public class DeleteHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_ResourceConflictException_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupDelete_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -244,19 +237,16 @@ public class DeleteHandlerTest extends AbstractTestBase {
                         .queryString(DG_QUERYSTRING)
                         .build());
         when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(DeleteConflictException.builder().build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InternalFailureException_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupDelete_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -268,19 +258,16 @@ public class DeleteHandlerTest extends AbstractTestBase {
                         .queryString(DG_QUERYSTRING)
                         .build());
         when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(InternalFailureException.builder().build());
+                .thenThrow(InvalidRequestException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InvalidRequestException_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupDelete_ThrottlingException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -292,44 +279,16 @@ public class DeleteHandlerTest extends AbstractTestBase {
                         .queryString(DG_QUERYSTRING)
                         .build());
         when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(InvalidRequestException.builder().build());
+                .thenThrow(ThrottlingException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
-    }
-
-
-    @Test
-    public void handleRequest_ResourceNotFound_DynamicThingGroup() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .queryString(DG_QUERYSTRING)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder()
-                        .queryString(DG_QUERYSTRING)
-                        .build());
-        when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_GeneralServiceExceptionUnavailable_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupDelete_VersionConflictException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -341,86 +300,11 @@ public class DeleteHandlerTest extends AbstractTestBase {
                         .queryString(DG_QUERYSTRING)
                         .build());
         when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(ServiceUnavailableException.builder().build());
+                .thenThrow(VersionConflictException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
-    }
-
-    @Test
-    public void handleRequest_ThrottlingException_DynamicThingGroup() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .queryString(DG_QUERYSTRING)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder()
-                        .queryString(DG_QUERYSTRING)
-                        .build());
-        when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(ThrottlingException.builder().build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
-    }
-
-    @Test
-    public void handleRequest_AccessDeniedException_DynamicThingGroup() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .queryString(DG_QUERYSTRING)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder()
-                        .queryString(DG_QUERYSTRING)
-                        .build());
-        when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(UnauthorizedException.builder().build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
-    }
-
-    @Test
-    public void handleRequest_VersionConflictException_DynamicThingGroup() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .queryString(DG_QUERYSTRING)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder()
-                        .queryString(DG_QUERYSTRING)
-                        .build());
-        when(iotClient.deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class)))
-                .thenThrow(VersionConflictException.builder().build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ResourceConflict);
+        assertThrows(CfnResourceConflictException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).deleteDynamicThingGroup(any(DeleteDynamicThingGroupRequest.class));
     }
 }

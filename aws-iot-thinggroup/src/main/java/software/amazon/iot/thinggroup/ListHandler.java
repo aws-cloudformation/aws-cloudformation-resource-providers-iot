@@ -1,6 +1,7 @@
 package software.amazon.iot.thinggroup;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListThingGroupsRequest;
 import software.amazon.awssdk.services.iot.model.ListThingGroupsResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -15,6 +16,9 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
  * ListThingGroups: To retrieve a list of all ThingGroups in the account
  */
 public class ListHandler extends BaseHandlerStd {
+
+    private static final String OPERATION = "ListThingGroups";
+
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -34,12 +38,12 @@ public class ListHandler extends BaseHandlerStd {
                     );
             String nextToken = listThingGroupsResponse.nextToken();
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModels(Translator.translateFromListRequest(listThingGroupsResponse))
+                    .resourceModels(Translator.translateFromListResponse(listThingGroupsResponse))
                     .nextToken(nextToken)
                     .status(OperationStatus.SUCCESS)
                     .build();
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(null, OPERATION, e);
         }
     }
 }

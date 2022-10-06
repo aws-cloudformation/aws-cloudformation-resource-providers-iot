@@ -100,6 +100,7 @@ public class AbstractTestBase {
     }
 
     protected final static String TG_NAME = "thingGroupName";
+    protected final static String TG_PARENT_NAME = "parentThingGroupName";
     protected final static String TG_ID = "thingGroupId";
     protected final static String TG_ARN = "arn:aws:iot:us-east-1:1234567890:thingGroup/thingGroupId";
     protected final String TG_DESCRIPTION = "Thing Group Description";
