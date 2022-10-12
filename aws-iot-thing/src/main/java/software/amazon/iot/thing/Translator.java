@@ -50,8 +50,10 @@ public class Translator {
             String resourceIdentifier, String operationName, IotException e) {
         if (e instanceof ResourceAlreadyExistsException) {
             return new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
-        } else if (e instanceof UnauthorizedException || e instanceof ResourceNotFoundException) {
+        } else if (e instanceof ResourceNotFoundException) {
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
+        } else if (e instanceof UnauthorizedException) {
+            return new CfnAccessDeniedException(e);
         } else if (e instanceof InternalFailureException) {
             return new CfnInternalFailureException(e);
         } else if (e instanceof ServiceUnavailableException) {

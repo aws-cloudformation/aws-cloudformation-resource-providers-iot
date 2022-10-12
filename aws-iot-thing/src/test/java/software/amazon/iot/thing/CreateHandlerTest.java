@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
@@ -242,7 +243,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(iotClient.createThing(any(CreateThingRequest.class)))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThrows(CfnNotFoundException.class, () ->
+        assertThrows(CfnAccessDeniedException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
         verify(iotClient).describeThing(any(DescribeThingRequest.class));
         verify(iotClient).createThing(any(CreateThingRequest.class));

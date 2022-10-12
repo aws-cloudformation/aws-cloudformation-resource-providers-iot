@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.ThingAttribute;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -113,7 +114,7 @@ public class ListHandlerTest extends AbstractTestBase{
         when(iotClient.listThings(any(ListThingsRequest.class)))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThrows(CfnNotFoundException.class, () ->
+        assertThrows(CfnAccessDeniedException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
         verify(iotClient).listThings(any(ListThingsRequest.class));
     }

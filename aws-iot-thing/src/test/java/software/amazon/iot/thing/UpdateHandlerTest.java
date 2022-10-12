@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UpdateThingRequest;
 import software.amazon.awssdk.services.iot.model.UpdateThingResponse;
 import software.amazon.awssdk.services.iot.model.VersionConflictException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -152,7 +153,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        assertThrows(CfnNotFoundException.class, () ->
+        assertThrows(CfnAccessDeniedException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
         verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
