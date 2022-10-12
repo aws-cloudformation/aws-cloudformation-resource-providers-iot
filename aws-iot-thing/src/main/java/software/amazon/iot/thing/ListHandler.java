@@ -1,6 +1,7 @@
 package software.amazon.iot.thing;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListThingsRequest;
 import software.amazon.awssdk.services.iot.model.ListThingsResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -15,6 +16,9 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
  * ListThings: To list all Things in an account
  */
 public class ListHandler extends BaseHandlerStd {
+
+    private static final String OPERATION = "ListThings";
+
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -22,8 +26,6 @@ public class ListHandler extends BaseHandlerStd {
             final CallbackContext callbackContext,
             final ProxyClient<IotClient> proxyClient,
             final Logger logger) {
-
-        final ResourceModel resourceModel = request.getDesiredResourceState();
 
         try {
             final ListThingsRequest listThingsRequest = Translator.translateToListRequest(request.getNextToken());
@@ -33,12 +35,12 @@ public class ListHandler extends BaseHandlerStd {
             );
             String nextToken = listThingsResponse.nextToken();
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModels(Translator.translateFromListRequest(listThingsResponse))
+                    .resourceModels(Translator.translateFromListResponse(listThingsResponse))
                     .nextToken(nextToken)
                     .status(OperationStatus.SUCCESS)
                     .build();
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(null, OPERATION, e);
         }
     }
 }

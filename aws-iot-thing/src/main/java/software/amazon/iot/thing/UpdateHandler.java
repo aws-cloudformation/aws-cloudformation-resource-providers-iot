@@ -1,9 +1,9 @@
 package software.amazon.iot.thing;
 
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.DescribeThingRequest;
-import software.amazon.awssdk.services.iot.model.DescribeThingResponse;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.UpdateThingRequest;
+import software.amazon.awssdk.services.iot.model.UpdateThingResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -18,6 +18,8 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
  */
 public class UpdateHandler extends BaseHandlerStd {
 
+    private static final String OPERATION = "UpdateThing";
+    private static final String CALL_GRAPH = "AWS-IoT-Thing::Update";
     private Logger logger;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -29,31 +31,38 @@ public class UpdateHandler extends BaseHandlerStd {
 
         this.logger = logger;
 
-        final ResourceModel resourceModel = request.getDesiredResourceState();
-        final DescribeThingRequest describeThingRequest = Translator.translateToReadRequest(resourceModel);
-        final UpdateThingRequest updateThingRequest = Translator.translateToUpdateRequest(resourceModel);
+        ResourceModel prevModel = request.getPreviousResourceState() == null ?
+                request.getDesiredResourceState() : request.getPreviousResourceState();
+        ResourceModel newModel = request.getDesiredResourceState();
+        newModel.setThingName(prevModel.getThingName());
 
+        return ProgressEvent.progress(newModel, callbackContext)
+                .then(progress ->
+                        proxy.initiate(CALL_GRAPH, proxyClient, newModel, callbackContext)
+                                .translateToServiceRequest(Translator::translateToUpdateRequest)
+                                .makeServiceCall(this::updateResource)
+                                .progress())
+                .then(progress -> ProgressEvent.defaultSuccessHandler(newModel));
+    }
+
+    /**
+     * Implement client invocation of the update request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     * @param updateThingRequest the aws service request to update a resource
+     * @param proxyClient the aws service client to make the call
+     * @return update resource response
+     */
+    private UpdateThingResponse updateResource(
+            UpdateThingRequest updateThingRequest,
+            ProxyClient<IotClient> proxyClient) {
         try {
-            // check whether the resource exists - ResourceNotFound is thrown otherwise.
-            DescribeThingResponse describeThingResponse = proxyClient.injectCredentialsAndInvokeV2(
-                    describeThingRequest,
-                    proxyClient.client()::describeThing
-            );
-            logger.log(String.format("%s %s Exists. Proceed to update.",
-                    ResourceModel.TYPE_NAME, describeThingRequest.thingName()));
-            resourceModel.setArn(describeThingResponse.thingArn());
-
-            // update changes
-            proxyClient.injectCredentialsAndInvokeV2(
-                    updateThingRequest,
-                    proxyClient.client()::updateThing
-            );
-            logger.log(String.format("%s %s has successfully been updated.",
+            final UpdateThingResponse updateThingResponse = proxyClient.injectCredentialsAndInvokeV2(
+                    updateThingRequest, proxyClient.client()::updateThing);
+            logger.log(String.format("%s [%s] has been successfully updated.",
                     ResourceModel.TYPE_NAME, updateThingRequest.thingName()));
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
+            return updateThingResponse;
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(updateThingRequest.thingName(), OPERATION, e);
         }
-
-        return ProgressEvent.defaultSuccessHandler(resourceModel);
     }
 }
