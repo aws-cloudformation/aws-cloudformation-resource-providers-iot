@@ -1,6 +1,7 @@
 package software.amazon.iot.billinggroup;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListBillingGroupsRequest;
 import software.amazon.awssdk.services.iot.model.ListBillingGroupsResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -16,6 +17,8 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
  */
 public class ListHandler extends BaseHandlerStd {
 
+    private static final String OPERATION = "ListBillingGroups";
+
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -24,24 +27,21 @@ public class ListHandler extends BaseHandlerStd {
             final ProxyClient<IotClient> proxyClient,
             final Logger logger) {
 
-        final ResourceModel resourceModel = request.getDesiredResourceState();
-
-        final ListBillingGroupsRequest listBillingGroupsRequest = Translator.translateToListRequest(request.getNextToken());
         try {
+            final ListBillingGroupsRequest listBillingGroupsRequest = Translator.translateToListRequest(request.getNextToken());
             ListBillingGroupsResponse listBillingGroupsResponse =
                     proxy.injectCredentialsAndInvokeV2(
                             listBillingGroupsRequest,
                             proxyClient.client()::listBillingGroups
                     );
-
             String nextToken = listBillingGroupsResponse.nextToken();
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModels(Translator.translateFromListRequest(listBillingGroupsResponse))
+                    .resourceModels(Translator.translateFromListResponse(listBillingGroupsResponse))
                     .nextToken(nextToken)
                     .status(OperationStatus.SUCCESS)
                     .build();
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(null, OPERATION, e);
         }
     }
 }

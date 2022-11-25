@@ -1,13 +1,16 @@
 package software.amazon.iot.billinggroup;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import software.amazon.awssdk.services.cloudwatch.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.DescribeBillingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DescribeBillingGroupResponse;
-import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
-import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.UpdateBillingGroupRequest;
+import software.amazon.awssdk.services.iot.model.UpdateBillingGroupResponse;
+import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -27,6 +30,9 @@ import java.util.Set;
  */
 public class UpdateHandler extends BaseHandlerStd {
 
+    private static final String OPERATION = "UpdateBillingGroup";
+    private static final String CALL_GRAPH = "AWS-IoT-BillingGroup::Update";
+    private static final String CALL_GRAPH_TAG = "AWS-IoT-BillingGroup::Tagging";
     private Logger logger;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -37,66 +43,107 @@ public class UpdateHandler extends BaseHandlerStd {
             final Logger logger) {
 
         this.logger = logger;
-        final ResourceModel resourceModel = request.getDesiredResourceState();
-        final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
-        final DescribeBillingGroupRequest describeBillingGroupRequest = Translator.translateToReadRequest(resourceModel);
-        final UpdateBillingGroupRequest updateBillingGroupRequest = Translator.translateToUpdateRequest(resourceModel);
 
-        try {
-            // check whether the resource exists - ResourceNotFound is thrown otherwise.
-            DescribeBillingGroupResponse describeBillingGroupResponse = proxyClient.injectCredentialsAndInvokeV2(
-                    describeBillingGroupRequest,
-                    proxyClient.client()::describeBillingGroup
-            );
-            logger.log(String.format("%s %s Exists. Proceed to update.",
-                    ResourceModel.TYPE_NAME,describeBillingGroupRequest.billingGroupName()));
-            resourceModel.setArn(describeBillingGroupResponse.billingGroupArn());
+        ResourceModel prevModel = request.getPreviousResourceState() == null ?
+                request.getDesiredResourceState() : request.getPreviousResourceState();
+        ResourceModel newModel = request.getDesiredResourceState();
 
-            // update changes
-            proxyClient.injectCredentialsAndInvokeV2(
-                    updateBillingGroupRequest,
-                    proxyClient.client()::updateBillingGroup
-            );
-            logger.log(String.format("%s %s has successfully been updated.",
-                    ResourceModel.TYPE_NAME, updateBillingGroupRequest.billingGroupName()));
+        validatePropertiesAreUpdatable(newModel, prevModel);
 
-            // update the Tags as specified in the resource model by generating a diff of current and desired Tags
-            updateTags(proxyClient, resourceModel, desiredTags);
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
-        }
-
-        return ProgressEvent.defaultSuccessHandler(resourceModel);
+        return ProgressEvent.progress(newModel, callbackContext)
+                .then(progress ->
+                        proxy.initiate(CALL_GRAPH, proxyClient, newModel, callbackContext)
+                                .translateToServiceRequest(Translator::translateToUpdateRequest)
+                                .makeServiceCall(this::updateResource)
+                                .progress())
+                .then(progress -> updateResourceTags(proxy, proxyClient, progress, request))
+                .then(progress -> ProgressEvent.defaultSuccessHandler(newModel));
     }
 
-    private void updateTags(ProxyClient<IotClient> proxyClient, ResourceModel resourceModel, Set<Tag> desiredTags) {
-        final ListTagsForResourceRequest listTagsForResourceRequest = Translator.listResourceTagsRequest(resourceModel);
-        ListTagsForResourceResponse listTagsForResourceResponse = proxyClient.injectCredentialsAndInvokeV2(
-                listTagsForResourceRequest,
-                proxyClient.client()::listTagsForResource
-        );
-        logger.log(String.format("Listed Tags for %s %s",
-                ResourceModel.TYPE_NAME, listTagsForResourceRequest.resourceArn()));
-        final Set<Tag> existingTags = new HashSet<>(listTagsForResourceResponse.tags());
-        final Set<Tag> tagsToRemove = Sets.difference(existingTags, desiredTags);
-        final Set<Tag> tagsToAdd = Sets.difference(desiredTags, existingTags);
-        // API call to remove old tags
-        if (!tagsToRemove.isEmpty()) {
-            proxyClient.injectCredentialsAndInvokeV2(
-                    Translator.untagResourceRequest(resourceModel.getArn(), tagsToRemove),
-                    proxyClient.client()::untagResource
-            );
-            logger.log(String.format("Removed old Tags for %s %s",
-                    ResourceModel.TYPE_NAME, listTagsForResourceRequest.resourceArn()));
+    private void validatePropertiesAreUpdatable(ResourceModel newModel, ResourceModel prevModel) {
+        if (!StringUtils.equals(newModel.getBillingGroupName(), prevModel.getBillingGroupName())) {
+            throwCfnNotUpdatableException("BillingGroupName");
+        } else if (StringUtils.isNotEmpty(newModel.getArn()) && !StringUtils.equals(newModel.getArn(), prevModel.getArn())) {
+            throwCfnNotUpdatableException("Arn");
         }
-        // API call to add new tags
-        if (!tagsToAdd.isEmpty()) {
-            proxyClient.injectCredentialsAndInvokeV2(
-                    Translator.tagResourceRequest(resourceModel.getArn(), tagsToAdd),
-                    proxyClient.client()::tagResource
-            );
-            logger.log(String.format("Added new Tags for %s %s",
-                    ResourceModel.TYPE_NAME, listTagsForResourceRequest.resourceArn()));
+    }
+
+    private void throwCfnNotUpdatableException(String propertyName) {
+        throw new CfnNotUpdatableException(InvalidParameterValueException.builder()
+                .message(String.format("Parameter '%s' is not updatable.", propertyName))
+                .build());
+    }
+
+    /**
+     * Implement client invocation of the update request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     * @param updateBillingGroupRequest the aws service request to update a resource
+     * @param proxyClient the aws service client to make the call
+     * @return update resource response
+     */
+    private UpdateBillingGroupResponse updateResource(
+            UpdateBillingGroupRequest updateBillingGroupRequest,
+            ProxyClient<IotClient> proxyClient) {
+        try {
+            final UpdateBillingGroupResponse updateBillingGroupResponse = proxyClient.injectCredentialsAndInvokeV2(
+                    updateBillingGroupRequest, proxyClient.client()::updateBillingGroup);
+            logger.log(String.format("%s [%s] has been successfully updated.",
+                    ResourceModel.TYPE_NAME, updateBillingGroupRequest.billingGroupName()));
+            return updateBillingGroupResponse;
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(updateBillingGroupRequest.billingGroupName(), OPERATION, e);
         }
+    }
+
+    /**
+     * Implement client invocation to update resource tags through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     * @param proxy
+     * @param proxyClient
+     * @param progress
+     * @param request
+     * @return
+     */
+    private ProgressEvent<ResourceModel, CallbackContext> updateResourceTags(
+            final AmazonWebServicesClientProxy proxy,
+            final ProxyClient<IotClient> proxyClient,
+            final ProgressEvent<ResourceModel, CallbackContext> progress,
+            final ResourceHandlerRequest<ResourceModel> request) {
+        return proxy.initiate(CALL_GRAPH_TAG, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToReadRequest)
+                .makeServiceCall((getRequest, proxyInvocation) -> {
+                        try {
+                            DescribeBillingGroupResponse describeBillingGroupResponse = proxyInvocation.injectCredentialsAndInvokeV2(getRequest,
+                                    proxyInvocation.client()::describeBillingGroup);
+
+                            final String resourceArn = describeBillingGroupResponse.billingGroupArn();
+                            final Set<Tag> previousTags = new HashSet<>(listTags(proxyClient, resourceArn));
+                            final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
+
+                            final Set<Tag> tagsToRemove = Sets.difference(previousTags, desiredTags);
+                            final Set<Tag> tagsToAdd = Sets.difference(desiredTags, previousTags);
+
+                            if (CollectionUtils.isNotEmpty(tagsToRemove)) {
+                                proxyClient.injectCredentialsAndInvokeV2(
+                                        Translator.untagResourceRequest(resourceArn, tagsToRemove),
+                                        proxyClient.client()::untagResource
+                                );
+                                logger.log(String.format("%s [%s] untagResourceRequest successfully completed.",
+                                        ResourceModel.TYPE_NAME, resourceArn));
+                            }
+                            if (CollectionUtils.isNotEmpty(tagsToAdd)) {
+                                proxyClient.injectCredentialsAndInvokeV2(
+                                        Translator.tagResourceRequest(resourceArn, tagsToAdd),
+                                        proxyClient.client()::tagResource
+                                );
+                                logger.log(String.format("%s [%s] tagResourceRequest successfully completed.",
+                                        ResourceModel.TYPE_NAME, resourceArn));
+                            }
+                            return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
+                        } catch (IotException e) {
+                            throw Translator.translateIotExceptionToHandlerException(getRequest.billingGroupName(), OPERATION, e);
+                        }
+                })
+                .progress();
     }
 }

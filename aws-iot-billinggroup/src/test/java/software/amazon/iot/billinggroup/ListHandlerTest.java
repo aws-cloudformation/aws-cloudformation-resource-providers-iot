@@ -9,13 +9,19 @@ import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ListBillingGroupsRequest;
 import software.amazon.awssdk.services.iot.model.ListBillingGroupsResponse;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,47 +55,62 @@ public class ListHandlerTest extends AbstractTestBase{
     }
 
     @Test
-    public void handleRequest_InternalFailure() {
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(null).build();
+    public void handleRequest_List_InternalFailureException() {
+        final ResourceModel model = ResourceModel.builder()
+                .billingGroupName(BG_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
         when(iotClient.listBillingGroups(any(ListBillingGroupsRequest.class)))
-                .thenThrow(InternalFailureException.builder().build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).listBillingGroups(any(ListBillingGroupsRequest.class));
     }
 
     @Test
-    public void handleRequest_InvalidRequest() {
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(null).build();
+    public void handleRequest_List_InvalidRequestException() {
+        final ResourceModel model = ResourceModel.builder()
+                .billingGroupName(BG_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
         when(iotClient.listBillingGroups(any(ListBillingGroupsRequest.class)))
-                .thenThrow(InvalidRequestException.builder().build());
+                .thenThrow(InvalidRequestException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).listBillingGroups(any(ListBillingGroupsRequest.class));
     }
 
     @Test
-    public void handleRequest_ThrottlingException() {
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(null).build();
+    public void handleRequest_List_ResourceNotFoundException() {
+        final ResourceModel model = ResourceModel.builder()
+                .billingGroupName(BG_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
         when(iotClient.listBillingGroups(any(ListBillingGroupsRequest.class)))
-                .thenThrow(ThrottlingException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
+        assertThrows(CfnNotFoundException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).listBillingGroups(any(ListBillingGroupsRequest.class));
+    }
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+    @Test
+    public void handleRequest_List_ThrottlingException() {
+        final ResourceModel model = ResourceModel.builder()
+                .billingGroupName(BG_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.listBillingGroups(any(ListBillingGroupsRequest.class)))
+                .thenThrow(ThrottlingException.class);
+
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).listBillingGroups(any(ListBillingGroupsRequest.class));
     }
 }
