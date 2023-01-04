@@ -68,9 +68,6 @@
     "/properties/Arn",
     "/properties/Id"
   ],
-  "writeOnlyProperties": [
-    "/properties/BillingGroupProperties"
-  ],
   "createOnlyProperties": [
     "/properties/BillingGroupName"
   ],
