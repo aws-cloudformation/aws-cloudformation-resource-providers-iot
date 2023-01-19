@@ -1,15 +1,18 @@
 package software.amazon.iot.thinggroup;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
-import software.amazon.awssdk.services.iot.model.DescribeThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupResponse;
-import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
-import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.UpdateDynamicThingGroupRequest;
+import software.amazon.awssdk.services.iot.model.UpdateDynamicThingGroupResponse;
 import software.amazon.awssdk.services.iot.model.UpdateThingGroupRequest;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.awssdk.services.iot.model.UpdateThingGroupResponse;
+import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -22,6 +25,7 @@ import java.util.Set;
 /**
  * API Calls for UpdateHandler:
  * UpdateThingGroup: To update a ThingGroup
+ * UpdateDynamicThingGroup: To update a dynamic ThingGroup
  * DescribeThingGroup: To retrieve ARN of the ThingGroup to make Tag and UnTag API calls
  * ListTagsForResource: To retrieve old tags associated with ThingGroup
  * UntagResource: To remove old tags
@@ -31,6 +35,9 @@ import java.util.Set;
  */
 public class UpdateHandler extends BaseHandlerStd {
 
+    private static final String OPERATION = "UpdateThingGroup";
+    private static final String CALL_GRAPH = "AWS-IoT-ThingGroup::Update";
+    private static final String CALL_GRAPH_TAG = "AWS-IoT-ThingGroup::Tagging";
     private Logger logger;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -42,88 +49,148 @@ public class UpdateHandler extends BaseHandlerStd {
 
         this.logger = logger;
 
-        final ResourceModel resourceModel = request.getDesiredResourceState();
-        final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
-        final DescribeThingGroupRequest describeThingGroupRequest = Translator.translateToReadRequest(resourceModel);
+        ResourceModel prevResourceModel = request.getPreviousResourceState() == null ?
+                request.getDesiredResourceState() : request.getPreviousResourceState();
+        final ResourceModel newResourceModel = request.getDesiredResourceState();
 
-        try {
-            // check whether the resource exists - ResourceNotFound is thrown otherwise.
-            DescribeThingGroupResponse describeThingGroupResponse = proxyClient.injectCredentialsAndInvokeV2(
-                    describeThingGroupRequest,
-                    proxyClient.client()::describeThingGroup
-            );
-            logger.log(String.format("%s %s Exists. Proceed to update.",
-                    ResourceModel.TYPE_NAME, describeThingGroupRequest.thingGroupName()));
-            resourceModel.setArn(describeThingGroupResponse.thingGroupArn());
+        validatePropertiesAreUpdatable(newResourceModel, prevResourceModel);
 
-            // check for thing-group and dynamic-thing-group conversion case
-            if (resourceModel.getQueryString() == null && isDynamicThingGroup(describeThingGroupResponse)) {
-                throw new CfnInvalidRequestException("Dynamic Thing Group cannot be converted to a Static Thing Group");
-            }
-            if (resourceModel.getQueryString() != null && !isDynamicThingGroup(describeThingGroupResponse)) {
-                throw new CfnInvalidRequestException("Static Thing Group cannot be converted to a Dynamic Thing Group");
-            }
-
-            // update changes
-            if (isDynamicThingGroup(describeThingGroupResponse)) {
-                final UpdateDynamicThingGroupRequest updateDynamicThingGroupRequest =
-                        Translator.translateToFirstDynamicThingGroupUpdateRequest(resourceModel);
-
-                proxyClient.injectCredentialsAndInvokeV2(
-                        updateDynamicThingGroupRequest,
-                        proxyClient.client()::updateDynamicThingGroup
-                );
-                logger.log(String.format("%s %s (DynamicThingGroup) has successfully been updated.",
-                        ResourceModel.TYPE_NAME, updateDynamicThingGroupRequest.thingGroupName()));
-            } else {
-                final UpdateThingGroupRequest updateThingGroupRequest =
-                        Translator.translateToUpdateThingGroupRequest(resourceModel);
-
-                proxyClient.injectCredentialsAndInvokeV2(
-                        updateThingGroupRequest,
-                        proxyClient.client()::updateThingGroup
-                );
-                logger.log(String.format("%s %s has successfully been updated.",
-                        ResourceModel.TYPE_NAME, updateThingGroupRequest.thingGroupName()));
-            }
-
-            // update the Tags as specified in the resource model by generating a diff of current and desired Tags
-            updateTags(proxyClient, resourceModel, desiredTags);
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
+        if (isDynamicThingGroup(checkForThingGroup(newResourceModel.getThingGroupName(), proxyClient, OPERATION))) {
+            return ProgressEvent.progress(newResourceModel, callbackContext)
+                    .then(progress ->
+                            proxy.initiate(CALL_GRAPH, proxyClient, newResourceModel, callbackContext)
+                                    .translateToServiceRequest(Translator::translateToFirstDynamicThingGroupUpdateRequest)
+                                    .makeServiceCall(this::updateDynamicThingGroupResource)
+                                    .progress())
+                    .then(progress -> updateResourceTags(proxy, proxyClient, progress, request, newResourceModel))
+                    .then(progress -> ProgressEvent.defaultSuccessHandler(newResourceModel));
+        } else {
+            return ProgressEvent.progress(newResourceModel, callbackContext)
+                    .then(progress ->
+                            proxy.initiate(CALL_GRAPH, proxyClient, newResourceModel, callbackContext)
+                                    .translateToServiceRequest(Translator::translateToUpdateThingGroupRequest)
+                                    .makeServiceCall(this::updateThingGroupResource)
+                                    .progress())
+                    .then(progress -> updateResourceTags(proxy, proxyClient, progress, request, newResourceModel))
+                    .then(progress -> ProgressEvent.defaultSuccessHandler(newResourceModel));
         }
-
-        return ProgressEvent.defaultSuccessHandler(resourceModel);
     }
 
-    private void updateTags(ProxyClient<IotClient> proxyClient, ResourceModel resourceModel, Set<Tag> desiredTags) {
-        final ListTagsForResourceRequest listTagsForResourceRequest = Translator.listResourceTagsRequest(resourceModel);
-        ListTagsForResourceResponse listTagsForResourceResponse = proxyClient.injectCredentialsAndInvokeV2(
-                listTagsForResourceRequest,
-                proxyClient.client()::listTagsForResource
-        );
-        logger.log(String.format("Listed Tags for %s %s",
-                ResourceModel.TYPE_NAME, listTagsForResourceRequest.resourceArn()));
-        final Set<Tag> existingTags = new HashSet<>(listTagsForResourceResponse.tags());
-        final Set<Tag> tagsToRemove = Sets.difference(existingTags, desiredTags);
-        final Set<Tag> tagsToAdd = Sets.difference(desiredTags, existingTags);
-        // API call to remove old tags
-        if (!tagsToRemove.isEmpty()) {
-            proxyClient.injectCredentialsAndInvokeV2(
-                    Translator.untagResourceRequest(resourceModel.getArn(), tagsToRemove),
-                    proxyClient.client()::untagResource
-            );
-            logger.log(String.format("Removed old Tags for %s %s",
-                    ResourceModel.TYPE_NAME, listTagsForResourceRequest.resourceArn()));
+    private void validatePropertiesAreUpdatable(ResourceModel newResourceModel, ResourceModel prevResourceModel) {
+        if (!StringUtils.equals(newResourceModel.getThingGroupName(), prevResourceModel.getThingGroupName())) {
+            throwCfnNotUpdatableException("ThingGroupName");
+        } else if (StringUtils.isNotEmpty(newResourceModel.getArn()) &&
+                !StringUtils.equals(newResourceModel.getArn(), prevResourceModel.getArn())) {
+            throwCfnNotUpdatableException("Arn");
         }
-        // API call to add new tags
-        if (!tagsToAdd.isEmpty()) {
-            proxyClient.injectCredentialsAndInvokeV2(
-                    Translator.tagResourceRequest(resourceModel.getArn(), tagsToAdd),
-                    proxyClient.client()::tagResource
-            );
-            logger.log(String.format("Added new Tags for %s %s",
-                    ResourceModel.TYPE_NAME, listTagsForResourceRequest.resourceArn()));
+
+        // check the case for switching between dynamic to static thing group and vice-versa
+        if ((StringUtils.isNotEmpty(prevResourceModel.getQueryString()) && StringUtils.isEmpty(newResourceModel.getQueryString()))
+                || (StringUtils.isEmpty(prevResourceModel.getQueryString()) && StringUtils.isNotEmpty(newResourceModel.getQueryString()))) {
+            throw new CfnNotUpdatableException(InvalidRequestException.builder()
+                    .message(String.format("Parameter '%s' is not updatable.", "QueryString"))
+                    .build());
         }
+    }
+
+    private void throwCfnNotUpdatableException(String propertyName) {
+        throw new CfnNotUpdatableException(InvalidRequestException.builder()
+                .message(String.format("Parameter '%s' can only be updated and not removed/added", propertyName))
+                .build());
+    }
+
+    /**
+     * Implement client invocation of the update request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     * @param updateThingGroupRequest the aws service request to update a resource
+     * @param proxyClient the aws service client to make the call
+     * @return update resource response
+     */
+    private UpdateThingGroupResponse updateThingGroupResource(
+            final UpdateThingGroupRequest updateThingGroupRequest,
+            final ProxyClient<IotClient> proxyClient) {
+        try {
+            UpdateThingGroupResponse updateThingGroupResponse = proxyClient.injectCredentialsAndInvokeV2(
+                    updateThingGroupRequest, proxyClient.client()::updateThingGroup);
+            logger.log(String.format("%s [%s] has successfully been updated.",
+                    ResourceModel.TYPE_NAME, updateThingGroupRequest.thingGroupName()));
+            return updateThingGroupResponse;
+        } catch (final IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(updateThingGroupRequest.thingGroupName(), OPERATION, e);
+        }
+    }
+
+    /**
+     * Implement client invocation of the update request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     * @param updateDynamicThingGroupRequest the aws service request to update a resource
+     * @param proxyClient the aws service client to make the call
+     * @return update resource response
+     */
+    private UpdateDynamicThingGroupResponse updateDynamicThingGroupResource(
+            final UpdateDynamicThingGroupRequest updateDynamicThingGroupRequest,
+            final ProxyClient<IotClient> proxyClient) {
+        try {
+            UpdateDynamicThingGroupResponse updateDynamicThingGroupResponse = proxyClient.injectCredentialsAndInvokeV2(
+                    updateDynamicThingGroupRequest, proxyClient.client()::updateDynamicThingGroup);
+            logger.log(String.format("%s [%s] has successfully been updated.",
+                    ResourceModel.TYPE_NAME, updateDynamicThingGroupRequest.thingGroupName()));
+            return updateDynamicThingGroupResponse;
+        } catch (final IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(updateDynamicThingGroupRequest.thingGroupName(), OPERATION, e);
+        }
+    }
+
+    /**
+     * Implement client invocation to update resource tags through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     * @param proxy
+     * @param proxyClient
+     * @param progress
+     * @param request
+     * @param newResourceModel
+     * @return
+     */
+    private ProgressEvent<ResourceModel, CallbackContext> updateResourceTags(
+            final AmazonWebServicesClientProxy proxy,
+            final ProxyClient<IotClient> proxyClient,
+            final ProgressEvent<ResourceModel, CallbackContext> progress,
+            final ResourceHandlerRequest<ResourceModel> request, ResourceModel newResourceModel) {
+        return proxy.initiate(CALL_GRAPH_TAG, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToReadRequest)
+                .makeServiceCall((getRequest, proxyInvocation) -> {
+                    try {
+                        DescribeThingGroupResponse describeThingGroupResponse = proxyInvocation.injectCredentialsAndInvokeV2(getRequest,
+                                proxyInvocation.client()::describeThingGroup);
+
+                        final String resourceArn = describeThingGroupResponse.thingGroupArn();
+                        final Set<Tag> previousTags = new HashSet<>(listTags(proxyClient, resourceArn));
+                        final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
+
+                        final Set<Tag> tagsToRemove = Sets.difference(previousTags, desiredTags);
+                        final Set<Tag> tagsToAdd = Sets.difference(desiredTags, previousTags);
+
+                        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(tagsToRemove)) {
+                            proxyClient.injectCredentialsAndInvokeV2(
+                                    Translator.untagResourceRequest(resourceArn, tagsToRemove),
+                                    proxyClient.client()::untagResource
+                            );
+                            logger.log(String.format("%s [%s] untagResourceRequest successfully completed.",
+                                    ResourceModel.TYPE_NAME, resourceArn));
+                        }
+                        if (CollectionUtils.isNotEmpty(tagsToAdd)) {
+                            proxyClient.injectCredentialsAndInvokeV2(
+                                    Translator.tagResourceRequest(resourceArn, tagsToAdd),
+                                    proxyClient.client()::tagResource
+                            );
+                            logger.log(String.format("%s [%s] tagResourceRequest successfully completed.",
+                                    ResourceModel.TYPE_NAME, resourceArn));
+                        }
+                        return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
+                    } catch (IotException e) {
+                        throw Translator.translateIotExceptionToHandlerException(getRequest.thingGroupName(), OPERATION, e);
+                    }
+                })
+                .progress();
     }
 }

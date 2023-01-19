@@ -9,20 +9,22 @@ import software.amazon.awssdk.services.iot.model.CreateThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.CreateThingGroupResponse;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupResponse;
-import software.amazon.awssdk.services.iot.model.InternalException;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidQueryException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.ThingGroupMetadata;
 import software.amazon.awssdk.services.iot.model.ThingGroupProperties;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
-import software.amazon.awssdk.services.iot.model.UnauthorizedException;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
@@ -31,7 +33,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -168,27 +173,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-    }
-
-    @Test
-    public void handleRequest_ResourceConflictFails() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
-        when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
-                .thenThrow(ResourceAlreadyExistsException.builder().resourceId(TG_ID).build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThat(response.getResourceModel().getTags().size()).isEqualTo(apiResponseTags.size());
     }
 
     @Test
@@ -201,118 +186,126 @@ public class CreateHandlerTest extends AbstractTestBase {
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
                 .thenReturn(DescribeThingGroupResponse.builder().thingGroupName(TG_NAME).build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThrows(CfnAlreadyExistsException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InvalidRequestFails() {
+    public void handleRequest_Create_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
-                .thenThrow(InvalidRequestException.builder().build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createThingGroup(any(CreateThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InternalExceptionFails() {
+    public void handleRequest_Create_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
-                .thenThrow(InternalException.builder().build());
+                .thenThrow(InvalidRequestException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createThingGroup(any(CreateThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ThrottlingFails() {
+    public void handleRequest_Create_ResourceAlreadyExistsException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
-                .thenThrow(ThrottlingException.builder().build());
+                .thenThrow(ResourceAlreadyExistsException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+        assertThrows(CfnAlreadyExistsException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createThingGroup(any(CreateThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_AccessDeniedException() {
+    public void handleRequest_Create_ThrottlingException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
-                .thenThrow(UnauthorizedException.builder().build());
+                .thenThrow(ThrottlingException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createThingGroup(any(CreateThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ServiceUnavailableException() {
+    public void handleRequest_Describe_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
-        when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
-                .thenThrow(ServiceUnavailableException.builder().build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+    }
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+    @Test
+    public void handleRequest_Describe_InvalidRequestException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
+                .thenThrow(InvalidRequestException.class);
+
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+    }
+
+    @Test
+    public void handleRequest_Describe_ThrottlingException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
+                .thenThrow(ThrottlingException.class);
+
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
     }
 
     @Test
@@ -355,6 +348,21 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_Create_DynamicThingGroup_FailsWithParentGroupPresent() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .parentGroupName(TG_PARENT_NAME)
+                .queryString(DG_QUERYSTRING)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient, never()).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
@@ -424,7 +432,6 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .thingGroupProperties(software.amazon.iot.thinggroup.ThingGroupProperties.builder()
                         .thingGroupDescription(TG_DESCRIPTION)
                         .build())
-                .parentGroupName("ParentGroup")
                 .queryString(DG_QUERYSTRING)
                 .tags(tags)
                 .build();
@@ -458,10 +465,11 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel().getTags().size()).isEqualTo(apiResponseTags.size());
     }
 
     @Test
-    public void handleRequest_ResourceConflictFails_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -469,21 +477,18 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(ResourceAlreadyExistsException.builder().resourceId(TG_ID).build());
+                .thenThrow(InternalFailureException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ResourceAlreadyExistsWithSamePropertyFails_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_InvalidQueryException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -491,41 +496,18 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenReturn(DescribeThingGroupResponse.builder().thingGroupName(TG_NAME).build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AlreadyExists);
-    }
-
-    @Test
-    public void handleRequest_InvalidRequestFails_DynamicThingGroup() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .queryString(DG_QUERYSTRING)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(InvalidRequestException.builder().build());
+                .thenThrow(InvalidQueryException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_InternalExceptionFails_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -533,21 +515,18 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(InternalFailureException.builder().build());
+                .thenThrow(InvalidRequestException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ThrottlingFails_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_LimitExceededException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -555,21 +534,18 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(ThrottlingException.builder().build());
+                .thenThrow(LimitExceededException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+        assertThrows(CfnServiceLimitExceededException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_AccessDeniedException_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_ResourceAlreadyExistsException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -577,21 +553,18 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(UnauthorizedException.builder().build());
+                .thenThrow(ResourceAlreadyExistsException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
+        assertThrows(CfnAlreadyExistsException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ServiceUnavailableException_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_ResourceNotFoundException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -599,21 +572,18 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(ServiceUnavailableException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnNotFoundException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 
     @Test
-    public void handleRequest_ServiceInvalidQueryException_DynamicThingGroup() {
+    public void handleRequest_DynamicThingGroupCreate_ThrottlingException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingGroupName(TG_NAME)
                 .queryString(DG_QUERYSTRING)
@@ -621,38 +591,13 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
         when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
+                .thenThrow(ResourceNotFoundException.class);
         when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(InvalidQueryException.builder().build());
+                .thenThrow(ThrottlingException.class);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
-    }
-
-    @Test
-    public void handleRequest_ServiceLimitExceededException_DynamicThingGroup() {
-        final ResourceModel model = ResourceModel.builder()
-                .thingGroupName(TG_NAME)
-                .queryString(DG_QUERYSTRING)
-                .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
-
-        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
-                .thenThrow(ResourceNotFoundException.builder().build());
-        when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
-                .thenThrow(LimitExceededException.builder().build());
-
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceLimitExceeded);
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
 }
