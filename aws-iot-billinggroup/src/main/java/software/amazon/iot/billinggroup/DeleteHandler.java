@@ -2,11 +2,11 @@ package software.amazon.iot.billinggroup;
 
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.http.HttpStatusCode;
-import software.amazon.awssdk.services.cloudwatch.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DeleteBillingGroupRequest;
 import software.amazon.awssdk.services.iot.model.DeleteBillingGroupResponse;
 import software.amazon.awssdk.services.iot.model.DescribeBillingGroupRequest;
+import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -38,7 +38,7 @@ public class DeleteHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
         if (StringUtils.isEmpty(resourceModel.getBillingGroupName())) {
-            throw new CfnNotFoundException(InvalidParameterValueException.builder()
+            throw new CfnNotFoundException(InvalidRequestException.builder()
                     .message("Parameter 'BillingGroupName' must be provided.")
                     .build());
         }
