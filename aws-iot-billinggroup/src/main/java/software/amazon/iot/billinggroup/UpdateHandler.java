@@ -3,9 +3,9 @@ package software.amazon.iot.billinggroup;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import software.amazon.awssdk.services.cloudwatch.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeBillingGroupResponse;
+import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.UpdateBillingGroupRequest;
@@ -69,7 +69,7 @@ public class UpdateHandler extends BaseHandlerStd {
     }
 
     private void throwCfnNotUpdatableException(String propertyName) {
-        throw new CfnNotUpdatableException(InvalidParameterValueException.builder()
+        throw new CfnNotUpdatableException(InvalidRequestException.builder()
                 .message(String.format("Parameter '%s' is not updatable.", propertyName))
                 .build());
     }

@@ -1,0 +1,21 @@
+{
+  "CreateInputs": {
+    "BillingGroupName": "CfnContractTestBillingGroup",
+    "BillingGroupProperties": {
+      "BillingGroupDescription": "test BillingGroup for Cfn Contract Tests"
+    },
+    "Tags": [
+      {
+        "Key": "testTagKey",
+        "Value": "tagValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/BillingGroupProperties/BillingGroupDescription",
+      "value": "updated test BillingGroup for Cfn Contract Tests"
+    }
+  ]
+}
