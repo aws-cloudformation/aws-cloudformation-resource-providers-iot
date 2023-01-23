@@ -1,7 +1,6 @@
 package software.amazon.iot.billinggroup;
 
 import com.amazonaws.util.StringUtils;
-import org.apache.commons.collections.MapUtils;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.CreateBillingGroupRequest;
@@ -101,16 +100,10 @@ public class CreateHandler extends BaseHandlerStd {
     }
 
     private String generateName(final ResourceHandlerRequest<ResourceModel> request) {
-        final StringBuilder identifierPrefix = new StringBuilder();
-        identifierPrefix.append((request.getSystemTags() != null &&
-                MapUtils.isNotEmpty(request.getSystemTags())) ?
-                request.getSystemTags().get("aws:cloudformation:stack-name") + "-" : "");
-        identifierPrefix.append(request.getLogicalResourceIdentifier() == null ?
-                "BILLING_GROUP" :
-                request.getLogicalResourceIdentifier());
         return IdentifierUtils.generateResourceIdentifier(
-                identifierPrefix.toString(),
+                StringUtils.isNullOrEmpty(request.getLogicalResourceIdentifier()) ?
+                        "ThingGroup" : request.getLogicalResourceIdentifier(),
                 request.getClientRequestToken(),
-                MAX_BILLING_GROUP_NAME_LENGTH);
+                MAX_BILLING_GROUP_NAME_LENGTH).replace("-", "_");
     }
 }
