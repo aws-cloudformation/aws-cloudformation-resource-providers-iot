@@ -65,6 +65,9 @@ public class Translator {
         if (e instanceof ResourceAlreadyExistsException) {
             return new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
         } else if (e instanceof ResourceNotFoundException) {
+            if (e.getMessage()!= null && e.getMessage().contains("AWS IoT Fleet Indexing is not enabled")) {
+                return new CfnInvalidRequestException(e);
+            }
             return new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
         } else if (e instanceof UnauthorizedException) {
             return new CfnAccessDeniedException(e);
