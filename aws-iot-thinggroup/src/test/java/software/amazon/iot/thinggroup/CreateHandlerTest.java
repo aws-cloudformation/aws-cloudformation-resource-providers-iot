@@ -600,4 +600,27 @@ public class CreateHandlerTest extends AbstractTestBase {
         verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
         verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
     }
+
+    @Test
+    public void handleRequest_DynamicThingGroupCreate_FleetIndexingNotEnabled() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .queryString(DG_QUERYSTRING)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        ResourceNotFoundException resourceNotFoundException = ResourceNotFoundException.builder()
+                .message("AWS IoT Fleet Indexing is not enabled. Please enable index by calling UpdateIndexingConfiguration.")
+                .build();
+
+        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
+                .thenThrow(ResourceNotFoundException.class);
+        when(iotClient.createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class)))
+                .thenThrow(resourceNotFoundException);
+
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).describeThingGroup(any(DescribeThingGroupRequest.class));
+        verify(iotClient).createDynamicThingGroup(any(CreateDynamicThingGroupRequest.class));
+    }
 }
