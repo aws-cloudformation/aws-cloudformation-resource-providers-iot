@@ -24,9 +24,13 @@ Resources:
               - Effect: Allow
                 Action:
                 - "iot:CreatePolicy"
+                - "iot:CreatePolicyVersion"
                 - "iot:DeletePolicy"
+                - "iot:DeletePolicyVersion"
                 - "iot:GetPolicy"
                 - "iot:ListPolicies"
+                - "iot:ListPolicyVersions"
+                - "iot:SetDefaultPolicyVersion"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

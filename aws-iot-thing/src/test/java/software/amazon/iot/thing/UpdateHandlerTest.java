@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.cloudformation.model.OperationStatus;
-import software.amazon.awssdk.services.iot.model.DescribeThingRequest;
-import software.amazon.awssdk.services.iot.model.DescribeThingResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
@@ -14,7 +12,14 @@ import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UpdateThingRequest;
 import software.amazon.awssdk.services.iot.model.UpdateThingResponse;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
+import software.amazon.awssdk.services.iot.model.VersionConflictException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
@@ -22,7 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,13 +53,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenReturn(UpdateThingResponse.builder()
                         .build());
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder()
-                        .attributes(attributes)
-                        .thingArn(T_ARN)
-                        .thingId(T_ID)
-                        .thingName(T_Name)
-                        .build());
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
@@ -69,128 +69,107 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_InternalFailure() {
+    public void handleRequest_InternalFailureException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(InternalFailureException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnInternalFailureException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_InvalidRequest() {
+    public void handleRequest_InvalidRequestException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(InvalidRequestException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.InvalidRequest);
+        assertThrows(CfnInvalidRequestException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_ResourceNotFound() {
+    public void handleRequest_ResourceNotFoundException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(ResourceNotFoundException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.NotFound);
+        assertThrows(CfnNotFoundException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_failsServiceUnavailableException() {
+    public void handleRequest_ServiceUnavailableException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(ServiceUnavailableException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.ServiceInternalError);
+        assertThrows(CfnGeneralServiceException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_failsThrottlingException() {
+    public void handleRequest_ThrottlingException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(ThrottlingException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.Throttling);
+        assertThrows(CfnThrottlingException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
 
     @Test
-    public void handleRequest_failsUnauthorizedException() {
+    public void handleRequest_UnauthorizedException() {
         final ResourceModel model = ResourceModel.builder()
                 .thingName(T_Name)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
-        when(iotClient.describeThing(any(DescribeThingRequest.class)))
-                .thenReturn(DescribeThingResponse.builder().thingName(T_Name).build());
         when(iotClient.updateThing(any(UpdateThingRequest.class)))
                 .thenThrow(UnauthorizedException.builder().build());
 
-        final ProgressEvent<ResourceModel, CallbackContext> response
-                = handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER);
+        assertThrows(CfnAccessDeniedException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
+    }
 
-        assertThat(response).isNotNull();
-        assertThat(response.getStatus()).isEqualTo(software.amazon.cloudformation.proxy.OperationStatus.FAILED);
-        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
-        assertThat(response.getErrorCode()).isEqualTo(HandlerErrorCode.AccessDenied);
+    @Test
+    public void handleRequest_VersionConflictException() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingName(T_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.updateThing(any(UpdateThingRequest.class)))
+                .thenThrow(VersionConflictException.builder().build());
+
+        assertThrows(CfnResourceConflictException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient).updateThing(any(UpdateThingRequest.class));
     }
 }

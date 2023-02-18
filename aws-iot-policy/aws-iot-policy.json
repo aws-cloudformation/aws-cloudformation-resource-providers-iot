@@ -24,8 +24,7 @@
     "/properties/Id"
   ],
   "createOnlyProperties": [
-    "/properties/PolicyName",
-    "/properties/PolicyDocument"
+    "/properties/PolicyName"
   ],
   "primaryIdentifier": [
     "/properties/Id"
@@ -45,7 +44,17 @@
     "delete": {
       "permissions": [
         "iot:DeletePolicy",
-        "iot:GetPolicy"
+        "iot:GetPolicy",
+        "iot:ListPolicyVersions",
+        "iot:DeletePolicyVersion"
+      ]
+    },
+    "update": {
+      "permissions": [
+        "iot:ListPolicyVersions",
+        "iot:CreatePolicyVersion",
+        "iot:DeletePolicyVersion",
+        "iot:SetDefaultPolicyVersion"
       ]
     },
     "list": {

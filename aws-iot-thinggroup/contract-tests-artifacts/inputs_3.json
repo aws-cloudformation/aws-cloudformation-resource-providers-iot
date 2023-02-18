@@ -1,0 +1,22 @@
+{
+  "CreateInputs": {
+    "ThingGroupName": "CfnContractTestDynamicThingGroup",
+    "QueryString": "attributes.temperature>60",
+    "ThingGroupProperties": {
+      "ThingGroupDescription": "test dynamic ThingGroup for Cfn Contract Tests"
+    },
+    "Tags": [
+      {
+        "Key": "testTagKey",
+        "Value": "tagValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/ThingGroupProperties/ThingGroupDescription",
+      "value": "updated test dynamic ThingGroup for Cfn Contract Tests"
+    }
+  ]
+}
