@@ -1,14 +1,14 @@
 package software.amazon.iot.thingtype;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.awssdk.services.iot.model.ConflictingResourceUpdateException;
 import software.amazon.awssdk.services.iot.model.CreateThingTypeRequest;
-import software.amazon.awssdk.services.iot.model.DeleteConflictException;
 import software.amazon.awssdk.services.iot.model.DeleteThingTypeRequest;
 import software.amazon.awssdk.services.iot.model.DeprecateThingTypeRequest;
 import software.amazon.awssdk.services.iot.model.DescribeThingTypeRequest;
-import software.amazon.awssdk.services.iot.model.InternalException;
+import software.amazon.awssdk.services.iot.model.DescribeThingTypeResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
+import software.amazon.awssdk.services.iot.model.InvalidQueryException;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.LimitExceededException;
@@ -24,10 +24,18 @@ import software.amazon.awssdk.services.iot.model.ThingTypeProperties;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
-import software.amazon.cloudformation.proxy.HandlerErrorCode;
-import software.amazon.cloudformation.proxy.Logger;
-import software.amazon.cloudformation.proxy.OperationStatus;
-import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.awssdk.services.iot.model.VersionConflictException;
+import software.amazon.cloudformation.exceptions.BaseHandlerException;
+import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
+import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
+import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
+import software.amazon.cloudformation.exceptions.CfnServiceLimitExceededException;
+import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -46,63 +54,31 @@ import java.util.stream.Stream;
  * mapping exceptions to appropriate Cloudformation exceptions
  */
 public class Translator {
-    static ProgressEvent<ResourceModel, CallbackContext> translateExceptionToProgressEvent(
-            ResourceModel model, Exception e, Logger logger) {
 
-        HandlerErrorCode errorCode = translateExceptionToErrorCode(e, logger);
-        ProgressEvent<ResourceModel, CallbackContext> progressEvent =
-                ProgressEvent.<ResourceModel, CallbackContext>builder()
-                        .resourceModel(model)
-                        .status(OperationStatus.FAILED)
-                        .errorCode(errorCode)
-                        .build();
-        if (errorCode != HandlerErrorCode.InternalFailure) {
-            progressEvent.setMessage(e.getMessage());
-        }
-        return progressEvent;
-    }
-
-
-    static HandlerErrorCode translateExceptionToErrorCode(Exception e, Logger logger) {
-        logger.log(String.format("Translating exception \"%s\", stack trace: %s",
-                e.getMessage(), ExceptionUtils.getStackTrace(e)));
-
-        // We're handling all the exceptions documented in API docs
-        // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html#API_CreateThingType_Errors
-        // (+same pages for other APIs)
-        // For Throttling and InternalFailure, we want CloudFormation to retry, and it will do so based on the error code.
-        // Reference with Retryable/Terminal in comments for each: https://tinyurl.com/y378qdno
+    static BaseHandlerException translateIotExceptionToHandlerException(
+            String resourceIdentifier, String operationName, IotException e) {
         if (e instanceof ResourceAlreadyExistsException) {
-            return HandlerErrorCode.AlreadyExists;
-        } else if (e instanceof software.amazon.cloudformation.exceptions.ResourceAlreadyExistsException) {
-            return HandlerErrorCode.AlreadyExists;
-        } else if (e instanceof InvalidRequestException) {
-            return HandlerErrorCode.InvalidRequest;
-        } else if (e instanceof LimitExceededException) {
-            return HandlerErrorCode.ServiceLimitExceeded;
-        } else if (e instanceof UnauthorizedException) {
-            return HandlerErrorCode.AccessDenied;
-        } else if (e instanceof InternalFailureException) {
-            return HandlerErrorCode.ServiceInternalError;
-        } else if (e instanceof InternalException) {
-            return HandlerErrorCode.ServiceInternalError;
-        } else if (e instanceof ServiceUnavailableException) {
-            return HandlerErrorCode.ServiceInternalError;
-        } else if (e instanceof ThrottlingException) {
-            return HandlerErrorCode.Throttling;
+            return new CfnAlreadyExistsException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
         } else if (e instanceof ResourceNotFoundException) {
-            return HandlerErrorCode.NotFound;
-        } else if (e instanceof ConflictingResourceUpdateException | e instanceof DeleteConflictException) {
-            return HandlerErrorCode.ResourceConflict;
-        } else if (e instanceof IotException && ((IotException) e).statusCode() == 403) {
-            return HandlerErrorCode.AccessDenied;
+            return new CfnNotFoundException(ResourceModel.TYPE_NAME, resourceIdentifier, e);
+        } else if (e instanceof UnauthorizedException) {
+            return new CfnAccessDeniedException(e);
+        } else if (e instanceof InternalFailureException) {
+            return new CfnInternalFailureException(e);
+        } else if (e instanceof ServiceUnavailableException) {
+            return new CfnGeneralServiceException(operationName, e);
+        } else if (e instanceof InvalidRequestException || e instanceof InvalidQueryException) {
+            return new CfnInvalidRequestException(e);
+        } else if (e instanceof LimitExceededException) {
+            return new CfnServiceLimitExceededException(ResourceModel.TYPE_NAME, e.getMessage());
+        } else if (e instanceof ConflictingResourceUpdateException || e instanceof VersionConflictException) {
+            return new CfnResourceConflictException(ResourceModel.TYPE_NAME, resourceIdentifier, e.getMessage(), e);
+        } else if (e instanceof ThrottlingException) {
+            return new CfnThrottlingException(operationName, e);
+        } else if (e.statusCode() == HttpStatusCode.FORBIDDEN) {
+            return new CfnAccessDeniedException(operationName, e);
         } else {
-            logger.log(String.format("Unexpected exception \"%s\", stack trace: %s",
-                    e.getMessage(), ExceptionUtils.getStackTrace(e)));
-            System.out.println(String.format("Unexpected exception \"%s\", stack trace: %s",
-                    e.getMessage(), ExceptionUtils.getStackTrace(e)));
-            // Any other exception at this point is unexpected.
-            return HandlerErrorCode.InternalFailure;
+            return new CfnServiceInternalErrorException(operationName, e);
         }
     }
 
@@ -152,10 +128,12 @@ public class Translator {
                 .build();
     }
 
-    static List<ResourceModel> translateFromListRequest(final ListThingTypesResponse listThingTypesResponse) {
+    static List<ResourceModel> translateFromListResponse(final ListThingTypesResponse listThingTypesResponse) {
         return streamOfOrEmpty(listThingTypesResponse.thingTypes())
                 .map(resource -> ResourceModel.builder()
                         .thingTypeName(resource.thingTypeName())
+                        .arn(resource.thingTypeArn())
+                        .deprecateThingType(resource.thingTypeMetadata().deprecated())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -185,9 +163,10 @@ public class Translator {
     }
 
 
-    static ListTagsForResourceRequest listResourceTagsRequest(final ResourceModel model) {
+    static ListTagsForResourceRequest listResourceTagsRequest(final String resourceArn, final String nextToken) {
         return ListTagsForResourceRequest.builder()
-                .resourceArn(model.getArn())
+                .resourceArn(resourceArn)
+                .nextToken(nextToken)
                 .build();
     }
 
@@ -205,5 +184,38 @@ public class Translator {
         return TagResourceRequest.builder()
                 .resourceArn(arn)
                 .tags(tags).build();
+    }
+
+    static software.amazon.iot.thingtype.ThingTypeProperties translateThingTypePropertiesToModelObject(
+            ThingTypeProperties thingTypeProperties
+    ) {
+        if (thingTypeProperties == null)
+        {
+            return software.amazon.iot.thingtype.ThingTypeProperties.builder().build();
+        } else {
+            return software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                    .thingTypeDescription(thingTypeProperties.thingTypeDescription())
+                    .searchableAttributes(thingTypeProperties.searchableAttributes())
+                    .build();
+        }
+    }
+
+    /**
+     * Translates resource object from sdk into a resource model
+     * @param describeThingTypeResponse the aws service describe resource response
+     * @return model resource model
+     */
+    public static ResourceModel translateFromReadResponse(final DescribeThingTypeResponse describeThingTypeResponse) {
+        ResourceModel resourceModel = ResourceModel.builder()
+                .arn(describeThingTypeResponse.thingTypeArn())
+                .id(describeThingTypeResponse.thingTypeId())
+                .thingTypeName(describeThingTypeResponse.thingTypeName())
+                .thingTypeProperties(Translator.translateThingTypePropertiesToModelObject(
+                        describeThingTypeResponse.thingTypeProperties()
+                ))
+                .deprecateThingType(describeThingTypeResponse.thingTypeMetadata().deprecated())
+                .build();
+
+        return resourceModel;
     }
 }
