@@ -1,6 +1,7 @@
 package software.amazon.iot.thingtype;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListThingTypesRequest;
 import software.amazon.awssdk.services.iot.model.ListThingTypesResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -16,6 +17,8 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
  */
 public class ListHandler extends BaseHandlerStd {
 
+    private static final String OPERATION = "ListThingTypes";
+
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -24,8 +27,6 @@ public class ListHandler extends BaseHandlerStd {
             final ProxyClient<IotClient> proxyClient,
             final Logger logger) {
 
-        final ResourceModel resourceModel = request.getDesiredResourceState();
-
         try {
             final ListThingTypesRequest listThingTypesRequest = Translator.translateToListRequest(request.getNextToken());
             ListThingTypesResponse listThingTypesResponse = proxy.injectCredentialsAndInvokeV2(
@@ -33,13 +34,14 @@ public class ListHandler extends BaseHandlerStd {
                     proxyClient.client()::listThingTypes
             );
             String nextToken = listThingTypesResponse.nextToken();
+
             return ProgressEvent.<ResourceModel, CallbackContext>builder()
-                    .resourceModels(Translator.translateFromListRequest(listThingTypesResponse))
+                    .resourceModels(Translator.translateFromListResponse(listThingTypesResponse))
                     .nextToken(nextToken)
                     .status(OperationStatus.SUCCESS)
                     .build();
-        } catch (Exception e) {
-            return Translator.translateExceptionToProgressEvent(resourceModel, e, logger);
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(null, OPERATION, e);
         }
     }
 }

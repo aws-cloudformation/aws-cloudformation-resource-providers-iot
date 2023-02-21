@@ -1,11 +1,16 @@
 package software.amazon.iot.thingtype;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     @Override
@@ -29,4 +34,17 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             final CallbackContext callbackContext,
             final ProxyClient<IotClient> proxyClient,
             final Logger logger);
+
+    protected List<Tag> listTags(final ProxyClient<IotClient> proxyClient, final String arn) {
+        String nextToken = null;
+        List<Tag> listOfTags = new ArrayList<>();
+        do {
+            final ListTagsForResourceResponse response = proxyClient.injectCredentialsAndInvokeV2(
+                    Translator.listResourceTagsRequest(arn, nextToken),
+                    proxyClient.client()::listTagsForResource);
+            listOfTags.addAll(response.tags());
+            nextToken = response.nextToken();
+        } while (nextToken != null);
+        return listOfTags;
+    }
 }
