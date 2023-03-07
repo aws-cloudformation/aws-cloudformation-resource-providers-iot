@@ -2,11 +2,11 @@ package software.amazon.iot.thing;
 
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.http.HttpStatusCode;
-import software.amazon.awssdk.services.cloudwatch.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DeleteThingRequest;
 import software.amazon.awssdk.services.iot.model.DeleteThingResponse;
 import software.amazon.awssdk.services.iot.model.DescribeThingRequest;
+import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -39,7 +39,7 @@ public class DeleteHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
         if (StringUtils.isEmpty(resourceModel.getThingName())) {
-            throw new CfnNotFoundException(InvalidParameterValueException.builder()
+            throw new CfnNotFoundException(InvalidRequestException.builder()
                     .message("Parameter 'ThingName' must be provided.")
                     .build());
         }

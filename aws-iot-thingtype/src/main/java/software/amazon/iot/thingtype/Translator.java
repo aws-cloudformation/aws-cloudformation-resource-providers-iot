@@ -113,7 +113,7 @@ public class Translator {
     static DeprecateThingTypeRequest translateToDeprecateRequest(final ResourceModel model, Boolean deprecateDefault) {
         // deprecateDefault is true for deleteHandler and false for create and update
         boolean deprecate = deprecateDefault;
-        if (model.getDeprecateThingType() != null) {
+        if (!deprecateDefault && model.getDeprecateThingType() != null) {
             deprecate = model.getDeprecateThingType();
         }
         return DeprecateThingTypeRequest.builder()

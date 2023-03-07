@@ -56,7 +56,12 @@ public class CreateHandler extends BaseHandlerStd {
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(model -> Translator.translateToCreateRequest(resourceModel, tags))
                                 .makeServiceCall(this::createThingTypeResource)
-                                .progress())
+                                .done((response) -> {
+                                    resourceModel.setId(response.thingTypeId());
+                                    resourceModel.setArn(response.thingTypeArn());
+                                    return progress;
+                                })
+                )
                 .then(progress -> checkForDeprecate(proxy, proxyClient, progress, request, resourceModel))
                 .then(progress -> ProgressEvent.defaultSuccessHandler(resourceModel));
     }

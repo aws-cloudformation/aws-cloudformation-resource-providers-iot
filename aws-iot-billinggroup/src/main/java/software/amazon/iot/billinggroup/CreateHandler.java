@@ -56,7 +56,12 @@ public class CreateHandler extends BaseHandlerStd {
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(model-> Translator.translateToCreateRequest(resourceModel, tags))
                                 .makeServiceCall(this::createResource)
-                                .progress())
+                                .done((response) -> {
+                                    resourceModel.setId(response.billingGroupId());
+                                    resourceModel.setArn(response.billingGroupArn());
+                                    return progress;
+                                })
+                )
                 .then(progress -> ProgressEvent.defaultSuccessHandler(resourceModel));
     }
 
@@ -102,7 +107,7 @@ public class CreateHandler extends BaseHandlerStd {
     private String generateName(final ResourceHandlerRequest<ResourceModel> request) {
         return IdentifierUtils.generateResourceIdentifier(
                 StringUtils.isNullOrEmpty(request.getLogicalResourceIdentifier()) ?
-                        "ThingGroup" : request.getLogicalResourceIdentifier(),
+                        "BillingGroup" : request.getLogicalResourceIdentifier(),
                 request.getClientRequestToken(),
                 MAX_BILLING_GROUP_NAME_LENGTH).replace("-", "_");
     }
