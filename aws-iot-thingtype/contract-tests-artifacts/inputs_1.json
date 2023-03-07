@@ -1,0 +1,21 @@
+{
+  "CreateInputs": {
+    "ThingTypeName": "CfnContractTestThingType",
+    "ThingTypeProperties": {
+      "ThingTypeDescription": "test ThingType for Cfn Contract Tests"
+    },
+    "Tags": [
+      {
+        "Key": "testTagKey",
+        "Value": "tagValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Tags/0/Value",
+      "value": "updatedTagValue"
+    }
+  ]
+}
