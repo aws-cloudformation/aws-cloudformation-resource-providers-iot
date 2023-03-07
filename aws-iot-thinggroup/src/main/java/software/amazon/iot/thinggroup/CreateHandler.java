@@ -61,7 +61,12 @@ public class CreateHandler extends BaseHandlerStd {
                             proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                     .translateToServiceRequest(model -> Translator.translateToCreateDynamicThingGroupRequest(resourceModel, tags))
                                     .makeServiceCall(this::createDynamicThingGroupResource)
-                                    .progress())
+                                    .done((response) -> {
+                                        resourceModel.setId(response.thingGroupId());
+                                        resourceModel.setArn(response.thingGroupArn());
+                                        return progress;
+                                    })
+                    )
                     .then(progress -> ProgressEvent.defaultSuccessHandler(resourceModel));
         } else {
             return ProgressEvent.progress(resourceModel, callbackContext)
@@ -69,7 +74,12 @@ public class CreateHandler extends BaseHandlerStd {
                             proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                     .translateToServiceRequest(model -> Translator.translateToCreateThingGroupRequest(resourceModel, tags))
                                     .makeServiceCall(this::createThingGroupResource)
-                                    .progress())
+                                    .done((response) -> {
+                                        resourceModel.setId(response.thingGroupId());
+                                        resourceModel.setArn(response.thingGroupArn());
+                                        return progress;
+                                    })
+                    )
                     .then(progress -> ProgressEvent.defaultSuccessHandler(resourceModel));
         }
     }
