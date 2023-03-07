@@ -53,7 +53,12 @@ public class CreateHandler extends BaseHandlerStd {
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToCreateRequest)
                                 .makeServiceCall(this::createResource)
-                                .progress())
+                                .done((response) -> {
+                                    resourceModel.setId(response.thingId());
+                                    resourceModel.setArn(response.thingArn());
+                                    return progress;
+                                })
+                )
                 .then(progress -> ProgressEvent.defaultSuccessHandler(resourceModel));
     }
 
