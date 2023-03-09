@@ -1,8 +1,12 @@
 {
   "CreateInputs": {
     "ThingTypeName": "CfnContractTestThingType",
+    "DeprecateThingType": false,
     "ThingTypeProperties": {
-      "ThingTypeDescription": "test ThingType for Cfn Contract Tests"
+      "ThingTypeDescription": "test ThingType for Cfn Contract Tests",
+      "SearchableAttributes": [
+        "Attribute1"
+      ]
     },
     "Tags": [
       {
