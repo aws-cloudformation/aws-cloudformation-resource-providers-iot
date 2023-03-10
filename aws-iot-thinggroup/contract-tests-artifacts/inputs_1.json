@@ -2,7 +2,12 @@
   "CreateInputs": {
     "ThingGroupName": "CfnContractTestThingGroup",
     "ThingGroupProperties": {
-      "ThingGroupDescription": "test ThingGroup for Cfn Contract Tests"
+      "ThingGroupDescription": "test ThingGroup for Cfn Contract Tests",
+      "AttributePayload": {
+        "Attributes": {
+          "attribute1": "Value1"
+        }
+      }
     },
     "Tags": [
       {
