@@ -58,7 +58,6 @@
       "properties": {
         "Attributes": {
           "type": "object",
-          "maxLength": 2800,
           "patternProperties": {
             "[a-zA-Z0-9_.,@/:#-]+": {
               "type": "string"
