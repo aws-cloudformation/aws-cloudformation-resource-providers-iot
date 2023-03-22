@@ -1,6 +1,6 @@
 {
   "CreateInputs": {
-    "BillingGroupName": "CfnContractTestBillingGroup",
+    "BillingGroupName": "{{uuid}}",
     "BillingGroupProperties": {
       "BillingGroupDescription": "test BillingGroup for Cfn Contract Tests"
     },

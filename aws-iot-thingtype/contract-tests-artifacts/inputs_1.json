@@ -1,6 +1,6 @@
 {
   "CreateInputs": {
-    "ThingTypeName": "CfnContractTestThingType",
+    "ThingTypeName": "{{uuid}}",
     "DeprecateThingType": false,
     "ThingTypeProperties": {
       "ThingTypeDescription": "test ThingType for Cfn Contract Tests",

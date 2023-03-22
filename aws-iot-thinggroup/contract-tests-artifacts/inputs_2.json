@@ -1,6 +1,6 @@
 {
   "CreateInputs": {
-    "ThingGroupName": "CfnContractTestThingGroup",
+    "ThingGroupName": "{{uuid}}",
     "ParentGroupName": "CfnContractTestThingGroupParent",
     "ThingGroupProperties": {
       "ThingGroupDescription": "test ThingGroup for Cfn Contract Tests"
