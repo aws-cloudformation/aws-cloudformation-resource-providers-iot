@@ -1,6 +1,6 @@
 {
   "CreateInputs": {
-    "ThingGroupName": "CfnContractTestDynamicThingGroup",
+    "ThingGroupName": "{{uuid}}",
     "QueryString": "attributes.temperature>60",
     "ThingGroupProperties": {
       "ThingGroupDescription": "test dynamic ThingGroup for Cfn Contract Tests"
