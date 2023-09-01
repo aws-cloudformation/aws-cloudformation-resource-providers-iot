@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - aws iot create-package --package-name CfnContractTestParentPackage --region $AWS_REGION
+      - echo "Created package CfnContractTestParentPackage"
+#      - aws iot update-indexing-configuration --thing-indexing-configuration thingIndexingMode=REGISTRY_AND_SHADOW --region $AWS_REGION
+      - aws cloudformation list-exports --region $AWS_REGION | jq -r '.'
+  post_build:
+    commands:
+      - echo Build completed on `date`

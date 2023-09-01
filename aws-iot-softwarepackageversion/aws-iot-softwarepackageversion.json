@@ -1,0 +1,143 @@
+{
+    "typeName": "AWS::IoT::SoftwarePackageVersion",
+    "description": "resource definition",
+    "definitions": {
+        "PackageVersionAction": {
+            "type": "string",
+            "enum": [
+                "PUBLISH",
+                "DEPRECATE"
+            ]
+        },
+        "PackageVersionStatus": {
+            "type": "string",
+            "enum": [
+                "DRAFT",
+                "PUBLISHED",
+                "DEPRECATED"
+            ]
+        },
+        "ResourceAttributes": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9:_-]+$": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^[^\\p{C}]+$"
+                }
+            },
+            "additionalProperties": false
+        },
+        "TagMap": {
+            "type": "object",
+            "maxProperties": 50,
+            "minProperties": 0,
+            "patternProperties": {
+                "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "minLength": 0
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "Action": {
+            "$ref": "#/definitions/PackageVersionAction"
+        },
+        "Attributes": {
+            "$ref": "#/definitions/ResourceAttributes"
+        },
+        "Description": {
+            "type": "string",
+            "maxLength": 1024,
+            "minLength": 0,
+            "pattern": "^[^\\p{C}]+$"
+        },
+        "ErrorReason": {
+            "type": "string"
+        },
+        "PackageName": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9-_.]+$"
+        },
+        "PackageVersionArn": {
+            "type": "string",
+            "maxLength": 1600,
+            "minLength": 1,
+            "pattern": "^arn:[!-~]+$"
+        },
+        "Status": {
+            "$ref": "#/definitions/PackageVersionStatus"
+        },
+        "Tags": {
+            "$ref": "#/definitions/TagMap"
+        },
+        "VersionName": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9-_.]+$"
+        }
+    },
+    "readOnlyProperties": [
+        "/properties/ErrorReason",
+        "/properties/PackageVersionArn",
+        "/properties/Status"
+    ],
+    "writeOnlyProperties": [
+        "/properties/Action",
+        "/properties/Tags"
+    ],
+    "createOnlyProperties": [
+        "/properties/PackageName",
+        "/properties/VersionName"
+    ],
+    "primaryIdentifier": [
+        "/properties/PackageName",
+        "/properties/VersionName"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "iot:CreatePackageVersion",
+                "iot:GetPackageVersion",
+                "iot:TagResource",
+                "iot:GetIndexingConfiguration"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "iot:GetPackageVersion",
+                "iot:ListTagsForResource"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "iot:UpdatePackageVersion",
+                "iot:GetPackageVersion",
+                "iot:ListTagsForResource",
+                "iot:TagResource",
+                "iot:UntagResource",
+                "iot:GetIndexingConfiguration"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "iot:DeletePackageVersion",
+                "iot:UpdatePackageVersion",
+                "iot:GetPackageVersion",
+                "iot:GetIndexingConfiguration"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "iot:ListPackageVersions"
+            ]
+        }
+    },
+    "additionalProperties": false
+}
