@@ -1,0 +1,108 @@
+{
+  "typeName": "AWS::IoT::SoftwarePackage",
+  "description": "resource definition",
+  "definitions": {
+      "TagMap": {
+          "type": "object",
+          "maxProperties": 50,
+          "minProperties": 0,
+          "patternProperties": {
+              "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$": {
+                  "type": "string",
+                  "maxLength": 256,
+                  "minLength": 0
+              }
+          },
+          "additionalProperties": false
+      }
+  },
+  "properties": {
+      "DefaultVersionName": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9-_.]+$"
+      },
+      "Description": {
+          "type": "string",
+          "maxLength": 1024,
+          "minLength": 0,
+          "pattern": "^[^\\p{C}]+$"
+      },
+      "PackageArn": {
+          "type": "string"
+      },
+      "PackageName": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9-_.]+$"
+      },
+      "Tags": {
+          "$ref": "#/definitions/TagMap"
+      },
+      "UnsetDefaultVersion": {
+          "type": "boolean"
+      }
+  },
+  "readOnlyProperties": [
+      "/properties/PackageArn"
+  ],
+  "writeOnlyProperties": [
+      "/properties/Tags",
+      "/properties/UnsetDefaultVersion"
+  ],
+  "createOnlyProperties": [
+      "/properties/PackageName"
+  ],
+  "primaryIdentifier": [
+      "/properties/PackageName"
+  ],
+  "handlers": {
+      "create": {
+          "permissions": [
+              "iot:CreatePackage",
+              "iot:UpdatePackage",
+              "iot:GetPackage",
+              "iot:TagResource",
+              "iot:GetIndexingConfiguration",
+              "iot:CreatePackageVersion",
+              "iot:UpdatePackageVersion"
+          ]
+      },
+      "read": {
+          "permissions": [
+              "iot:GetPackage",
+              "iot:ListTagsForResource"
+          ]
+      },
+      "update": {
+          "permissions": [
+              "iot:CreatePackage",
+              "iot:UpdatePackage",
+              "iot:GetPackage",
+              "iot:ListTagsForResource",
+              "iot:TagResource",
+              "iot:UntagResource",
+              "iot:GetIndexingConfiguration"
+          ]
+      },
+      "delete": {
+          "permissions": [
+              "iot:DeletePackage",
+              "iot:GetPackage",
+              "iot:DeletePackageVersion",
+              "iot:GetPackageVersion",
+              "iot:UpdatePackage",
+              "iot:UpdatePackageVersion",
+              "iot:GetIndexingConfiguration"
+          ]
+      },
+      "list": {
+          "permissions": [
+              "iot:ListPackages"
+          ]
+      }
+  },
+  "additionalProperties": false
+}
