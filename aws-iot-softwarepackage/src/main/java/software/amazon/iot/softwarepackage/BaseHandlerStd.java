@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+    public static final String PACKAGE_DEFAULT_VERSION_NAME = "default";
+
     @Override
     public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,

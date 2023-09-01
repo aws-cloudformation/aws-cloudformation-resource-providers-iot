@@ -29,7 +29,6 @@ public class UpdateHandler extends BaseHandlerStd {
     private static final String CALL_GRAPH = "AWS-IoT-SoftwarePackage::Update";
     private static final String CALL_GRAPH_TAG = "AWS-IoT-SoftwarePackage::TaggingUpdate";
     private Logger logger;
-    private String clientToken;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -39,7 +38,6 @@ public class UpdateHandler extends BaseHandlerStd {
             final Logger logger) {
 
         this.logger = logger;
-        //this.clientToken = request.getClientRequestToken();
 
         ResourceModel prevModel = request.getPreviousResourceState() == null ?
                 request.getDesiredResourceState() : request.getPreviousResourceState();
@@ -99,7 +97,7 @@ public class UpdateHandler extends BaseHandlerStd {
     private UpdatePackageResponse updateResource(
             UpdatePackageRequest updatePackageRequest,
             ProxyClient<IotClient> proxyClient) {
-        // A little bit messy, but need to append the idempotency token which is not a property of the ResourceModel
+        // TODO: add in client token once idempotency is implemented for the API
         UpdatePackageRequest requestWithClientToken = UpdatePackageRequest.builder()
                 .packageName(updatePackageRequest.packageName())
                 .description(updatePackageRequest.description())

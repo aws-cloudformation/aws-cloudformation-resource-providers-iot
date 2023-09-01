@@ -35,17 +35,16 @@ public class CreateHandler extends BaseHandlerStd {
             final Logger logger) {
 
         this.logger = logger;
-        //this.clientToken = request.getClientRequestToken();
+        this.clientToken = request.getClientRequestToken();
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
         // create a package name if not provided by user
         if (StringUtils.isNullOrEmpty(resourceModel.getPackageName())) {
-            System.out.println("package name is null");
             resourceModel.setPackageName(generateName(request));
         }
 
-        resourceModel.setDefaultVersionName("default");
+        resourceModel.setDefaultVersionName(PACKAGE_DEFAULT_VERSION_NAME);
 
         return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress ->
@@ -82,7 +81,7 @@ public class CreateHandler extends BaseHandlerStd {
     private CreatePackageResponse createResource(
             final CreatePackageRequest createPackageRequest,
             final ProxyClient<IotClient> proxyClient) {
-        // A little bit messy, but need to append the idempotency token which is not a property of the ResourceModel
+        // TODO: add in client token once idempotency is implemented for the API
         CreatePackageRequest requestWithClientToken = CreatePackageRequest.builder()
                 .packageName(createPackageRequest.packageName())
                 .description(createPackageRequest.description())
@@ -100,6 +99,14 @@ public class CreateHandler extends BaseHandlerStd {
         }
     }
 
+    /**
+     * Implement client invocation of the create request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     *
+     * @param createPackageVersionRequest     the aws service request to create a resource
+     * @param proxyClient the aws service client to make the call
+     * @return awsResponse create resource response
+     */
     private CreatePackageVersionResponse createResourceForPackageVersion(
             final CreatePackageVersionRequest createPackageVersionRequest,
             final ProxyClient<IotClient> proxyClient) {
@@ -114,6 +121,14 @@ public class CreateHandler extends BaseHandlerStd {
         }
     }
 
+    /**
+     * Implement client invocation of the create request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     *
+     * @param updatePackageVersionRequest the aws service request to update a resource
+     * @param proxyClient the aws service client to make the call
+     * @return awsResponse update resource response
+     */
     private UpdatePackageVersionResponse updateResourceForPackageVersion(
             final UpdatePackageVersionRequest updatePackageVersionRequest,
             final ProxyClient<IotClient> proxyClient) {
@@ -128,6 +143,14 @@ public class CreateHandler extends BaseHandlerStd {
         }
     }
 
+    /**
+     * Implement client invocation of the create request through the proxyClient, which is already initialised with
+     * caller credentials, correct region and retry settings
+     *
+     * @param updatePackageRequest     the aws service request to update a resource
+     * @param proxyClient the aws service client to make the call
+     * @return awsResponse update resource response
+     */
     private UpdatePackageResponse updateResourceForDefaultVersionName(
             UpdatePackageRequest updatePackageRequest,
             ProxyClient<IotClient> proxyClient) {

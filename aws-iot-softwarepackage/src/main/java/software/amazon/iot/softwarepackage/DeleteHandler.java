@@ -41,18 +41,17 @@ public class DeleteHandler extends BaseHandlerStd {
             final Logger logger) {
 
         this.logger = logger;
-        //this.clientToken = request.getClientRequestToken();
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
-        // will our API return this instead? so no need to have this here
+        // eagerly return not found if name is not provided in the request
         if (StringUtils.isEmpty(resourceModel.getPackageName())) {
             throw new CfnNotFoundException(InvalidRequestException.builder()
                     .message("Parameter 'PackageName' must be provided.")
                     .build());
         }
 
-        resourceModel.setDefaultVersionName("default");
+        resourceModel.setDefaultVersionName(PACKAGE_DEFAULT_VERSION_NAME);
         resourceModel.setUnsetDefaultVersion(true);
 
         return ProgressEvent.progress(resourceModel, callbackContext)
