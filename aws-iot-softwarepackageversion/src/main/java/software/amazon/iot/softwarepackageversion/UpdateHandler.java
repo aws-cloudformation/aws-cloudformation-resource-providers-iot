@@ -61,7 +61,7 @@ public class UpdateHandler extends BaseHandlerStd {
                                         return proxyInvocation.injectCredentialsAndInvokeV2(getRequest,
                                                 proxyInvocation.client()::getPackageVersion);
                                     } catch (IotException e) {
-                                        throw Translator.translateIotExceptionToHandlerException(getRequest.packageName(), OPERATION, e);
+                                        throw Translator.translateIotExceptionToHandlerException(getRequest.packageName() + ":" + getRequest.versionName(), OPERATION, e);
                                     }
                                 })
                                 .stabilize(this::stabilizeUpdateTags)
@@ -70,7 +70,8 @@ public class UpdateHandler extends BaseHandlerStd {
     }
 
     private void validatePropertiesAreUpdatable(ResourceModel newModel, ResourceModel prevModel) {
-        if (!StringUtils.equals(newModel.getPackageName(), prevModel.getPackageName())) {
+        if (!StringUtils.equals(newModel.getPackageName(), prevModel.getPackageName()) ||
+                !StringUtils.equals(newModel.getVersionName(), prevModel.getVersionName())) {
             throwCfnNotUpdatableException("SoftwarePackageName");
         } else if (StringUtils.isNotEmpty(newModel.getPackageVersionArn()) && !StringUtils.equals(newModel.getPackageVersionArn(), prevModel.getPackageVersionArn())) {
             throwCfnNotUpdatableException("Arn");
@@ -102,11 +103,11 @@ public class UpdateHandler extends BaseHandlerStd {
         try {
             final UpdatePackageVersionResponse updatePackageVersionResponse = proxyClient.injectCredentialsAndInvokeV2(
                     updatePackageVersionRequest, proxyClient.client()::updatePackageVersion);
-            logger.log(String.format("%s [%s] has been successfully updated.",
-                    ResourceModel.TYPE_NAME, updatePackageVersionRequest.packageName()));
+            logger.log(String.format("%s [%s, %s] has been successfully updated.",
+                    ResourceModel.TYPE_NAME, updatePackageVersionRequest.packageName(), updatePackageVersionRequest.versionName()));
             return updatePackageVersionResponse;
         } catch (IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(updatePackageVersionRequest.packageName(), OPERATION, e);
+            throw Translator.translateIotExceptionToHandlerException(updatePackageVersionRequest.packageName() + ":" + updatePackageVersionRequest.versionName(), OPERATION, e);
         }
     }
 }

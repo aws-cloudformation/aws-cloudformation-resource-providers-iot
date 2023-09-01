@@ -19,7 +19,6 @@ import software.amazon.cloudformation.resource.IdentifierUtils;
 public class CreateHandler extends BaseHandlerStd {
     private final static String OPERATION = "CreateSoftwarePackageVersion";
     private static final String CALL_GRAPH = "AWS-IoT-SoftwarePackageVersion::Create";
-    private static final int MAX_PACKAGE_NAME_LENGTH = 128;
     private Logger logger;
     private String clientToken;
 
@@ -56,7 +55,7 @@ public class CreateHandler extends BaseHandlerStd {
     private CreatePackageVersionResponse createResource(
             final CreatePackageVersionRequest createPackageVersionRequest,
             final ProxyClient<IotClient> proxyClient) {
-        // A little bit messy, but need to append the idempotency token which is not a property of the ResourceModel
+        // TODO: add in client token once idempotency is implemented for the API
         CreatePackageVersionRequest requestWithClientToken = CreatePackageVersionRequest.builder()
                 .packageName(createPackageVersionRequest.packageName())
                 .versionName(createPackageVersionRequest.versionName())
@@ -68,25 +67,11 @@ public class CreateHandler extends BaseHandlerStd {
         try {
             final CreatePackageVersionResponse createPackageVersionResponse = proxyClient.injectCredentialsAndInvokeV2(
                     requestWithClientToken, proxyClient.client()::createPackageVersion);
-            logger.log(String.format("%s [%s] successfully created.",
-                    ResourceModel.TYPE_NAME, createPackageVersionRequest.packageName()));
+            logger.log(String.format("%s [%s, %s] successfully created.",
+                    ResourceModel.TYPE_NAME, createPackageVersionRequest.packageName(), createPackageVersionRequest.versionName()));
             return createPackageVersionResponse;
         } catch (IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(createPackageVersionRequest.packageName(), OPERATION, e);
-        }
-    }
-
-    private UpdatePackageVersionResponse updateResource(
-            final UpdatePackageVersionRequest updatePackageVersionRequest,
-            final ProxyClient<IotClient> proxyClient) {
-        try {
-            final UpdatePackageVersionResponse updatePackageVersionResponse = proxyClient.injectCredentialsAndInvokeV2(
-                    updatePackageVersionRequest, proxyClient.client()::updatePackageVersion);
-            logger.log(String.format("%s [%s] successfully created.",
-                    ResourceModel.TYPE_NAME, updatePackageVersionRequest.packageName()));
-            return updatePackageVersionResponse;
-        } catch (IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(updatePackageVersionRequest.packageName(), OPERATION, e);
+            throw Translator.translateIotExceptionToHandlerException(createPackageVersionRequest.packageName() + ":" + createPackageVersionRequest.versionName(), OPERATION, e);
         }
     }
 }

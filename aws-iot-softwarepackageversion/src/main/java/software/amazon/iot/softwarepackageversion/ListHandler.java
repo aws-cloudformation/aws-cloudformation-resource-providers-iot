@@ -57,7 +57,7 @@ public class ListHandler extends BaseHandlerStd {
                     .status(OperationStatus.SUCCESS)
                     .build();
         } catch (IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(null, OPERATION, e);
+            throw Translator.translateIotExceptionToHandlerException(packageName, OPERATION, e);
         }
     }
 }

@@ -161,21 +161,4 @@ public class Translator {
                 .nextToken(token)
                 .build();
     }
-
-    static UntagResourceRequest untagResourceRequest(final String arn, final Set<Tag> tags) {
-        return UntagResourceRequest.builder()
-                .resourceArn(arn)
-                .tagKeys(tags
-                        .stream()
-                        .map(Tag::key)
-                        .collect(Collectors.toSet())
-                ).build();
-    }
-
-    static TagResourceRequest tagResourceRequest(final String arn, final Collection<Tag> tags) {
-        return TagResourceRequest.builder()
-                .resourceArn(arn)
-                .tags(tags).build();
-    }
-
 }

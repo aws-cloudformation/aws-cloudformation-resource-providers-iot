@@ -71,11 +71,11 @@ public class DeleteHandler extends BaseHandlerStd {
             checkForPackageVersion(deletePackageVersionRequest.packageName(), deletePackageVersionRequest.versionName(), proxyClient);
             DeletePackageVersionResponse response = proxyClient.injectCredentialsAndInvokeV2(
                     deletePackageVersionRequest, proxyClient.client()::deletePackageVersion);
-            logger.log(String.format("%s [%s] successfully deleted.",
-                    ResourceModel.TYPE_NAME, deletePackageVersionRequest.packageName()));
+            logger.log(String.format("%s [%s, %s] successfully deleted.",
+                    ResourceModel.TYPE_NAME, deletePackageVersionRequest.packageName(), deletePackageVersionRequest.versionName()));
             return response;
         } catch (IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(deletePackageVersionRequest.packageName(), OPERATION, e);
+            throw Translator.translateIotExceptionToHandlerException(deletePackageVersionRequest.packageName() + ":" + deletePackageVersionRequest.versionName(), OPERATION, e);
         }
     }
 
@@ -88,7 +88,7 @@ public class DeleteHandler extends BaseHandlerStd {
             proxyClient.injectCredentialsAndInvokeV2(getPackageVersionRequest, proxyClient.client()::getPackageVersion);
         } catch (IotException e) {
             if (e.statusCode() != HttpStatusCode.FORBIDDEN) {
-                throw Translator.translateIotExceptionToHandlerException(packageName, OPERATION, e);
+                throw Translator.translateIotExceptionToHandlerException(packageName + ":" + versionName, OPERATION, e);
             }
         }
     }

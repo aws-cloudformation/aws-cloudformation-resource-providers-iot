@@ -63,7 +63,7 @@ public class ReadHandler extends BaseHandlerStd {
                     ResourceModel.TYPE_NAME, getPackageVersionRequest.packageName(), getPackageVersionRequest.versionName()));
             return getPackageVersionResponse;
         } catch (final IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(getPackageVersionRequest.packageName(), OPERATION, e);
+            throw Translator.translateIotExceptionToHandlerException(getPackageVersionRequest.packageName() + ":" + getPackageVersionRequest.versionName(), OPERATION, e);
         }
     }
 
@@ -84,7 +84,7 @@ public class ReadHandler extends BaseHandlerStd {
         } catch (final IotException e) {
             if (e.statusCode() != HttpStatusCode.FORBIDDEN) {
                 throw Translator.translateIotExceptionToHandlerException(
-                        getPackageVersionResponse.packageName(), OPERATION, e);
+                        getPackageVersionResponse.packageName() + ":" + getPackageVersionResponse.versionName(), OPERATION, e);
             }
         }
 
