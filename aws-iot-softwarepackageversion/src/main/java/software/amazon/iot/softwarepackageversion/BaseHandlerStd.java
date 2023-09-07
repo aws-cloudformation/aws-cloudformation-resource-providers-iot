@@ -1,8 +1,11 @@
 package software.amazon.iot.softwarepackageversion;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.Tag;
+import software.amazon.awssdk.services.iot.model.UpdateIndexingConfigurationRequest;
+import software.amazon.awssdk.services.iot.model.UpdateIndexingConfigurationResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -13,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
+    public static final String DEFAULT_PACKAGE_NAME = "cloudformation-default-package";
+
     @Override
     public final ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -45,5 +50,17 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
             nextToken = response.nextToken();
         } while (nextToken != null);
         return listOfTags;
+    }
+
+    protected UpdateIndexingConfigurationResponse updateIndexingConfiguration(
+            final UpdateIndexingConfigurationRequest updateIndexingConfigurationRequest,
+            final ProxyClient<IotClient> proxyClient) {
+        try {
+            final UpdateIndexingConfigurationResponse updateIndexingConfigurationResponse = proxyClient.injectCredentialsAndInvokeV2(
+                    updateIndexingConfigurationRequest, proxyClient.client()::updateIndexingConfiguration);
+            return updateIndexingConfigurationResponse;
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(updateIndexingConfigurationRequest.thingIndexingConfiguration().thingIndexingModeAsString(), "UpdateIndexingConfiguration", e);
+        }
     }
 }

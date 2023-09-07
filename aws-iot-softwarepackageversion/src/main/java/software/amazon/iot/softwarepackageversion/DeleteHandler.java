@@ -49,6 +49,11 @@ public class DeleteHandler extends BaseHandlerStd {
         return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
+                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
+                                .makeServiceCall(this::updateIndexingConfiguration)
+                                .progress())
+                .then(progress ->
+                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToDeleteRequest)
                                 .makeServiceCall(this::deleteResource)
                                 .stabilize(this::stabilizedOnDelete)

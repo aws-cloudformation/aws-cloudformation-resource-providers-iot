@@ -7,9 +7,10 @@ phases:
   build:
     commands:
       - echo Build started on `date`
+      - aws iot update-indexing-configuration --thing-indexing-configuration thingIndexingMode=REGISTRY_AND_SHADOW,namedShadowIndexingMode=ON,filter={namedShadowNames=['$package']} --region $AWS_REGION
+      - echo "Enabled indexing"
       - aws iot create-package --package-name CfnContractTestParentPackage --region $AWS_REGION
       - echo "Created package CfnContractTestParentPackage"
-#      - aws iot update-indexing-configuration --thing-indexing-configuration thingIndexingMode=REGISTRY_AND_SHADOW --region $AWS_REGION
       - aws cloudformation list-exports --region $AWS_REGION | jq -r '.'
   post_build:
     commands:

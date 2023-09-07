@@ -83,6 +83,13 @@
             "pattern": "^[a-zA-Z0-9-_.]+$"
         }
     },
+    "tagging": {
+        "taggable": true,
+        "tagOnCreate": true,
+        "tagUpdatable": true,
+        "cloudFormationSystemTags": true,
+        "tagProperty": "/properties/Tags"
+    },
     "readOnlyProperties": [
         "/properties/ErrorReason",
         "/properties/PackageVersionArn",
@@ -103,10 +110,13 @@
     "handlers": {
         "create": {
             "permissions": [
+                "iot:CreatePackage",
                 "iot:CreatePackageVersion",
+                "iot:GetPackage",
                 "iot:GetPackageVersion",
                 "iot:TagResource",
-                "iot:GetIndexingConfiguration"
+                "iot:GetIndexingConfiguration",
+                "iot:UpdateIndexingConfiguration"
             ]
         },
         "read": {
@@ -122,7 +132,8 @@
                 "iot:ListTagsForResource",
                 "iot:TagResource",
                 "iot:UntagResource",
-                "iot:GetIndexingConfiguration"
+                "iot:GetIndexingConfiguration",
+                "iot:UpdateIndexingConfiguration"
             ]
         },
         "delete": {
@@ -130,7 +141,8 @@
                 "iot:DeletePackageVersion",
                 "iot:UpdatePackageVersion",
                 "iot:GetPackageVersion",
-                "iot:GetIndexingConfiguration"
+                "iot:GetIndexingConfiguration",
+                "iot:UpdateIndexingConfiguration"
             ]
         },
         "list": {

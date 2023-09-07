@@ -3,10 +3,15 @@ package software.amazon.iot.softwarepackageversion;
 import com.amazonaws.util.StringUtils;
 import org.apache.commons.collections.MapUtils;
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.CreatePackageRequest;
 import software.amazon.awssdk.services.iot.model.CreatePackageVersionRequest;
 import software.amazon.awssdk.services.iot.model.CreatePackageVersionResponse;
+import software.amazon.awssdk.services.iot.model.GetPackageRequest;
+import software.amazon.awssdk.services.iot.model.GetPackageResponse;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.PackageVersionAction;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.iot.model.UpdateIndexingConfigurationRequest;
 import software.amazon.awssdk.services.iot.model.UpdatePackageVersionRequest;
 import software.amazon.awssdk.services.iot.model.UpdatePackageVersionResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -19,6 +24,7 @@ import software.amazon.cloudformation.resource.IdentifierUtils;
 public class CreateHandler extends BaseHandlerStd {
     private final static String OPERATION = "CreateSoftwarePackageVersion";
     private static final String CALL_GRAPH = "AWS-IoT-SoftwarePackageVersion::Create";
+    private static final int MAX_PACKAGE_VERSION_NAME_LENGTH = 64;
     private Logger logger;
     private String clientToken;
 
@@ -35,7 +41,36 @@ public class CreateHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
-        return ProgressEvent.progress(resourceModel, callbackContext)
+        if (StringUtils.isNullOrEmpty(resourceModel.getPackageName())) {
+            resourceModel.setPackageName(DEFAULT_PACKAGE_NAME);
+        }
+        if (StringUtils.isNullOrEmpty(resourceModel.getVersionName())) {
+            resourceModel.setVersionName(generateName(request));
+        }
+
+        final UpdateIndexingConfigurationRequest updateIndexingConfigurationRequest = Translator.translateToUpdateFIRequest(resourceModel);
+        proxyClient.injectCredentialsAndInvokeV2(
+                updateIndexingConfigurationRequest, proxyClient.client()::updateIndexingConfiguration);
+
+        final GetPackageRequest getPackageRequest = GetPackageRequest.builder()
+                .packageName(resourceModel.getPackageName())
+                .build();
+        try {
+            try {
+                proxyClient.injectCredentialsAndInvokeV2(
+                        getPackageRequest, proxyClient.client()::getPackage);
+            } catch (final ResourceNotFoundException e) {
+                final CreatePackageRequest createPackageRequest = CreatePackageRequest.builder()
+                        .packageName(resourceModel.getPackageName())
+                        .build();
+                proxyClient.injectCredentialsAndInvokeV2(
+                        createPackageRequest, proxyClient.client()::createPackage);
+            }
+        } catch (final IotException e) {
+            throw Translator.translateIotExceptionToHandlerException(getPackageRequest.packageName(), OPERATION, e);
+        }
+
+            return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToCreateRequest)
@@ -73,5 +108,20 @@ public class CreateHandler extends BaseHandlerStd {
         } catch (IotException e) {
             throw Translator.translateIotExceptionToHandlerException(createPackageVersionRequest.packageName() + ":" + createPackageVersionRequest.versionName(), OPERATION, e);
         }
+    }
+
+    private String generateName(final ResourceHandlerRequest<ResourceModel> request) {
+        final StringBuilder identifierPrefix = new StringBuilder();
+        identifierPrefix.append((request.getSystemTags() != null &&
+                MapUtils.isNotEmpty(request.getSystemTags())) ?
+                request.getSystemTags().get("aws:cloudformation:stack-name") + "-" : "");
+        identifierPrefix.append(request.getLogicalResourceIdentifier() == null ?
+                "SOFTWARE-PACKAGE-VERSION" :
+                request.getLogicalResourceIdentifier());
+
+        return IdentifierUtils.generateResourceIdentifier(
+                identifierPrefix.toString(),
+                request.getClientRequestToken(),
+                MAX_PACKAGE_VERSION_NAME_LENGTH);
     }
 }
