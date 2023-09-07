@@ -41,6 +41,7 @@ Resources:
                 - "iot:ListTagsForResource"
                 - "iot:TagResource"
                 - "iot:UntagResource"
+                - "iot:UpdateIndexingConfiguration"
                 - "iot:UpdatePackage"
                 - "iot:UpdatePackageVersion"
                 Resource: "*"

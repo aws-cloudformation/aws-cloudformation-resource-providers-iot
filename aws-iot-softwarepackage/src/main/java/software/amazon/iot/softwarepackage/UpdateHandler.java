@@ -48,6 +48,11 @@ public class UpdateHandler extends BaseHandlerStd {
         return ProgressEvent.progress(newModel, callbackContext)
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, newModel, callbackContext)
+                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
+                                .makeServiceCall(this::updateIndexingConfiguration)
+                                .progress())
+                .then(progress ->
+                        proxy.initiate(CALL_GRAPH, proxyClient, newModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToUpdateRequest)
                                 .makeServiceCall(this::updateResource)
                                 .progress())

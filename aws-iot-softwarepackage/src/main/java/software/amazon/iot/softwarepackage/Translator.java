@@ -50,6 +50,16 @@ public class Translator {
         }
     }
 
+    static UpdateIndexingConfigurationRequest translateToUpdateFIRequest(final ResourceModel model) {
+        return UpdateIndexingConfigurationRequest.builder()
+                .thingIndexingConfiguration(ThingIndexingConfiguration.builder()
+                        .thingIndexingMode(ThingIndexingMode.REGISTRY_AND_SHADOW)
+                        .namedShadowIndexingMode(NamedShadowIndexingMode.ON)
+                        .filter(IndexingFilter.builder().namedShadowNames(Collections.singletonList("$package")).build())
+                        .build())
+                .build();
+    }
+
     static CreatePackageRequest translateToCreateRequest(final ResourceModel model) {
         return CreatePackageRequest.builder()
                 .packageName(model.getPackageName())

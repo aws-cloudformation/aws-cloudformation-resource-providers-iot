@@ -44,9 +44,14 @@ public class CreateHandler extends BaseHandlerStd {
             resourceModel.setPackageName(generateName(request));
         }
 
-        resourceModel.setDefaultVersionName(PACKAGE_DEFAULT_VERSION_NAME);
+        resourceModel.setDefaultVersionName(DEFAULT_PACKAGE_VERSION_NAME);
 
         return ProgressEvent.progress(resourceModel, callbackContext)
+                .then(progress ->
+                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
+                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
+                                .makeServiceCall(this::updateIndexingConfiguration)
+                                .progress())
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToCreateRequest)

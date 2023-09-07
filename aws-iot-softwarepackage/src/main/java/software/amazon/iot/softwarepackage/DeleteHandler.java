@@ -31,7 +31,6 @@ public class DeleteHandler extends BaseHandlerStd {
     private static final String OPERATION = "DeleteSoftwarePackage";
     private static final String CALL_GRAPH = "AWS-IoT-SoftwarePackage::Delete";
     private Logger logger;
-    private String clientToken;
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
             final AmazonWebServicesClientProxy proxy,
@@ -51,10 +50,15 @@ public class DeleteHandler extends BaseHandlerStd {
                     .build());
         }
 
-        resourceModel.setDefaultVersionName(PACKAGE_DEFAULT_VERSION_NAME);
+        resourceModel.setDefaultVersionName(DEFAULT_PACKAGE_VERSION_NAME);
         resourceModel.setUnsetDefaultVersion(true);
 
         return ProgressEvent.progress(resourceModel, callbackContext)
+                .then(progress ->
+                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
+                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
+                                .makeServiceCall(this::updateIndexingConfiguration)
+                                .progress())
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToUpdateRequest)
