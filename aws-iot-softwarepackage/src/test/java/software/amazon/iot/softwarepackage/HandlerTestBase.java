@@ -99,7 +99,7 @@ public class HandlerTestBase {
     protected final static String PKG_ARN = "arn:aws:iot:us-east-1:1234567890:package/packageId";
     protected final static String PKG_NAME = "PackageName";
     protected final static String PKG_DESC = "description";
-    protected final static String DEFAULT_VER_NAME = "default";
+    protected final static String DEFAULT_VER_NAME = "cloudformation-default-package-version";
     protected final static String REQUEST_TOKEN = "REQUEST_TOKEN";
     protected final static String LOGICAL_ID = "PKG";
 
