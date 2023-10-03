@@ -19,6 +19,9 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CreateHandler extends BaseHandlerStd {
     private final static String OPERATION = "CreateSoftwarePackage";
     private static final String CALL_GRAPH = "AWS-IoT-SoftwarePackage::Create";
@@ -38,39 +41,29 @@ public class CreateHandler extends BaseHandlerStd {
         this.clientToken = request.getClientRequestToken();
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
+        final Map<String, String> stackTags = request.getDesiredResourceTags();
+        // TODO: aws: System tags not supported by our tagging operation
+        // final Map<String, String> systemTags = request.getSystemTags();
+
+        Map<String, String> combinedTags = new HashMap<>();
+        Map<String, String> modelTags = Translator.translateTagsToSdk(resourceModel.getTags());
+        if (stackTags != null) {
+            combinedTags.putAll(stackTags);
+        }
+        if (modelTags != null) {
+            combinedTags.putAll(modelTags);
+        }
 
         // create a package name if not provided by user
         if (StringUtils.isNullOrEmpty(resourceModel.getPackageName())) {
             resourceModel.setPackageName(generateName(request));
         }
 
-        resourceModel.setDefaultVersionName(DEFAULT_PACKAGE_VERSION_NAME);
-
         return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
-                                .makeServiceCall(this::updateIndexingConfiguration)
-                                .progress())
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToCreateRequest)
+                                .translateToServiceRequest(model -> Translator.translateToCreateRequest(resourceModel, combinedTags))
                                 .makeServiceCall(this::createResource)
-                                .progress())
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToCreateRequestForPackageVersion)
-                                .makeServiceCall(this::createResourceForPackageVersion)
-                                .progress())
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToUpdateRequestForPackageVersion)
-                                .makeServiceCall(this::updateResourceForPackageVersion)
-                                .progress())
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToUpdateRequest)
-                                .makeServiceCall(this::updateResourceForDefaultVersionName)
                                 .progress())
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }

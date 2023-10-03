@@ -61,7 +61,7 @@ public class ReadHandlerTest extends HandlerTestBase {
         ResourceModel expectedModel = ResourceModel.builder()
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
-                .tags(Collections.emptyMap())
+                .tags(Collections.emptySet())
                 .build();
 
         when(iotClient.getPackage(any(GetPackageRequest.class))).thenReturn(getPackageResponse);
@@ -107,8 +107,7 @@ public class ReadHandlerTest extends HandlerTestBase {
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
                 .description(PKG_DESC)
-                .defaultVersionName("v")
-                .tags(Collections.singletonMap("key", "value"))
+                .tags(Collections.singleton(new software.amazon.iot.softwarepackage.Tag("key", "value")))
                 .build();
 
         when(iotClient.getPackage(any(GetPackageRequest.class))).thenReturn(getPackageResponse);

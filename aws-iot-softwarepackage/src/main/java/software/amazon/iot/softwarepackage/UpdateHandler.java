@@ -6,6 +6,9 @@ import software.amazon.awssdk.services.iot.model.GetPackageRequest;
 import software.amazon.awssdk.services.iot.model.GetPackageResponse;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
+import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
+import software.amazon.awssdk.services.iot.model.TagResourceResponse;
 import software.amazon.awssdk.services.iot.model.UpdatePackageRequest;
 import software.amazon.awssdk.services.iot.model.UpdatePackageResponse;
 import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
@@ -15,6 +18,9 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import com.amazonaws.iot.cfn.common.handler.Tagging;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -42,15 +48,20 @@ public class UpdateHandler extends BaseHandlerStd {
         ResourceModel prevModel = request.getPreviousResourceState() == null ?
                 request.getDesiredResourceState() : request.getPreviousResourceState();
         ResourceModel newModel = request.getDesiredResourceState();
+        final Map<String, String> stackTags = request.getDesiredResourceTags();
+
+        Map<String, String> combinedTags = new HashMap<>();
+        Map<String, String> modelTags = Translator.translateTagsToSdk(newModel.getTags());
+        if (stackTags != null) {
+            combinedTags.putAll(stackTags);
+        }
+        if (modelTags != null) {
+            combinedTags.putAll(modelTags);
+        }
 
         validatePropertiesAreUpdatable(newModel, prevModel);
 
         return ProgressEvent.progress(newModel, callbackContext)
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, newModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
-                                .makeServiceCall(this::updateIndexingConfiguration)
-                                .progress())
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, newModel, callbackContext)
                                 .translateToServiceRequest(Translator::translateToUpdateRequest)
@@ -58,16 +69,8 @@ public class UpdateHandler extends BaseHandlerStd {
                                 .progress())
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH_TAG, proxyClient, newModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToReadRequest)
-                                .makeServiceCall((getRequest, proxyInvocation) -> {
-                                    try {
-                                        return proxyInvocation.injectCredentialsAndInvokeV2(getRequest,
-                                                proxyInvocation.client()::getPackage);
-                                    } catch (IotException e) {
-                                        throw Translator.translateIotExceptionToHandlerException(getRequest.packageName(), OPERATION, e);
-                                    }
-                                })
-                                .stabilize(this::stabilizeUpdateTags)
+                                .translateToServiceRequest(model -> Translator.translateToListTagsRequestAfterUpdate(newModel, proxyClient, OPERATION, combinedTags))
+                                .makeServiceCall(this::listResourceTags)
                                 .progress())
                 .then(progress -> new ReadHandler().handleRequest(proxy, request.toBuilder().desiredResourceState(newModel).build(), callbackContext, proxyClient, logger));
     }
@@ -86,10 +89,18 @@ public class UpdateHandler extends BaseHandlerStd {
                 .build());
     }
 
-    private Boolean stabilizeUpdateTags(final GetPackageRequest request, final GetPackageResponse response,
-                                        ProxyClient<IotClient> proxyClient, ResourceModel model, CallbackContext context) {
-        return Tagging.updateResourceTags(response.packageArn(), model.getPackageName(), OPERATION,
-                ResourceModel.TYPE_NAME, model.getTags(), proxyClient);
+    private ListTagsForResourceResponse listResourceTags(
+            ListTagsForResourceRequest listTagsForResourceRequest,
+            ProxyClient<IotClient> proxyClient) {
+        try {
+            final ListTagsForResourceResponse listTagsForResourceResponse = proxyClient.injectCredentialsAndInvokeV2(
+                    listTagsForResourceRequest, proxyClient.client()::listTagsForResource);
+            logger.log(String.format("%s has been successfully updated with tags.",
+                    ResourceModel.TYPE_NAME));
+            return listTagsForResourceResponse;
+        } catch (IotException e) {
+            throw Translator.translateIotExceptionToHandlerException("Tagging operation", OPERATION, e);
+        }
     }
 
     /**

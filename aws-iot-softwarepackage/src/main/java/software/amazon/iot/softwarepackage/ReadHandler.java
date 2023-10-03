@@ -78,7 +78,7 @@ public class ReadHandler extends BaseHandlerStd {
 
         try {
             List<Tag> tags = listTags(proxyClient, getPackageResponse.packageArn());
-            resourceModel.setTags(Tagging.translateSdkTagsToMap(tags));
+            resourceModel.setTags(Translator.translateTagsToCfn(tags));
         } catch (final IotException e) {
             if (e.statusCode() != HttpStatusCode.FORBIDDEN) {
                 throw Translator.translateIotExceptionToHandlerException(

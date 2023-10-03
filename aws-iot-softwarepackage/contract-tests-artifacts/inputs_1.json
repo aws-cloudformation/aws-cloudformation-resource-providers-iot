@@ -2,16 +2,18 @@
   "CreateInputs": {
     "PackageName": "{{uuid}}",
     "Description": "test package for Cfn Contract Tests",
-    "Tags": {
+    "Tags": [
+      {
         "Key": "testTagKey",
         "Value": "tagValue"
-    }
+      }
+    ]
   },
   "PatchInputs": [
     {
       "op": "replace",
       "path": "/Description",
-      "value": "updated test package for Cfn Contract Tests"
+      "value": "test package for Cfn Contract Tests updated"
     }
   ]
 }

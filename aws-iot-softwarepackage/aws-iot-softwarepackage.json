@@ -2,27 +2,32 @@
   "typeName": "AWS::IoT::SoftwarePackage",
   "description": "resource definition",
   "definitions": {
-    "TagMap": {
+    "Tag": {
+      "description": "A key-value pair to associate with a resource.",
       "type": "object",
-      "maxProperties": 50,
-      "minProperties": 0,
-      "patternProperties": {
-        "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$": {
+      "properties": {
+        "Key": {
           "type": "string",
-          "maxLength": 256,
-          "minLength": 0
+          "description": "The key name of the tag. You can specify a value that is 1 to 128 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
+        },
+        "Value": {
+          "type": "string",
+          "description": "The value for the tag. You can specify a value that is 1 to 256 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+          "minLength": 1,
+          "maxLength": 256
         }
       },
+      "required": [
+        "Key",
+        "Value"
+      ],
       "additionalProperties": false
     }
   },
   "properties": {
-    "DefaultVersionName": {
-      "type": "string",
-      "maxLength": 64,
-      "minLength": 1,
-      "pattern": "^[a-zA-Z0-9-_.]+$"
-    },
     "Description": {
       "type": "string",
       "maxLength": 1024,
@@ -39,10 +44,14 @@
       "pattern": "^[a-zA-Z0-9-_.]+$"
     },
     "Tags": {
-      "$ref": "#/definitions/TagMap"
-    },
-    "UnsetDefaultVersion": {
-      "type": "boolean"
+      "description": "An array of key-value pairs to apply to this resource.",
+      "type": "array",
+      "maxItems": 50,
+      "uniqueItems": true,
+      "insertionOrder": false,
+      "items": {
+        "$ref": "#/definitions/Tag"
+      }
     }
   },
   "tagging": {
@@ -55,10 +64,6 @@
   "readOnlyProperties": [
     "/properties/PackageArn"
   ],
-  "writeOnlyProperties": [
-    "/properties/Tags",
-    "/properties/UnsetDefaultVersion"
-  ],
   "createOnlyProperties": [
     "/properties/PackageName"
   ],
@@ -69,13 +74,9 @@
     "create": {
       "permissions": [
         "iot:CreatePackage",
-        "iot:CreatePackageVersion",
-        "iot:UpdatePackage",
-        "iot:UpdatePackageVersion",
         "iot:GetPackage",
         "iot:TagResource",
-        "iot:GetIndexingConfiguration",
-        "iot:UpdateIndexingConfiguration"
+        "iot:GetIndexingConfiguration"
       ]
     },
     "read": {
@@ -92,8 +93,7 @@
         "iot:ListTagsForResource",
         "iot:TagResource",
         "iot:UntagResource",
-        "iot:GetIndexingConfiguration",
-        "iot:UpdateIndexingConfiguration"
+        "iot:GetIndexingConfiguration"
       ]
     },
     "delete": {
@@ -105,7 +105,7 @@
         "iot:UpdatePackage",
         "iot:UpdatePackageVersion",
         "iot:GetIndexingConfiguration",
-        "iot:UpdateIndexingConfiguration"
+        "iot:ListPackageVersions"
       ]
     },
     "list": {

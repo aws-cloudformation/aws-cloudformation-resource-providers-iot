@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceResponse;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
+import software.amazon.awssdk.services.iot.model.Tag;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
@@ -25,8 +26,10 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +63,7 @@ public class CreateHandlerTest extends HandlerTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .packageName(getPackageResponse.packageName())
                 .packageArn(getPackageResponse.packageArn())
-                .tags(Collections.emptyMap())
+                .tags(Collections.emptySet())
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)
@@ -102,22 +105,22 @@ public class CreateHandlerTest extends HandlerTestBase {
                         .defaultVersionName(DEFAULT_VER_NAME)
                         .build();
 
-        final Map<String, String> TAGS = new HashMap<String, String>() {{
-            put("key1", "value1");
-            put("key2", "value2");
+        final List<Tag> TAGS = new ArrayList<software.amazon.awssdk.services.iot.model.Tag>(){{
+            add(software.amazon.awssdk.services.iot.model.Tag.builder().key("key1").value("value1").build());
+            add(software.amazon.awssdk.services.iot.model.Tag.builder().key("key2").value("value2").build());
         }};
 
         final ListTagsForResourceResponse listTagsForResourceResponse =
                 ListTagsForResourceResponse
                         .builder()
-                        .tags(Translator.translateTagsToSdk(TAGS))
+                        .tags(TAGS)
                         .build();
 
         final ResourceModel model = ResourceModel.builder()
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
                 .description(PKG_DESC)
-                .tags(TAGS)
+                .tags(Translator.translateTagsToCfn(TAGS))
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
                 .desiredResourceState(model)

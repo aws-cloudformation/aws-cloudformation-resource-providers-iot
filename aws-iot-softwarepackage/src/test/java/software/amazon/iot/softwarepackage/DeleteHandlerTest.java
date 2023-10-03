@@ -9,6 +9,8 @@ import software.amazon.awssdk.services.iot.model.GetPackageResponse;
 import software.amazon.awssdk.services.iot.model.GetPackageVersionRequest;
 import software.amazon.awssdk.services.iot.model.GetPackageVersionResponse;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
+import software.amazon.awssdk.services.iot.model.ListPackageVersionsRequest;
+import software.amazon.awssdk.services.iot.model.ListPackageVersionsResponse;
 import software.amazon.awssdk.services.iot.model.UpdatePackageRequest;
 import software.amazon.awssdk.services.iot.model.UpdatePackageResponse;
 import software.amazon.awssdk.services.iot.model.InternalFailureException;
@@ -52,11 +54,9 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenReturn(DeletePackageResponse.builder().build());
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
 
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
@@ -80,10 +80,8 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenThrow(ResourceNotFoundException.builder().build());
 
         assertThrows(CfnNotFoundException.class, () ->
@@ -101,10 +99,8 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenThrow(InvalidRequestException.builder().build());
 
         assertThrows(CfnInvalidRequestException.class, () ->
@@ -122,10 +118,8 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenThrow(InternalFailureException.builder().build());
 
         assertThrows(CfnInternalFailureException.class, () ->
@@ -143,10 +137,8 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenThrow(ThrottlingException.builder().build());
 
         assertThrows(CfnThrottlingException.class, () ->
@@ -164,10 +156,8 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenThrow(ServiceUnavailableException.builder().build());
 
         assertThrows(CfnGeneralServiceException.class, () ->
@@ -185,10 +175,8 @@ public class DeleteHandlerTest extends HandlerTestBase {
         when(iotClient.getPackage(any(GetPackageRequest.class)))
                 .thenReturn(GetPackageResponse.builder().build())
                 .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class)))
-                .thenReturn(GetPackageVersionResponse.builder().build())
-                .thenThrow(ResourceNotFoundException.class);
-        when(iotClient.deletePackageVersion(any(DeletePackageVersionRequest.class))).thenReturn(DeletePackageVersionResponse.builder().build());
+        when(iotClient.listPackageVersions(any(ListPackageVersionsRequest.class)))
+                .thenReturn(ListPackageVersionsResponse.builder().build());
         when(iotClient.deletePackage(any(DeletePackageRequest.class))).thenThrow(UnauthorizedException.builder().build());
 
         assertThrows(CfnAccessDeniedException.class, () ->

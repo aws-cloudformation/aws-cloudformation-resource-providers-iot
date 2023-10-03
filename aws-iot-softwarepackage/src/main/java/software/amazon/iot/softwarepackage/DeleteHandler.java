@@ -7,9 +7,12 @@ import software.amazon.awssdk.services.iot.model.DeletePackageResponse;
 import software.amazon.awssdk.services.iot.model.DeletePackageVersionRequest;
 import software.amazon.awssdk.services.iot.model.DeletePackageVersionResponse;
 import software.amazon.awssdk.services.iot.model.GetPackageRequest;
-import software.amazon.awssdk.services.iot.model.GetPackageVersionRequest;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
+import software.amazon.awssdk.services.iot.model.ListPackageVersionsRequest;
+import software.amazon.awssdk.services.iot.model.ListPackageVersionsResponse;
+import software.amazon.awssdk.services.iot.model.PackageVersionSummary;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.UpdatePackageRequest;
 import software.amazon.awssdk.services.iot.model.UpdatePackageResponse;
 import software.amazon.awssdk.utils.StringUtils;
@@ -20,6 +23,8 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.List;
 
 /**
  * The handler deletes the Package resource (if it exists)
@@ -50,24 +55,11 @@ public class DeleteHandler extends BaseHandlerStd {
                     .build());
         }
 
-        resourceModel.setDefaultVersionName(DEFAULT_PACKAGE_VERSION_NAME);
-        resourceModel.setUnsetDefaultVersion(true);
-
         return ProgressEvent.progress(resourceModel, callbackContext)
                 .then(progress ->
                         proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToUpdateFIRequest)
-                                .makeServiceCall(this::updateIndexingConfiguration)
-                                .progress())
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToUpdateRequest)
-                                .makeServiceCall(this::updateResourceToUnsetDefaultVersion)
-                                .progress())
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToDeleteRequestForPackageVersion)
-                                .makeServiceCall(this::deleteResourceForPackageVersion)
+                                .translateToServiceRequest(Translator::translateToListRequestForPackageVersion)
+                                .makeServiceCall(this::listThenDeleteResourceForPackageVersion)
                                 .stabilize(this::stabilizedOnDeleteForPackageVersion)
                                 .progress())
                 .then(progress ->
@@ -102,18 +94,37 @@ public class DeleteHandler extends BaseHandlerStd {
         }
     }
 
-    private DeletePackageVersionResponse deleteResourceForPackageVersion(
-            DeletePackageVersionRequest deletePackageVersionRequest,
+    private ListPackageVersionsResponse listThenDeleteResourceForPackageVersion(
+            ListPackageVersionsRequest listPackageVersionsRequest,
             ProxyClient<IotClient> proxyClient) {
         try {
-            checkForPackageVersion(deletePackageVersionRequest.packageName(), deletePackageVersionRequest.versionName(), proxyClient);
-            DeletePackageVersionResponse response = proxyClient.injectCredentialsAndInvokeV2(
-                    deletePackageVersionRequest, proxyClient.client()::deletePackageVersion);
-            logger.log(String.format("%s [%s, %s] successfully deleted.",
-                    ResourceModel.TYPE_NAME, deletePackageVersionRequest.packageName(), deletePackageVersionRequest.versionName()));
-            return response;
+            String packageName = listPackageVersionsRequest.packageName();
+            ListPackageVersionsResponse listPackageVersionsResponse;
+            do {
+                listPackageVersionsResponse = proxyClient.injectCredentialsAndInvokeV2(
+                        listPackageVersionsRequest, proxyClient.client()::listPackageVersions);
+                if (listPackageVersionsResponse.hasPackageVersionSummaries()) {
+                    List<PackageVersionSummary> packageVersionSummaries = listPackageVersionsResponse.packageVersionSummaries();
+
+                    packageVersionSummaries.stream().forEach(packageVersionSummary -> {
+                        DeletePackageVersionRequest deletePackageVersionRequest = DeletePackageVersionRequest.builder()
+                                .packageName(packageName)
+                                .versionName(packageVersionSummary.versionName())
+                                .build();
+                        proxyClient.injectCredentialsAndInvokeV2(
+                                deletePackageVersionRequest, proxyClient.client()::deletePackageVersion);
+                        logger.log(String.format("%s [%s, %s] successfully deleted.",
+                                ResourceModel.TYPE_NAME, deletePackageVersionRequest.packageName(), deletePackageVersionRequest.versionName()));
+                    });
+                }
+                listPackageVersionsRequest = ListPackageVersionsRequest.builder()
+                        .packageName(packageName)
+                        .nextToken(listPackageVersionsResponse.nextToken())
+                        .build();
+            } while (listPackageVersionsResponse.nextToken() != null);
+            return listPackageVersionsResponse;
         } catch (IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(deletePackageVersionRequest.packageName(), OPERATION, e);
+            throw Translator.translateIotExceptionToHandlerException(listPackageVersionsRequest.packageName(), OPERATION, e);
         }
     }
 
@@ -149,13 +160,15 @@ public class DeleteHandler extends BaseHandlerStd {
         }
     }
 
-    private void checkForPackageVersion(String packageName, String versionName, ProxyClient<IotClient> proxyClient) {
+    private void checkForPackageVersions(String packageName, ProxyClient<IotClient> proxyClient) {
         try {
-            final GetPackageVersionRequest getPackageVersionRequest = GetPackageVersionRequest.builder()
+            final ListPackageVersionsRequest listPackageVersionsRequest = ListPackageVersionsRequest.builder()
                     .packageName(packageName)
-                    .versionName(versionName)
                     .build();
-            proxyClient.injectCredentialsAndInvokeV2(getPackageVersionRequest, proxyClient.client()::getPackageVersion);
+            ListPackageVersionsResponse listPackagesVersionResponse = proxyClient.injectCredentialsAndInvokeV2(listPackageVersionsRequest, proxyClient.client()::listPackageVersions);
+            if (!listPackagesVersionResponse.hasPackageVersionSummaries() || listPackagesVersionResponse.packageVersionSummaries().size() == 0) {
+                throw ResourceNotFoundException.builder().build();
+            }
         } catch (IotException e) {
             if (e.statusCode() != HttpStatusCode.FORBIDDEN) {
                 throw Translator.translateIotExceptionToHandlerException(packageName, OPERATION, e);
@@ -178,13 +191,14 @@ public class DeleteHandler extends BaseHandlerStd {
     }
 
     private Boolean stabilizedOnDeleteForPackageVersion(
-            DeletePackageVersionRequest deletePackageVersionRequest,
-            DeletePackageVersionResponse deletePackageVersionResponse,
+            ListPackageVersionsRequest listPackageVersionRequest,
+            ListPackageVersionsResponse listPackageVersionResponse,
             ProxyClient<IotClient> proxyClient,
             ResourceModel resourceModel,
             CallbackContext callbackContext) {
+        //return true;
         try {
-            checkForPackageVersion(deletePackageVersionRequest.packageName(), deletePackageVersionRequest.versionName(), proxyClient);
+            checkForPackageVersions(listPackageVersionRequest.packageName(), proxyClient);
             return false;
         } catch (CfnNotFoundException e) {
             return true;

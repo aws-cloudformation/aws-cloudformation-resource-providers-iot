@@ -27,6 +27,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,7 +45,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
-                .tags(new HashMap())
+                .tags(Collections.emptySet())
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
@@ -69,7 +70,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
         ResourceModel expectedModel = ResourceModel.builder()
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
-                .tags(new HashMap())
+                .tags(Collections.emptySet())
                 .build();
 
 
@@ -96,8 +97,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
                 .description(PKG_DESC)
-                .defaultVersionName("v")
-                .tags(Collections.singletonMap("key", "value"))
+                .tags(Collections.singleton(new software.amazon.iot.softwarepackage.Tag("key", "value")))
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
@@ -125,8 +125,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .packageName(PKG_NAME)
                 .packageArn(PKG_ARN)
                 .description(PKG_DESC)
-                .defaultVersionName("v")
-                .tags(Collections.singletonMap("key", "value"))
+                .tags(Collections.singleton(new software.amazon.iot.softwarepackage.Tag("key", "value")))
                 .build();
 
         when(iotClient.updatePackage(any(UpdatePackageRequest.class))).thenReturn(updatePackageResponse);
