@@ -30,17 +30,14 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                - "iot:CreatePackage"
                 - "iot:CreatePackageVersion"
                 - "iot:DeletePackageVersion"
                 - "iot:GetIndexingConfiguration"
-                - "iot:GetPackage"
                 - "iot:GetPackageVersion"
                 - "iot:ListPackageVersions"
                 - "iot:ListTagsForResource"
                 - "iot:TagResource"
                 - "iot:UntagResource"
-                - "iot:UpdateIndexingConfiguration"
                 - "iot:UpdatePackageVersion"
                 Resource: "*"
 Outputs:

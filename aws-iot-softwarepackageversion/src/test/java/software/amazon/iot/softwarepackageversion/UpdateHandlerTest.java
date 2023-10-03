@@ -52,7 +52,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .packageVersionArn(PKG_VER_ARN)
                 .errorReason("")
                 .attributes(Collections.emptyMap())
-                .tags(Collections.emptyMap())
+                .tags(Collections.emptySet())
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 
@@ -103,7 +103,7 @@ public class UpdateHandlerTest extends HandlerTestBase {
                 .status(PackageVersionStatus.PUBLISHED.toString())
                 .errorReason("")
                 .attributes(Collections.singletonMap("key", "value"))
-                .tags(Collections.singletonMap("key", "value"))
+                .tags(Collections.singleton(new software.amazon.iot.softwarepackageversion.Tag("key", "value")))
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
 

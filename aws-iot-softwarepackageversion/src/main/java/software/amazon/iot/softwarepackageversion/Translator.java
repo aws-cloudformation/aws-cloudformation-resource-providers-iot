@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.amazonaws.iot.cfn.common.handler.Tagging;
+import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.*;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
@@ -20,6 +22,7 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnResourceConflictException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.exceptions.CfnThrottlingException;
+import software.amazon.cloudformation.proxy.ProxyClient;
 
 import javax.annotation.Resource;
 import java.util.stream.Stream;
@@ -52,23 +55,13 @@ public class Translator {
         }
     }
 
-    static UpdateIndexingConfigurationRequest translateToUpdateFIRequest(final ResourceModel model) {
-        return UpdateIndexingConfigurationRequest.builder()
-                .thingIndexingConfiguration(ThingIndexingConfiguration.builder()
-                        .thingIndexingMode(ThingIndexingMode.REGISTRY_AND_SHADOW)
-                        .namedShadowIndexingMode(NamedShadowIndexingMode.ON)
-                        .filter(IndexingFilter.builder().namedShadowNames(Collections.singletonList("$package")).build())
-                        .build())
-                .build();
-    }
-
-    static CreatePackageVersionRequest translateToCreateRequest(final ResourceModel model) {
+    static CreatePackageVersionRequest translateToCreateRequest(final ResourceModel model, Map<String, String> combinedTags) {
         return CreatePackageVersionRequest.builder()
                 .packageName(model.getPackageName())
                 .versionName(model.getVersionName())
                 .description(model.getDescription())
                 .attributes(model.getAttributes())
-                .tags(model.getTags())
+                .tags(combinedTags)
                 .build();
     }
 
@@ -92,7 +85,6 @@ public class Translator {
                 .versionName(model.getVersionName())
                 .description(model.getDescription())
                 .attributes(model.getAttributes())
-                .action(model.getAction())
                 .build();
     }
 
@@ -101,6 +93,16 @@ public class Translator {
                 .packageName(packageName)
                 .nextToken(nextToken)
                 .build();
+    }
+
+    static ListTagsForResourceRequest translateToListTagsRequestAfterUpdate(final ResourceModel model, final ProxyClient<IotClient> proxyClient, final String operation, Map<String, String> combinedTags) {
+        GetPackageVersionRequest getPackageVersionRequest = GetPackageVersionRequest.builder().packageName(model.getPackageName()).versionName(model.getVersionName()).build();
+        GetPackageVersionResponse getPackageVersionResponse = proxyClient.injectCredentialsAndInvokeV2(
+                getPackageVersionRequest, proxyClient.client()::getPackageVersion);
+        Tagging.updateResourceTags(getPackageVersionResponse.packageVersionArn(), model.getVersionName(), operation,
+                ResourceModel.TYPE_NAME, combinedTags, proxyClient);
+
+        return ListTagsForResourceRequest.builder().resourceArn(getPackageVersionResponse.packageVersionArn()).build();
     }
 
     private static <T> Stream<T> streamOfOrEmpty(final Collection<T> collection) {
@@ -140,29 +142,26 @@ public class Translator {
                 .build();
     }
 
-    static Set<Tag> translateTagsToSdk(final Map<String, String> tags) {
-
+    static Set<software.amazon.iot.softwarepackageversion.Tag> translateTagsToCfn(final List<software.amazon.awssdk.services.iot.model.Tag> tags) {
         if (tags == null) {
             return Collections.emptySet();
         }
-
-        return tags.keySet().stream()
-                .map(key -> Tag.builder()
-                        .key(key)
-                        .value(tags.get(key))
+        return tags.stream()
+                .map(tag -> software.amazon.iot.softwarepackageversion.Tag.builder()
+                        .key(tag.key())
+                        .value(tag.value())
                         .build())
                 .collect(Collectors.toSet());
     }
 
-    static Map<String, String> translateTagsToCfn(
-            final List<Tag> tags) {
-
+    static Map<String, String> translateTagsToSdk(
+            final Set<software.amazon.iot.softwarepackageversion.Tag> tags) {
         if (tags == null) {
             return Collections.emptyMap();
         }
 
         return tags.stream()
-                .collect(Collectors.toMap(Tag::key, Tag::value));
+                .collect(Collectors.toMap(Tag::getKey, Tag::getValue));
     }
 
     static ListTagsForResourceRequest listResourceTagsRequest(final String resourceArn, final String token) {

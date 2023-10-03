@@ -2,13 +2,6 @@
     "typeName": "AWS::IoT::SoftwarePackageVersion",
     "description": "resource definition",
     "definitions": {
-        "PackageVersionAction": {
-            "type": "string",
-            "enum": [
-                "PUBLISH",
-                "DEPRECATE"
-            ]
-        },
         "PackageVersionStatus": {
             "type": "string",
             "enum": [
@@ -28,24 +21,32 @@
             },
             "additionalProperties": false
         },
-        "TagMap": {
+        "Tag": {
+            "description": "A key-value pair to associate with a resource.",
             "type": "object",
-            "maxProperties": 50,
-            "minProperties": 0,
-            "patternProperties": {
-                "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$": {
+            "properties": {
+                "Key": {
                     "type": "string",
-                    "maxLength": 256,
-                    "minLength": 0
+                    "description": "The key name of the tag. You can specify a value that is 1 to 128 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$"
+                },
+                "Value": {
+                    "type": "string",
+                    "description": "The value for the tag. You can specify a value that is 1 to 256 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -. ",
+                    "minLength": 1,
+                    "maxLength": 256
                 }
             },
+            "required": [
+                "Key",
+                "Value"
+            ],
             "additionalProperties": false
         }
     },
     "properties": {
-        "Action": {
-            "$ref": "#/definitions/PackageVersionAction"
-        },
         "Attributes": {
             "$ref": "#/definitions/ResourceAttributes"
         },
@@ -65,16 +66,20 @@
             "pattern": "^[a-zA-Z0-9-_.]+$"
         },
         "PackageVersionArn": {
-            "type": "string",
-            "maxLength": 1600,
-            "minLength": 1,
-            "pattern": "^arn:[!-~]+$"
+            "type": "string"
         },
         "Status": {
             "$ref": "#/definitions/PackageVersionStatus"
         },
         "Tags": {
-            "$ref": "#/definitions/TagMap"
+            "description": "An array of key-value pairs to apply to this resource.",
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "insertionOrder": false,
+            "items": {
+                "$ref": "#/definitions/Tag"
+            }
         },
         "VersionName": {
             "type": "string",
@@ -90,14 +95,13 @@
         "cloudFormationSystemTags": true,
         "tagProperty": "/properties/Tags"
     },
+    "required": [
+        "PackageName"
+    ],
     "readOnlyProperties": [
         "/properties/ErrorReason",
         "/properties/PackageVersionArn",
         "/properties/Status"
-    ],
-    "writeOnlyProperties": [
-        "/properties/Action",
-        "/properties/Tags"
     ],
     "createOnlyProperties": [
         "/properties/PackageName",
@@ -110,13 +114,10 @@
     "handlers": {
         "create": {
             "permissions": [
-                "iot:CreatePackage",
                 "iot:CreatePackageVersion",
-                "iot:GetPackage",
                 "iot:GetPackageVersion",
                 "iot:TagResource",
-                "iot:GetIndexingConfiguration",
-                "iot:UpdateIndexingConfiguration"
+                "iot:GetIndexingConfiguration"
             ]
         },
         "read": {
@@ -132,8 +133,7 @@
                 "iot:ListTagsForResource",
                 "iot:TagResource",
                 "iot:UntagResource",
-                "iot:GetIndexingConfiguration",
-                "iot:UpdateIndexingConfiguration"
+                "iot:GetIndexingConfiguration"
             ]
         },
         "delete": {
@@ -141,8 +141,7 @@
                 "iot:DeletePackageVersion",
                 "iot:UpdatePackageVersion",
                 "iot:GetPackageVersion",
-                "iot:GetIndexingConfiguration",
-                "iot:UpdateIndexingConfiguration"
+                "iot:GetIndexingConfiguration"
             ]
         },
         "list": {

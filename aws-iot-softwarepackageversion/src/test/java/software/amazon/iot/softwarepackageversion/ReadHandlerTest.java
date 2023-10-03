@@ -68,7 +68,7 @@ public class ReadHandlerTest extends HandlerTestBase {
                 .packageVersionArn(PKG_VER_ARN)
                 .errorReason("")
                 .attributes(Collections.emptyMap())
-                .tags(Collections.emptyMap())
+                .tags(Collections.emptySet())
                 .build();
 
         when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class))).thenReturn(getPackageVersionResponse);
@@ -120,7 +120,7 @@ public class ReadHandlerTest extends HandlerTestBase {
                 .status(PackageVersionStatus.PUBLISHED.toString())
                 .errorReason("")
                 .attributes(Collections.singletonMap("key", "value"))
-                .tags(Collections.singletonMap("key", "value"))
+                .tags(Collections.singleton(new software.amazon.iot.softwarepackageversion.Tag("key", "value")))
                 .build();
 
         when(iotClient.getPackageVersion(any(GetPackageVersionRequest.class))).thenReturn(getPackageVersionResponse);

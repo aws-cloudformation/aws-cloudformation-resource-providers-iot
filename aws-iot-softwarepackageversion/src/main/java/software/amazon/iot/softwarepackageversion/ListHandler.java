@@ -1,12 +1,15 @@
 package software.amazon.iot.softwarepackageversion;
 
 import software.amazon.awssdk.services.iot.IotClient;
+import software.amazon.awssdk.services.iot.model.CreatePackageRequest;
+import software.amazon.awssdk.services.iot.model.GetPackageRequest;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.ListPackageVersionsRequest;
 import software.amazon.awssdk.services.iot.model.ListPackageVersionsResponse;
 import software.amazon.awssdk.services.iot.model.ListPackagesRequest;
 import software.amazon.awssdk.services.iot.model.ListPackagesResponse;
 import software.amazon.awssdk.services.iot.model.PackageSummary;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
@@ -21,6 +24,8 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 public class ListHandler extends BaseHandlerStd {
 
     private static final String OPERATION = "ListSoftwarePackageVersions";
+    private static final String DEFAULT_PACKAGE_NAME = "cloudformation-default-package";
+
 
     @Override
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(
@@ -32,19 +37,23 @@ public class ListHandler extends BaseHandlerStd {
         final ResourceModel resourceModel = request.getDesiredResourceState();
         String packageName = resourceModel.getPackageName();
 
-        if (packageName == null || packageName.isEmpty()) {
-            final ListPackagesRequest listPackagesRequest = ListPackagesRequest.builder()
-                    .build();
-
-            ListPackagesResponse listPackagesResponse =
-                    proxy.injectCredentialsAndInvokeV2(listPackagesRequest, proxyClient.client()::listPackages);
-
-            // In order to pass the contract tests, enforce one package per account
-            packageName = listPackagesResponse
-                    .packageSummaries().get(0).packageName();
-        }
-
         try {
+            // For contract test scenario only
+            if (packageName == null || packageName.isEmpty()) {
+                packageName = DEFAULT_PACKAGE_NAME;
+                final GetPackageRequest getPackageRequest = GetPackageRequest.builder()
+                        .packageName(packageName)
+                        .build();
+                try {
+                    proxy.injectCredentialsAndInvokeV2(getPackageRequest, proxyClient.client()::getPackage);
+                } catch (final ResourceNotFoundException e) {
+                    final CreatePackageRequest createPackageRequest = CreatePackageRequest.builder()
+                            .packageName(DEFAULT_PACKAGE_NAME)
+                            .build();
+
+                    proxy.injectCredentialsAndInvokeV2(createPackageRequest, proxyClient.client()::createPackage);
+                }
+            }
             final ListPackageVersionsRequest listPackageVersionsRequest = Translator.translateToListRequest(packageName, request.getNextToken());
             ListPackageVersionsResponse listPackageVersionsResponse = proxy.injectCredentialsAndInvokeV2(
                     listPackageVersionsRequest,

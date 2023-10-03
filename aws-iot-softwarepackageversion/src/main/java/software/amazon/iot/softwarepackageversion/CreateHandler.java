@@ -21,6 +21,9 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CreateHandler extends BaseHandlerStd {
     private final static String OPERATION = "CreateSoftwarePackageVersion";
     private static final String CALL_GRAPH = "AWS-IoT-SoftwarePackageVersion::Create";
@@ -40,43 +43,30 @@ public class CreateHandler extends BaseHandlerStd {
         this.clientToken = request.getClientRequestToken();
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
+        final Map<String, String> stackTags = request.getDesiredResourceTags();
+        // TODO: aws: System tags not supported by our tagging operation
+        // final Map<String, String> systemTags = request.getSystemTags();
 
-        if (StringUtils.isNullOrEmpty(resourceModel.getPackageName())) {
-            resourceModel.setPackageName(DEFAULT_PACKAGE_NAME);
+        Map<String, String> combinedTags = new HashMap<>();
+        Map<String, String> modelTags = Translator.translateTagsToSdk(resourceModel.getTags());
+        if (stackTags != null) {
+            combinedTags.putAll(stackTags);
         }
+        if (modelTags != null) {
+            combinedTags.putAll(modelTags);
+        }
+
         if (StringUtils.isNullOrEmpty(resourceModel.getVersionName())) {
             resourceModel.setVersionName(generateName(request));
         }
 
-        final UpdateIndexingConfigurationRequest updateIndexingConfigurationRequest = Translator.translateToUpdateFIRequest(resourceModel);
-        proxyClient.injectCredentialsAndInvokeV2(
-                updateIndexingConfigurationRequest, proxyClient.client()::updateIndexingConfiguration);
-
-        final GetPackageRequest getPackageRequest = GetPackageRequest.builder()
-                .packageName(resourceModel.getPackageName())
-                .build();
-        try {
-            try {
-                proxyClient.injectCredentialsAndInvokeV2(
-                        getPackageRequest, proxyClient.client()::getPackage);
-            } catch (final ResourceNotFoundException e) {
-                final CreatePackageRequest createPackageRequest = CreatePackageRequest.builder()
-                        .packageName(resourceModel.getPackageName())
-                        .build();
-                proxyClient.injectCredentialsAndInvokeV2(
-                        createPackageRequest, proxyClient.client()::createPackage);
-            }
-        } catch (final IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(getPackageRequest.packageName(), OPERATION, e);
-        }
-
-            return ProgressEvent.progress(resourceModel, callbackContext)
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                                .translateToServiceRequest(Translator::translateToCreateRequest)
-                                .makeServiceCall(this::createResource)
-                                .progress())
-                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+        return ProgressEvent.progress(resourceModel, callbackContext)
+            .then(progress ->
+                    proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
+                            .translateToServiceRequest(model -> Translator.translateToCreateRequest(resourceModel, combinedTags))
+                            .makeServiceCall(this::createResource)
+                            .progress())
+            .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
     /**
