@@ -82,10 +82,8 @@ public class ReadHandler extends BaseHandlerStd {
             List<Tag> tags = listTags(proxyClient, getPackageVersionResponse.packageVersionArn());
             resourceModel.setTags(Translator.translateTagsToCfn(tags));
         } catch (final IotException e) {
-            if (e.statusCode() != HttpStatusCode.FORBIDDEN) {
-                throw Translator.translateIotExceptionToHandlerException(
-                        getPackageVersionResponse.packageName() + ":" + getPackageVersionResponse.versionName(), OPERATION, e);
-            }
+            throw Translator.translateIotExceptionToHandlerException(
+                    getPackageVersionResponse.packageName() + ":" + getPackageVersionResponse.versionName(), OPERATION, e);
         }
 
         return ProgressEvent.defaultSuccessHandler(resourceModel);
