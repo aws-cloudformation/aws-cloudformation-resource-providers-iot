@@ -47,6 +47,10 @@ public class DeleteHandler extends BaseHandlerStd {
         this.logger = logger;
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
+        final String awsAccountId = request.getAwsAccountId();
+
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
 
         // eagerly return not found if name is not provided in the request
         if (StringUtils.isEmpty(resourceModel.getPackageName())) {

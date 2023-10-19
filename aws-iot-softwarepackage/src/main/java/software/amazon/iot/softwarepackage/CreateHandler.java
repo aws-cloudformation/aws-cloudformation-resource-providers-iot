@@ -44,6 +44,10 @@ public class CreateHandler extends BaseHandlerStd {
         final Map<String, String> stackTags = request.getDesiredResourceTags();
         // TODO: aws: System tags not supported by our tagging operation
         // final Map<String, String> systemTags = request.getSystemTags();
+        final String awsAccountId = request.getAwsAccountId();
+
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
 
         Map<String, String> combinedTags = new HashMap<>();
         Map<String, String> modelTags = Translator.translateTagsToSdk(resourceModel.getTags());

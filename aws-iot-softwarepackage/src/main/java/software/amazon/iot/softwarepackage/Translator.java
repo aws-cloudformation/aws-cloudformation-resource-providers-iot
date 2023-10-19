@@ -42,7 +42,7 @@ public class Translator {
             return new CfnInternalFailureException(e);
         } else if (e instanceof ServiceUnavailableException) {
             return new CfnGeneralServiceException(operationName, e);
-        } else if (e instanceof InvalidRequestException) {
+        } else if (e instanceof InvalidRequestException || e instanceof ValidationException) {
             return new CfnInvalidRequestException(e);
         } else if (e instanceof ConflictingResourceUpdateException || e instanceof VersionConflictException) {
             return new CfnResourceConflictException(ResourceModel.TYPE_NAME, resourceIdentifier, e.getMessage(), e);
@@ -56,6 +56,12 @@ public class Translator {
     }
 
     static CreatePackageRequest translateToCreateRequest(final ResourceModel model, Map<String, String> combinedTags) {
+        if (combinedTags.isEmpty()) {
+            return CreatePackageRequest.builder()
+                    .packageName(model.getPackageName())
+                    .description(model.getDescription())
+                    .build();
+        }
         return CreatePackageRequest.builder()
                 .packageName(model.getPackageName())
                 .description(model.getDescription())

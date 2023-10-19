@@ -49,6 +49,10 @@ public class UpdateHandler extends BaseHandlerStd {
                 request.getDesiredResourceState() : request.getPreviousResourceState();
         ResourceModel newModel = request.getDesiredResourceState();
         final Map<String, String> stackTags = request.getDesiredResourceTags();
+        final String awsAccountId = request.getAwsAccountId();
+
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
 
         Map<String, String> combinedTags = new HashMap<>();
         Map<String, String> modelTags = Translator.translateTagsToSdk(newModel.getTags());

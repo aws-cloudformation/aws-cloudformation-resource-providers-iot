@@ -26,6 +26,10 @@ public class ListHandler extends BaseHandlerStd {
             final CallbackContext callbackContext,
             final ProxyClient<IotClient> proxyClient,
             final Logger logger) {
+        final String awsAccountId = request.getAwsAccountId();
+
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
 
         try {
             final ListPackagesRequest listPackagesRequest = Translator.translateToListRequest(request.getNextToken());
