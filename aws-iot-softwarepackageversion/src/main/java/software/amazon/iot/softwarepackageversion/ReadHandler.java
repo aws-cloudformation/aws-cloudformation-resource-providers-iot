@@ -38,6 +38,10 @@ public class ReadHandler extends BaseHandlerStd {
         this.logger = logger;
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
+        final String awsAccountId = request.getAwsAccountId();
+
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
 
         return proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
                 .translateToServiceRequest(Translator::translateToReadRequest)

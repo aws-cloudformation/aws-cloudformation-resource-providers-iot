@@ -39,6 +39,10 @@ public class DeleteHandler extends BaseHandlerStd {
         this.clientToken = request.getClientRequestToken();
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
+        final String awsAccountId = request.getAwsAccountId();
+
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
 
         if (StringUtils.isEmpty(resourceModel.getPackageName()) || StringUtils.isEmpty(resourceModel.getVersionName())) {
             throw new CfnNotFoundException(InvalidRequestException.builder()

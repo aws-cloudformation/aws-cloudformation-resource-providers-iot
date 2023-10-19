@@ -35,8 +35,12 @@ public class ListHandler extends BaseHandlerStd {
             final ProxyClient<IotClient> proxyClient,
             final Logger logger) {
         final ResourceModel resourceModel = request.getDesiredResourceState();
-        String packageName = resourceModel.getPackageName();
+        final String awsAccountId = request.getAwsAccountId();
 
+        logger.log(String.format("%s for accountId: %s",
+                OPERATION, awsAccountId));
+
+        String packageName = resourceModel.getPackageName();
         try {
             // For contract test scenario only
             if (packageName == null || packageName.isEmpty()) {
