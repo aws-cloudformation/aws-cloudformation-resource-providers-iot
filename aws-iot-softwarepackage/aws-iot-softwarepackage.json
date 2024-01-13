@@ -35,7 +35,10 @@
       "pattern": "^[^\\p{C}]+$"
     },
     "PackageArn": {
-      "type": "string"
+      "type": "string",
+      "maxLength": 1600,
+      "minLength": 1,
+      "pattern": "^arn:[!-~]+$"
     },
     "PackageName": {
       "type": "string",
