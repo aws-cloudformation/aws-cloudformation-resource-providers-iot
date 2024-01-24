@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - aws iot delete-package --package-name CfnContractTestParentPackage
+      - echo "Deleted package CfnContractTestParentPackage"
+  post_build:
+    commands:
+      - echo Build completed on `date`

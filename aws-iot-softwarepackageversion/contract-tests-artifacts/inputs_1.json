@@ -1,0 +1,26 @@
+{
+  "CreateInputs": {
+    "PackageName": "cloudformation-default-package",
+    "VersionName": "{{uuid}}",
+    "Description": "test PackageVersion for Cfn Contract Tests",
+    "Attributes": {
+      "attribute1": "Value1"
+    },
+    "Tags": [
+      {
+      "Key": "testTagKey",
+      "Value": "tagValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Description",
+      "value": "updated test PackageVersion for Cfn Contract Tests"
+    }
+  ],
+  "ListInputs": {
+    "PackageName": "cloudformation-default-package"
+  }
+}
