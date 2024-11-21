@@ -95,10 +95,16 @@ public class AbstractTestBase {
     protected final static String LOGICAL_ID = "ThingType";
 
     protected ResourceHandlerRequest.ResourceHandlerRequestBuilder<ResourceModel> defaultRequestBuilder(ResourceModel model) {
+        return defaultRequestBuilder(model, model);
+    }
+
+    protected ResourceHandlerRequest.ResourceHandlerRequestBuilder<ResourceModel> defaultRequestBuilder(
+            ResourceModel prevModel,
+            ResourceModel newModel) {
         return ResourceHandlerRequest.<ResourceModel>builder()
                 .clientRequestToken(REQUEST_TOKEN)
                 .logicalResourceIdentifier(LOGICAL_ID)
-                .desiredResourceState(model)
-                .previousResourceState(model);
+                .desiredResourceState(newModel)
+                .previousResourceState(prevModel);
     }
 }

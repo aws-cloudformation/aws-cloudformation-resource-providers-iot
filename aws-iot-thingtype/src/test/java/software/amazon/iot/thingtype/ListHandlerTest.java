@@ -21,6 +21,8 @@ import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,6 +62,75 @@ public class ListHandlerTest extends AbstractTestBase{
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isNull();
         assertThat(response.getResourceModels()).isNotNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_SuccessWithThingTypeProperties() {
+        final ResourceModel model = ResourceModel.builder()
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        when(iotClient.listThingTypes(any(ListThingTypesRequest.class)))
+                .thenReturn(ListThingTypesResponse.builder()
+                        .thingTypes(
+                                ThingTypeDefinition.builder()
+                                        .thingTypeArn(TT_ARN)
+                                        .thingTypeName(TT_Name)
+                                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                                .deprecated(false)
+                                                .build())
+                                        .thingTypeProperties(ThingTypeProperties.builder()
+                                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                                .build())
+                                        .build(),
+                                ThingTypeDefinition.builder()
+                                        .thingTypeArn(TT_ARN + "2")
+                                        .thingTypeName(TT_Name + "2")
+                                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                                .deprecated(true)
+                                                .build())
+                                        .thingTypeProperties(ThingTypeProperties.builder()
+                                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                                .mqtt5Configuration(software.amazon.awssdk.services.iot.model.Mqtt5Configuration.builder()
+                                                        .propagatingAttributes(Collections.singletonList(
+                                                                software.amazon.awssdk.services.iot.model.PropagatingAttribute.builder()
+                                                                        .userPropertyKey("testPropagatingAttribute")
+                                                                        .connectionAttribute("iot:Thing.ThingName")
+                                                                        .build()))
+                                                        .build())
+                                                .build())
+                                        .build(),
+                                ThingTypeDefinition.builder()
+                                        .thingTypeArn(TT_ARN + "3")
+                                        .thingTypeName(TT_Name + "3")
+                                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                                .deprecated(true)
+                                                .build())
+                                        .thingTypeProperties(ThingTypeProperties.builder()
+                                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                                .mqtt5Configuration(software.amazon.awssdk.services.iot.model.Mqtt5Configuration.builder()
+                                                        .propagatingAttributes(Collections.singletonList(
+                                                                software.amazon.awssdk.services.iot.model.PropagatingAttribute.builder()
+                                                                        .userPropertyKey("testPropagatingAttribute")
+                                                                        .thingAttribute("testThingPropagatingAttribute")
+                                                                        .build()))
+                                                        .build())
+                                                .build())
+                                        .build()
+                        )
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isNull();
+        assertThat(response.getResourceModels()).isNotNull();
+        assertThat(response.getResourceModels().size()).isEqualTo(3);
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }

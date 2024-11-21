@@ -27,6 +27,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -77,7 +78,7 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_AllProperties() {
+    public void handleRequest_SuccessWithAllProperties() {
         final CreateThingTypeResponse createThingTypeResponse =
                 CreateThingTypeResponse
                         .builder()
@@ -95,6 +96,12 @@ public class CreateHandlerTest extends AbstractTestBase {
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .thingTypeDescription(THING_TYPE_DESCRIPTION)
                         .searchableAttributes(searchableAttributes)
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
                         .build())
                 .tags(tags)
                 .deprecateThingType(false)

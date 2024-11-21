@@ -31,16 +31,14 @@ public class ReadHandler extends BaseHandlerStd {
             final CallbackContext callbackContext,
             final ProxyClient<IotClient> proxyClient,
             final Logger logger) {
-
         this.logger = logger;
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
         return proxy.initiate(CALL_GRAPH, proxyClient, resourceModel, callbackContext)
-                    .translateToServiceRequest(Translator::translateToReadRequest)
-                    .makeServiceCall(this::readResource)
-                    .done((describeThingTypeRequest, describeThingTypeResponse, sdkProxyClient, model, context) ->
-                            constructResourceModelFromResponse(describeThingTypeResponse, proxyClient));
-
+                .translateToServiceRequest(Translator::translateToReadRequest)
+                .makeServiceCall(this::readResource)
+                .done((describeThingTypeRequest, describeThingTypeResponse, sdkProxyClient, model, context) ->
+                        constructResourceModelFromResponse(describeThingTypeResponse, proxyClient));
     }
 
     /**
@@ -77,11 +75,8 @@ public class ReadHandler extends BaseHandlerStd {
             DescribeThingTypeResponse describeThingTypeResponse,
             ProxyClient<IotClient> proxyClient) {
         final ResourceModel resourceModel = Translator.translateFromReadResponse(describeThingTypeResponse);
-
-
         try {
             List<Tag> tags = listTags(proxyClient, describeThingTypeResponse.thingTypeArn());
-
             resourceModel.setTags(Translator.translateTagsFromSdk(tags));
         } catch (IotException e) {
             if (e.statusCode() != HttpStatusCode.FORBIDDEN) {
@@ -89,7 +84,6 @@ public class ReadHandler extends BaseHandlerStd {
                         describeThingTypeResponse.thingTypeName(), OPERATION, e);
             }
         }
-
         return ProgressEvent.defaultSuccessHandler(resourceModel);
     }
 }
