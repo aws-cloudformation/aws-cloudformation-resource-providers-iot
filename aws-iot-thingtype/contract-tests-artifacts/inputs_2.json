@@ -1,0 +1,37 @@
+{
+  "CreateInputs": {
+    "ThingTypeName": "{{uuid}}",
+    "DeprecateThingType": false,
+    "ThingTypeProperties": {
+      "ThingTypeDescription": "test ThingType for Cfn Contract Tests",
+      "SearchableAttributes": [
+        "Attribute1"
+      ],
+      "Mqtt5Configuration": {
+        "PropagatingAttributes": [
+          {
+            "UserPropertyKey": "iot:ClientId",
+            "ConnectionAttribute": "iot:ClientId"
+          },
+          {
+            "UserPropertyKey": "testAttribute",
+            "ThingAttribute": "testAttribute"
+          }
+        ]
+      }
+    },
+    "Tags": [
+      {
+        "Key": "testTagKey",
+        "Value": "tagValue"
+      }
+    ]
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/Tags/0/Value",
+      "value": "updatedTagValue"
+    }
+  ]
+}

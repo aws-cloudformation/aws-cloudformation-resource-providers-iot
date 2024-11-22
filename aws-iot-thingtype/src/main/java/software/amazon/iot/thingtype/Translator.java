@@ -1,5 +1,6 @@
 package software.amazon.iot.thingtype;
 
+import lombok.NonNull;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.awssdk.services.iot.model.ConflictingResourceUpdateException;
 import software.amazon.awssdk.services.iot.model.CreateThingTypeRequest;
@@ -15,6 +16,8 @@ import software.amazon.awssdk.services.iot.model.LimitExceededException;
 import software.amazon.awssdk.services.iot.model.ListTagsForResourceRequest;
 import software.amazon.awssdk.services.iot.model.ListThingTypesRequest;
 import software.amazon.awssdk.services.iot.model.ListThingTypesResponse;
+import software.amazon.awssdk.services.iot.model.Mqtt5Configuration;
+import software.amazon.awssdk.services.iot.model.PropagatingAttribute;
 import software.amazon.awssdk.services.iot.model.ResourceAlreadyExistsException;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.iot.model.ServiceUnavailableException;
@@ -24,6 +27,7 @@ import software.amazon.awssdk.services.iot.model.ThingTypeProperties;
 import software.amazon.awssdk.services.iot.model.ThrottlingException;
 import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
+import software.amazon.awssdk.services.iot.model.UpdateThingTypeRequest;
 import software.amazon.awssdk.services.iot.model.VersionConflictException;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
@@ -82,19 +86,53 @@ public class Translator {
         }
     }
 
-    static CreateThingTypeRequest translateToCreateRequest(final ResourceModel model, final Map<String,String> tags) {
-        software.amazon.iot.thingtype.ThingTypeProperties thingTypeProperties =
-                software.amazon.iot.thingtype.ThingTypeProperties.builder().build();
-        if (model.getThingTypeProperties() != null) {
-            thingTypeProperties = model.getThingTypeProperties();
-        }
+    static CreateThingTypeRequest translateToCreateRequest(final ResourceModel model, final Map<String, String> tags) {
         return CreateThingTypeRequest.builder()
                 .thingTypeName(model.getThingTypeName())
-                .thingTypeProperties(ThingTypeProperties.builder()
-                        .thingTypeDescription(thingTypeProperties.getThingTypeDescription())
-                        .searchableAttributes(thingTypeProperties.getSearchableAttributes())
-                        .build())
+                .thingTypeProperties(buildThingTypeProperties(model.getThingTypeProperties(), false))
                 .tags(translateTagsToSdk(tags))
+                .build();
+    }
+
+    private static ThingTypeProperties buildThingTypeProperties(
+            software.amazon.iot.thingtype.ThingTypeProperties properties,
+            boolean isUpdateRequest) {
+        if (properties == null) {
+            return null;
+        }
+
+        ThingTypeProperties.Builder thingTypePropertiesBuilder = ThingTypeProperties.builder();
+
+        if (!isUpdateRequest) {
+            Optional.ofNullable(properties.getThingTypeDescription())
+                    .ifPresent(thingTypePropertiesBuilder::thingTypeDescription);
+
+            Optional.ofNullable(properties.getSearchableAttributes())
+                    .ifPresent(thingTypePropertiesBuilder::searchableAttributes);
+        }
+
+        Optional.ofNullable(properties.getMqtt5Configuration())
+                .map(Translator::validateAndAddMqtt5Configuration)
+                .ifPresent(thingTypePropertiesBuilder::mqtt5Configuration);
+
+        return thingTypePropertiesBuilder.build();
+    }
+
+    private static Mqtt5Configuration validateAndAddMqtt5Configuration(
+            @NonNull software.amazon.iot.thingtype.Mqtt5Configuration mqtt5Configuration) {
+        List<PropagatingAttribute> propagatingAttributes = Optional.ofNullable(mqtt5Configuration.getPropagatingAttributes())
+                .filter(propagatingAttributeList -> !propagatingAttributeList.isEmpty())
+                .map(listOfPropagatingAttributes -> listOfPropagatingAttributes.stream()
+                        .map(propagatingAttribute -> PropagatingAttribute.builder()
+                                .userPropertyKey(propagatingAttribute.getUserPropertyKey())
+                                .connectionAttribute(propagatingAttribute.getConnectionAttribute())
+                                .thingAttribute(propagatingAttribute.getThingAttribute())
+                                .build())
+                        .collect(Collectors.toList()))
+                .orElse(null);
+
+        return Mqtt5Configuration.builder()
+                .propagatingAttributes(propagatingAttributes)
                 .build();
     }
 
@@ -107,6 +145,13 @@ public class Translator {
     static DeleteThingTypeRequest translateToDeleteRequest(final ResourceModel model) {
         return DeleteThingTypeRequest.builder()
                 .thingTypeName(model.getThingTypeName())
+                .build();
+    }
+
+    static UpdateThingTypeRequest translateToUpdateThingTypeRequest(final ResourceModel model) {
+        return UpdateThingTypeRequest.builder()
+                .thingTypeName(model.getThingTypeName())
+                .thingTypeProperties(buildThingTypeProperties(model.getThingTypeProperties(), true))
                 .build();
     }
 
@@ -134,6 +179,7 @@ public class Translator {
                         .thingTypeName(resource.thingTypeName())
                         .arn(resource.thingTypeArn())
                         .deprecateThingType(resource.thingTypeMetadata().deprecated())
+                        .thingTypeProperties(translateThingTypePropertiesToModelObject(resource.thingTypeProperties()))
                         .build())
                 .collect(Collectors.toList());
     }
@@ -187,17 +233,58 @@ public class Translator {
     }
 
     static software.amazon.iot.thingtype.ThingTypeProperties translateThingTypePropertiesToModelObject(
-            ThingTypeProperties thingTypeProperties
-    ) {
+            ThingTypeProperties thingTypeProperties) {
         if (thingTypeProperties == null)
         {
             return software.amazon.iot.thingtype.ThingTypeProperties.builder().build();
-        } else {
-            return software.amazon.iot.thingtype.ThingTypeProperties.builder()
-                    .thingTypeDescription(thingTypeProperties.thingTypeDescription())
-                    .searchableAttributes(thingTypeProperties.searchableAttributes())
+        }
+        return software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                .thingTypeDescription(thingTypeProperties.thingTypeDescription())
+                .searchableAttributes(thingTypeProperties.searchableAttributes())
+                .mqtt5Configuration(getMqtt5ConfigurationFromSdk(thingTypeProperties.mqtt5Configuration()))
+                .build();
+    }
+
+    static software.amazon.iot.thingtype.Mqtt5Configuration getMqtt5ConfigurationFromSdk(
+            Mqtt5Configuration mqtt5Configuration) {
+        if (mqtt5Configuration == null)
+        {
+            return software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                    .propagatingAttributes(Collections.emptyList())
                     .build();
         }
+        return software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                .propagatingAttributes(getPropagatingAttributesFromSdk(mqtt5Configuration.propagatingAttributes()))
+                .build();
+    }
+
+    static List<software.amazon.iot.thingtype.PropagatingAttribute> getPropagatingAttributesFromSdk(
+            List<PropagatingAttribute> propagatingAttributes) {
+        if (propagatingAttributes == null || propagatingAttributes.isEmpty())
+        {
+            return Collections.emptyList();
+        }
+        return propagatingAttributes.stream()
+                .map(Translator::buildPropagatingAttributeFromSdk)
+                .collect(Collectors.toList());
+    }
+
+    static software.amazon.iot.thingtype.PropagatingAttribute buildPropagatingAttributeFromSdk(
+            PropagatingAttribute sdkPropagatingAttribute) {
+        if (sdkPropagatingAttribute == null)
+        {
+            return software.amazon.iot.thingtype.PropagatingAttribute.builder().build();
+        }
+        software.amazon.iot.thingtype.PropagatingAttribute.PropagatingAttributeBuilder builder =
+                software.amazon.iot.thingtype.PropagatingAttribute.builder()
+                        .userPropertyKey(sdkPropagatingAttribute.userPropertyKey());
+        String thingAttribute = sdkPropagatingAttribute.thingAttribute();
+        if (thingAttribute != null && !thingAttribute.isEmpty()) {
+            builder.thingAttribute(thingAttribute);
+        } else {
+            builder.connectionAttribute(sdkPropagatingAttribute.connectionAttribute());
+        }
+        return builder.build();
     }
 
     /**

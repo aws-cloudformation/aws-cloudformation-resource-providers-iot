@@ -58,6 +58,9 @@ public class ReadHandlerTest extends AbstractTestBase {
                 .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
                         .thingTypeDescription(THING_TYPE_DESCRIPTION)
                         .searchableAttributes(Collections.emptyList())
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.emptyList())
+                                .build())
                         .build())
                 .tags(new HashSet<>())
                 .build();
@@ -72,6 +75,267 @@ public class ReadHandlerTest extends AbstractTestBase {
                                 .build())
                         .thingTypeProperties(ThingTypeProperties.builder()
                                 .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                .build())
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_WithMqtt5Configuration() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        ResourceModel expectedModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .id(TT_ID)
+                .arn(TT_ARN)
+                .deprecateThingType(false)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .searchableAttributes(Collections.emptyList())
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(
+                                        software.amazon.iot.thingtype.PropagatingAttribute.builder()
+                                                .userPropertyKey("testPropagatingAttribute")
+                                                .connectionAttribute("iot:Thing.ThingName")
+                                                .build()))
+                                .build())
+                        .build())
+                .tags(new HashSet<>())
+                .build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                .deprecated(false)
+                                .build())
+                        .thingTypeProperties(ThingTypeProperties.builder()
+                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                .mqtt5Configuration(software.amazon.awssdk.services.iot.model.Mqtt5Configuration.builder()
+                                        .propagatingAttributes(Collections.singletonList(
+                                                software.amazon.awssdk.services.iot.model.PropagatingAttribute.builder()
+                                                        .userPropertyKey("testPropagatingAttribute")
+                                                        .connectionAttribute("iot:Thing.ThingName")
+                                                        .build()))
+                                        .build())
+                                .build())
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_WithMqtt5ConfigurationAndThingAttribute() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .thingAttribute("testThingPropagatingAttribute")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        ResourceModel expectedModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .id(TT_ID)
+                .arn(TT_ARN)
+                .deprecateThingType(false)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .searchableAttributes(Collections.emptyList())
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(
+                                        software.amazon.iot.thingtype.PropagatingAttribute.builder()
+                                                .userPropertyKey("testPropagatingAttribute")
+                                                .thingAttribute("testThingPropagatingAttribute")
+                                                .build()))
+                                .build())
+                        .build())
+                .tags(new HashSet<>())
+                .build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                .deprecated(false)
+                                .build())
+                        .thingTypeProperties(ThingTypeProperties.builder()
+                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                .mqtt5Configuration(software.amazon.awssdk.services.iot.model.Mqtt5Configuration.builder()
+                                        .propagatingAttributes(Collections.singletonList(
+                                                software.amazon.awssdk.services.iot.model.PropagatingAttribute.builder()
+                                                        .userPropertyKey("testPropagatingAttribute")
+                                                        .thingAttribute("testThingPropagatingAttribute")
+                                                        .build()))
+                                        .build())
+                                .build())
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_WithEmptyMqtt5Configuration() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.emptyList())
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        ResourceModel expectedModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .id(TT_ID)
+                .arn(TT_ARN)
+                .deprecateThingType(false)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .searchableAttributes(Collections.emptyList())
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.emptyList())
+                                .build())
+                        .build())
+                .tags(new HashSet<>())
+                .build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                .deprecated(false)
+                                .build())
+                        .thingTypeProperties(ThingTypeProperties.builder()
+                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                .mqtt5Configuration(software.amazon.awssdk.services.iot.model.Mqtt5Configuration.builder()
+                                        .build())
+                                .build())
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(expectedModel);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_WithEmptyPropagatingAttributeList() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.emptyList())
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+
+        ResourceModel expectedModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .id(TT_ID)
+                .arn(TT_ARN)
+                .deprecateThingType(false)
+                .thingTypeProperties(software.amazon.iot.thingtype.ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .searchableAttributes(Collections.emptyList())
+                        .mqtt5Configuration(software.amazon.iot.thingtype.Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.emptyList())
+                                .build())
+                        .build())
+                .tags(new HashSet<>())
+                .build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .thingTypeMetadata(ThingTypeMetadata.builder()
+                                .deprecated(false)
+                                .build())
+                        .thingTypeProperties(ThingTypeProperties.builder()
+                                .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                                .mqtt5Configuration(software.amazon.awssdk.services.iot.model.Mqtt5Configuration.builder()
+                                        .propagatingAttributes(Collections.emptyList())
+                                        .build())
                                 .build())
                         .build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
