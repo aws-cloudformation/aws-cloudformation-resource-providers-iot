@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.iot.model.DescribeThingTypeResponse;
 import software.amazon.awssdk.services.iot.model.InvalidRequestException;
 import software.amazon.awssdk.services.iot.model.IotException;
 import software.amazon.awssdk.services.iot.model.Tag;
-import software.amazon.awssdk.services.iot.model.UpdateThingTypeRequest;
 import software.amazon.awssdk.services.iot.model.UpdateThingTypeResponse;
 import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -59,12 +58,10 @@ public class UpdateHandler extends BaseHandlerStd {
         validatePropertiesAreUpdatable(newResourceModel, prevResourceModel);
 
         boolean deprecateActionNeeded = isDeprecateActionNeeded(newResourceModel, prevResourceModel);
+        boolean updateActionNeeded = isUpdateActionNeeded(newResourceModel, prevResourceModel);
+
         return ProgressEvent.progress(newResourceModel, callbackContext)
-                .then(progress ->
-                        proxy.initiate(CALL_GRAPH, proxyClient, newResourceModel, callbackContext)
-                                .translateToServiceRequest((resourceModel) -> Translator.translateToUpdateThingTypeRequest(newResourceModel))
-                                .makeServiceCall(this::performUpdateThingType)
-                                .progress())
+                .then(progress -> (updateActionNeeded) ? performUpdateThingType(proxy, proxyClient, progress, request, newResourceModel) : progress)
                 .then(progress -> (deprecateActionNeeded) ? performDeprecateAction(proxy, proxyClient, progress, request, newResourceModel) :  progress)
                 .then(progress -> updateResourceTags(proxy, proxyClient, progress, request, newResourceModel))
                 .then(progress -> ProgressEvent.defaultSuccessHandler(newResourceModel));
@@ -97,7 +94,14 @@ public class UpdateHandler extends BaseHandlerStd {
             software.amazon.iot.thingtype.ThingTypeProperties newProps,
             software.amazon.iot.thingtype.ThingTypeProperties prevProps) {
         if (Objects.isNull(newProps) != Objects.isNull(prevProps)) {
-            throwCfnNotUpdatableException("ThingTypeProperties");
+            ThingTypeProperties propsToCheck = Objects.nonNull(prevProps) ? prevProps : newProps;
+
+            if (propsToCheck.getThingTypeDescription() != null) {
+                throwCfnNotUpdatableException("ThingTypeDescription");
+            }
+            if (propsToCheck.getSearchableAttributes() != null) {
+                throwCfnNotUpdatableException("SearchableAttributes");
+            }
         }
 
         if (Objects.nonNull(newProps) && Objects.nonNull(prevProps)) {
@@ -136,21 +140,37 @@ public class UpdateHandler extends BaseHandlerStd {
         );
     }
 
+    private boolean isUpdateActionNeeded(ResourceModel newResourceModel, ResourceModel prevResourceModel) {
+        return !Objects.equals(
+                newResourceModel.getThingTypeProperties(),
+                prevResourceModel.getThingTypeProperties()
+        );
+    }
+
     /**
      * Implement client invocation of the update request through the proxyClient, which is already initialised with
      * caller credentials, correct region and retry settings
      */
-    private Object performUpdateThingType(UpdateThingTypeRequest updateThingTypeRequest,
-                                          ProxyClient<IotClient> proxyClient) {
-        try {
-            UpdateThingTypeResponse updateThingTypeResponse = proxyClient.injectCredentialsAndInvokeV2(
-                    updateThingTypeRequest, proxyClient.client()::updateThingType);
-            logger.log(String.format("%s [%s] has successfully been updated.",
-                    ResourceModel.TYPE_NAME, updateThingTypeRequest.thingTypeName()));
-            return updateThingTypeResponse;
-        } catch (final IotException e) {
-            throw Translator.translateIotExceptionToHandlerException(updateThingTypeRequest.thingTypeName(), OPERATION, e);
-        }
+    private ProgressEvent<ResourceModel, CallbackContext> performUpdateThingType(
+            final AmazonWebServicesClientProxy proxy,
+            final ProxyClient<IotClient> proxyClient,
+            final ProgressEvent<ResourceModel, CallbackContext> progress,
+            final ResourceHandlerRequest<ResourceModel> request,
+            final ResourceModel newResourceModel) {
+        return proxy.initiate(CALL_GRAPH, proxyClient, newResourceModel, progress.getCallbackContext())
+                .translateToServiceRequest((resourceModel) -> Translator.translateToUpdateThingTypeRequest(newResourceModel))
+                .makeServiceCall((updateThingTypeRequest, proxyInvocation) -> {
+                    try {
+                        UpdateThingTypeResponse updateThingTypeResponse = proxyClient.injectCredentialsAndInvokeV2(
+                                updateThingTypeRequest, proxyClient.client()::updateThingType);
+                        logger.log(String.format("%s [%s] has successfully been updated.",
+                                ResourceModel.TYPE_NAME, updateThingTypeRequest.thingTypeName()));
+                        return updateThingTypeResponse;
+                    } catch (final IotException e) {
+                        throw Translator.translateIotExceptionToHandlerException(updateThingTypeRequest.thingTypeName(), OPERATION, e);
+                    }
+                })
+                .progress();
     }
 
 
@@ -164,7 +184,7 @@ public class UpdateHandler extends BaseHandlerStd {
             final ProgressEvent<ResourceModel, CallbackContext> progress,
             final ResourceHandlerRequest<ResourceModel> request,
             final ResourceModel newResourceModel) {
-        return proxy.initiate(CALL_GRAPH_TAG, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+        return proxy.initiate(CALL_GRAPH, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                 .translateToServiceRequest((resourceModel) -> Translator.translateToDeprecateRequest(newResourceModel, false))
                 .makeServiceCall((deprecateThingTypeRequest, proxyInvocation) -> {
                     try {

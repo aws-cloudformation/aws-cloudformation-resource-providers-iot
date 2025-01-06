@@ -23,7 +23,6 @@ import software.amazon.awssdk.services.iot.model.UnauthorizedException;
 import software.amazon.awssdk.services.iot.model.UntagResourceRequest;
 import software.amazon.awssdk.services.iot.model.UntagResourceResponse;
 import software.amazon.awssdk.services.iot.model.UpdateThingTypeRequest;
-import software.amazon.awssdk.services.iot.model.UpdateThingTypeResponse;
 import software.amazon.cloudformation.exceptions.CfnAccessDeniedException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
@@ -36,15 +35,18 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -91,10 +93,97 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getDeprecateThingType()).isEqualTo(newModel.getDeprecateThingType());
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleRequest_DeprecateThingTypeFromFalseToTrue() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .deprecateThingType(false)
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .deprecateThingType(true)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
+                .previousResourceState(prevModel)
+                .build();
+
+        when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
+                .thenReturn(DeprecateThingTypeResponse.builder()
+                        .build());
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .thingTypeMetadata(ThingTypeMetadata.builder().deprecated(true).build())
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel().getDeprecateThingType()).isEqualTo(newModel.getDeprecateThingType());
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
     @Test
     public void handleRequest_UnDeprecateThingType() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .deprecateThingType(true)
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
+                .previousResourceState(prevModel)
+                .build();
+
+        when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
+                .thenReturn(DeprecateThingTypeResponse.builder()
+                        .build());
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .thingTypeMetadata(ThingTypeMetadata.builder().deprecated(false).build())
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel().getDeprecateThingType()).isEqualTo(newModel.getDeprecateThingType());
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleRequest_UnDeprecateThingTypeFromTrueToFalse() {
         final ResourceModel prevModel = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .deprecateThingType(true)
@@ -132,6 +221,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getDeprecateThingType()).isEqualTo(newModel.getDeprecateThingType());
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
     @Test
@@ -348,7 +439,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_UpdateThingTypeProperties_ShouldFail() {
+    public void handleRequest_ShouldFailOnRemovingDescriptionWithProperties() {
         final ResourceModel prevModel = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .thingTypeProperties(ThingTypeProperties.builder()
@@ -357,7 +448,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceModel newModel = ResourceModel.builder()
                 .thingTypeName(TT_Name)
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -365,6 +455,28 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleRequest_ShouldFailOnRemovingSearchableAttributeWithProperties() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .searchableAttributes(Collections.emptyList())
+                        .build())
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
+                .previousResourceState(prevModel)
+                .build();
+
+        assertThrows(CfnNotUpdatableException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
@@ -380,7 +492,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .thingTypeName(TT_Name)
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .build())
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -388,6 +499,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
@@ -403,7 +515,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .thingTypeDescription(THING_TYPE_DESCRIPTION)
                         .build())
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -411,6 +522,28 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleRequest_UpdateThingTypeDescription_ShouldFailOnAdditionWithProperties() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .thingTypeDescription(THING_TYPE_DESCRIPTION)
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
+                .previousResourceState(prevModel)
+                .build();
+
+        assertThrows(CfnNotUpdatableException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
@@ -427,7 +560,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .thingTypeDescription("Update " + THING_TYPE_DESCRIPTION)
                         .build())
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -435,6 +567,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
@@ -450,7 +583,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .searchableAttributes(Arrays.asList("A1", "A2", "A3"))
                         .build())
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -458,6 +590,28 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleRequest_UpdateSearchableAttributes_ShouldFailOnAdditionWithProperties() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .searchableAttributes(Arrays.asList("A1", "A2", "A3"))
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
+                .previousResourceState(prevModel)
+                .build();
+
+        assertThrows(CfnNotUpdatableException.class, () ->
+                handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
@@ -473,7 +627,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .thingTypeName(TT_Name)
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .build())
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -481,6 +634,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
     }
 
@@ -497,7 +651,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .thingTypeProperties(ThingTypeProperties.builder()
                         .searchableAttributes(Arrays.asList("A1", "A2", "A3", "A4"))
                         .build())
-                .deprecateThingType(true)
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(newModel)
                 .previousResourceState(prevModel)
@@ -505,7 +658,92 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotUpdatableException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
         verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleUpdate_AddPropagatingAttribute() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder().build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel().getDeprecateThingType()).isEqualTo(newModel.getDeprecateThingType());
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
+    }
+
+    @Test
+    public void handleUpdate_RemovePropagatingAttribute() {
+        final ResourceModel prevModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenReturn(DescribeThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .build());
+        when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
+                .thenReturn(ListTagsForResourceResponse.builder().build());
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getCallbackContext()).isNull();
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(response.getResourceModel().getDeprecateThingType()).isEqualTo(newModel.getDeprecateThingType());
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -513,14 +751,25 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
         when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
                 .thenThrow(InternalFailureException.class);
 
         assertThrows(CfnInternalFailureException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -528,14 +777,25 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
         when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
                 .thenThrow(InvalidRequestException.class);
 
         assertThrows(CfnInvalidRequestException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -543,14 +803,25 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
         when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
                 .thenThrow(ResourceNotFoundException.class);
 
         assertThrows(CfnNotFoundException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -558,14 +829,25 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
         when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
                 .thenThrow(ServiceUnavailableException.class);
 
         assertThrows(CfnGeneralServiceException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -573,14 +855,25 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
         when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
                 .thenThrow(ThrottlingException.class);
 
         assertThrows(CfnThrottlingException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -588,14 +881,25 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .thingTypeProperties(ThingTypeProperties.builder()
+                        .mqtt5Configuration(Mqtt5Configuration.builder()
+                                .propagatingAttributes(Collections.singletonList(PropagatingAttribute.builder()
+                                        .userPropertyKey("testPropagatingAttribute")
+                                        .connectionAttribute("iot:Thing.ThingName")
+                                        .build()))
+                                .build())
+                        .build())
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
         when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
                 .thenThrow(UnauthorizedException.class);
 
         assertThrows(CfnAccessDeniedException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, times(1)).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
 
@@ -610,14 +914,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
                 .thenThrow(InternalFailureException.class);
 
         assertThrows(CfnInternalFailureException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -631,14 +934,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
                 .thenThrow(InvalidRequestException.class);
 
         assertThrows(CfnInvalidRequestException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -652,14 +954,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
                 .thenThrow(ResourceNotFoundException.class);
 
         assertThrows(CfnNotFoundException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -673,14 +974,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
                 .thenThrow(ServiceUnavailableException.class);
 
         assertThrows(CfnGeneralServiceException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -694,14 +994,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
                 .thenThrow(ThrottlingException.class);
 
         assertThrows(CfnThrottlingException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -715,14 +1014,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
                 .build();
         final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(prevModel, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.deprecateThingType(any(DeprecateThingTypeRequest.class)))
                 .thenThrow(UnauthorizedException.class);
 
         assertThrows(CfnAccessDeniedException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
     }
 
     @Test
@@ -730,17 +1028,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenThrow(InternalFailureException.class);
 
         assertThrows(CfnInternalFailureException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
     }
 
     @Test
@@ -748,17 +1059,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenThrow(InvalidRequestException.class);
 
         assertThrows(CfnInvalidRequestException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
     }
 
     @Test
@@ -766,17 +1090,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenThrow(ResourceNotFoundException.class);
 
         assertThrows(CfnNotFoundException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
     }
 
     @Test
@@ -784,17 +1121,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenThrow(ServiceUnavailableException.class);
 
         assertThrows(CfnGeneralServiceException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
     }
 
     @Test
@@ -802,17 +1152,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenThrow(ThrottlingException.class);
 
         assertThrows(CfnThrottlingException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
     }
 
     @Test
@@ -820,17 +1183,30 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenThrow(UnauthorizedException.class);
 
         assertThrows(CfnAccessDeniedException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
     }
 
     @Test
@@ -838,10 +1214,22 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
@@ -849,9 +1237,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnInternalFailureException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
     }
 
     @Test
@@ -859,10 +1248,22 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
@@ -870,9 +1271,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnInvalidRequestException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
     }
 
     @Test
@@ -880,10 +1282,22 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
@@ -891,9 +1305,10 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnNotFoundException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
     }
 
     @Test
@@ -901,10 +1316,22 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model).build();
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel).build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
@@ -912,294 +1339,518 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         assertThrows(CfnThrottlingException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
     }
 
     @Test
     public void handleRequest_TagResource_InternalFailureException() {
-        Map<String, String> tags= new HashMap<>();
-        tags.put("k1", "v1");
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
-                .desiredResourceTags(tags)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+            put("k2", "v2");
+            put("k3", "v3");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
-                .thenReturn(ListTagsForResourceResponse.builder().build());
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .tags(Collections.singleton(
+                                Tag.builder()
+                                        .key("k1")
+                                        .value("v1")
+                                        .build()
+                        ))
+                        .build());
         when(iotClient.tagResource(any(TagResourceRequest.class)))
                 .thenThrow(InternalFailureException.class);
 
         assertThrows(CfnInternalFailureException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
-        verify(iotClient).tagResource(any(TagResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, times(1)).tagResource(any(TagResourceRequest.class));
         verify(iotClient, never()).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_TagResource_InvalidRequestException() {
-        Map<String, String> tags= new HashMap<>();
-        tags.put("k1", "v1");
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
-                .desiredResourceTags(tags)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+            put("k2", "v2");
+            put("k3", "v3");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
-                .thenReturn(ListTagsForResourceResponse.builder().build());
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .tags(Collections.singleton(
+                                Tag.builder()
+                                        .key("k1")
+                                        .value("v1")
+                                        .build()
+                        ))
+                        .build());
         when(iotClient.tagResource(any(TagResourceRequest.class)))
                 .thenThrow(InvalidRequestException.class);
 
         assertThrows(CfnInvalidRequestException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
-        verify(iotClient).tagResource(any(TagResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, times(1)).tagResource(any(TagResourceRequest.class));
         verify(iotClient, never()).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_TagResource_LimitExceededException() {
-        Map<String, String> tags= new HashMap<>();
-        tags.put("k1", "v1");
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
-                .desiredResourceTags(tags)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+            put("k2", "v2");
+            put("k3", "v3");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
-                .thenReturn(ListTagsForResourceResponse.builder().build());
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .tags(Collections.singleton(
+                                Tag.builder()
+                                        .key("k1")
+                                        .value("v1")
+                                        .build()
+                        ))
+                        .build());
         when(iotClient.tagResource(any(TagResourceRequest.class)))
                 .thenThrow(LimitExceededException.class);
 
         assertThrows(CfnServiceLimitExceededException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
-        verify(iotClient).tagResource(any(TagResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, times(1)).tagResource(any(TagResourceRequest.class));
         verify(iotClient, never()).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_TagResource_ResourceNotFoundException() {
-        Map<String, String> tags= new HashMap<>();
-        tags.put("k1", "v1");
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
-                .desiredResourceTags(tags)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+            put("k2", "v2");
+            put("k3", "v3");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
-                .thenReturn(ListTagsForResourceResponse.builder().build());
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .tags(Collections.singleton(
+                                Tag.builder()
+                                        .key("k1")
+                                        .value("v1")
+                                        .build()
+                        ))
+                        .build());
         when(iotClient.tagResource(any(TagResourceRequest.class)))
                 .thenThrow(ResourceNotFoundException.class);
 
         assertThrows(CfnNotFoundException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
-        verify(iotClient).tagResource(any(TagResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, times(1)).tagResource(any(TagResourceRequest.class));
         verify(iotClient, never()).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_TagResource_ThrottlingException() {
-        Map<String, String> tags= new HashMap<>();
-        tags.put("k1", "v1");
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
-                .desiredResourceTags(tags)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+            put("k2", "v2");
+            put("k3", "v3");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
-                .thenReturn(ListTagsForResourceResponse.builder().build());
+                .thenReturn(ListTagsForResourceResponse.builder()
+                        .tags(Collections.singleton(
+                                Tag.builder()
+                                        .key("k1")
+                                        .value("v1")
+                                        .build()
+                        ))
+                        .build());
         when(iotClient.tagResource(any(TagResourceRequest.class)))
                 .thenThrow(ThrottlingException.class);
 
         assertThrows(CfnThrottlingException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
-        verify(iotClient).tagResource(any(TagResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, times(1)).tagResource(any(TagResourceRequest.class));
         verify(iotClient, never()).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_UntagResource_InternalFailureException() {
-        Set<Tag> apiResponseTags = new HashSet<>();
-        apiResponseTags.add(Tag.builder()
-                .key("k1")
-                .value("v1")
-                .build());
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
                 .thenReturn(ListTagsForResourceResponse.builder()
-                        .tags(apiResponseTags)
+                        .tags(Arrays.asList(
+                                Tag.builder().key("k1").value("v1").build(),
+                                Tag.builder().key("k2").value("v2").build(),
+                                Tag.builder().key("k3").value("v3").build()
+                        ))
                         .build());
         when(iotClient.untagResource(any(UntagResourceRequest.class)))
                 .thenThrow(InternalFailureException.class);
 
         assertThrows(CfnInternalFailureException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
         verify(iotClient, never()).tagResource(any(TagResourceRequest.class));
-        verify(iotClient).untagResource(any(UntagResourceRequest.class));
+        verify(iotClient, times(1)).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_UntagResource_InvalidRequestException() {
-        Set<Tag> apiResponseTags = new HashSet<>();
-        apiResponseTags.add(Tag.builder()
-                .key("k1")
-                .value("v1")
-                .build());
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
                 .thenReturn(ListTagsForResourceResponse.builder()
-                        .tags(apiResponseTags)
+                        .tags(Arrays.asList(
+                                Tag.builder().key("k1").value("v1").build(),
+                                Tag.builder().key("k2").value("v2").build(),
+                                Tag.builder().key("k3").value("v3").build()
+                        ))
                         .build());
         when(iotClient.untagResource(any(UntagResourceRequest.class)))
                 .thenThrow(InvalidRequestException.class);
 
         assertThrows(CfnInvalidRequestException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
         verify(iotClient, never()).tagResource(any(TagResourceRequest.class));
-        verify(iotClient).untagResource(any(UntagResourceRequest.class));
+        verify(iotClient, times(1)).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_UntagResource_ResourceNotFoundException() {
-        Set<Tag> apiResponseTags = new HashSet<>();
-        apiResponseTags.add(Tag.builder()
-                .key("k1")
-                .value("v1")
-                .build());
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
                 .thenReturn(ListTagsForResourceResponse.builder()
-                        .tags(apiResponseTags)
+                        .tags(Arrays.asList(
+                                Tag.builder().key("k1").value("v1").build(),
+                                Tag.builder().key("k2").value("v2").build(),
+                                Tag.builder().key("k3").value("v3").build()
+                        ))
                         .build());
         when(iotClient.untagResource(any(UntagResourceRequest.class)))
                 .thenThrow(ResourceNotFoundException.class);
 
         assertThrows(CfnNotFoundException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
         verify(iotClient, never()).tagResource(any(TagResourceRequest.class));
-        verify(iotClient).untagResource(any(UntagResourceRequest.class));
+        verify(iotClient, times(1)).untagResource(any(UntagResourceRequest.class));
     }
 
     @Test
     public void handleRequest_UntagResource_ThrottlingException() {
-        Set<Tag> apiResponseTags = new HashSet<>();
-        apiResponseTags.add(Tag.builder()
-                .key("k1")
-                .value("v1")
-                .build());
-
         final ResourceModel model = ResourceModel.builder()
                 .thingTypeName(TT_Name)
+                .tags(new HashMap<String, String>() {{
+                    put("k1", "v1");
+                    put("k2", "v2");
+                    put("k3", "v3");
+                }}.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
                 .build();
-        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model)
+        final Map<String, String> updatedModelTags = new HashMap<String, String>() {{
+            put("k1", "v1");
+        }};
+        final ResourceModel newModel = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .tags(updatedModelTags.entrySet()
+                        .stream()
+                        .map(entry -> software.amazon.iot.thingtype.Tag.builder()
+                                .key(entry.getKey())
+                                .value(entry.getValue())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .build();
+        final ResourceHandlerRequest<ResourceModel> request = defaultRequestBuilder(model, newModel)
+                .desiredResourceTags(updatedModelTags)
                 .build();
 
-        when(iotClient.updateThingType(any(UpdateThingTypeRequest.class)))
-                .thenReturn(UpdateThingTypeResponse.builder().build());
         when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
                 .thenReturn(DescribeThingTypeResponse.builder().build());
         when(iotClient.listTagsForResource(any(ListTagsForResourceRequest.class)))
                 .thenReturn(ListTagsForResourceResponse.builder()
-                        .tags(apiResponseTags)
+                        .tags(Arrays.asList(
+                                Tag.builder().key("k1").value("v1").build(),
+                                Tag.builder().key("k2").value("v2").build(),
+                                Tag.builder().key("k3").value("v3").build()
+                        ))
                         .build());
         when(iotClient.untagResource(any(UntagResourceRequest.class)))
                 .thenThrow(ThrottlingException.class);
 
         assertThrows(CfnThrottlingException.class, () ->
                 handler.handleRequest(proxy, request, new CallbackContext(),proxyClient,LOGGER));
-        verify(iotClient).updateThingType(any(UpdateThingTypeRequest.class));
-        verify(iotClient).describeThingType(any(DescribeThingTypeRequest.class));
-        verify(iotClient).listTagsForResource(any(ListTagsForResourceRequest.class));
+        verify(iotClient, never()).updateThingType(any(UpdateThingTypeRequest.class));
+        verify(iotClient, never()).deprecateThingType(any(DeprecateThingTypeRequest.class));
+        verify(iotClient, times(1)).describeThingType(any(DescribeThingTypeRequest.class));
+        verify(iotClient, times(1)).listTagsForResource(any(ListTagsForResourceRequest.class));
         verify(iotClient, never()).tagResource(any(TagResourceRequest.class));
-        verify(iotClient).untagResource(any(UntagResourceRequest.class));
+        verify(iotClient, times(1)).untagResource(any(UntagResourceRequest.class));
     }
 }
