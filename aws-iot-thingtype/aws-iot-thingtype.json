@@ -122,11 +122,7 @@
     "tagUpdatable": true,
     "cloudFormationSystemTags": true,
     "tagProperty": "/properties/Tags",
-    "permissions": [
-      "iot:ListTagsForResource",
-      "iot:TagResource",
-      "iot:UntagResource"
-    ]
+    "permissions": ["iot:ListTagsForResource", "iot:TagResource", "iot:UntagResource"]
   },
   "readOnlyProperties": [
     "/properties/Arn",

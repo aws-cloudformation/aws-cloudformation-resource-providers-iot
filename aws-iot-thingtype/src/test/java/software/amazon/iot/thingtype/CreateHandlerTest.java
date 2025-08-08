@@ -2,6 +2,7 @@ package software.amazon.iot.thingtype;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.CreateThingTypeRequest;
 import software.amazon.awssdk.services.iot.model.CreateThingTypeResponse;
@@ -123,6 +124,58 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleCreate_withResourceAndStackTags() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingTypeName(TT_Name)
+                .id(TT_ID)
+                .tags(new HashSet<>(Collections.singletonList(
+                        software.amazon.iot.thingtype.Tag.builder().key("resourceKey1").value("resourceValue1").build()
+                )))
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .logicalResourceIdentifier("LRI")
+                .clientRequestToken("client request token")
+                .desiredResourceTags(Collections.singletonMap("stackKey1", "stackValue1"))
+                .build();
+
+        when(iotClient.describeThingType(any(DescribeThingTypeRequest.class)))
+                .thenThrow(ResourceNotFoundException.class);
+        when(iotClient.createThingType(any(CreateThingTypeRequest.class)))
+                .thenReturn(CreateThingTypeResponse.builder()
+                        .thingTypeArn(TT_ARN)
+                        .thingTypeId(TT_ID)
+                        .thingTypeName(TT_Name)
+                        .build());
+
+        // Capture the CreateThingType request to verify parameters
+        ArgumentCaptor<CreateThingTypeRequest> createRequestCaptor =
+                ArgumentCaptor.forClass(CreateThingTypeRequest.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        verify(iotClient).createThingType(createRequestCaptor.capture());
+        CreateThingTypeRequest createRequest = createRequestCaptor.getValue();
+        assertThat(createRequest.thingTypeName()).isEqualTo(TT_Name);
+        assertThat(createRequest.tags()).hasSize(2);
+        assertThat(createRequest.tags()).contains(
+                software.amazon.awssdk.services.iot.model.Tag.builder().key("stackKey1").value("stackValue1").build(),
+                software.amazon.awssdk.services.iot.model.Tag.builder().key("resourceKey1").value("resourceValue1").build()
+        );
+
+        verify(iotClient).createThingType(any(CreateThingTypeRequest.class));
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel().getThingTypeName()).isNotNull();
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
