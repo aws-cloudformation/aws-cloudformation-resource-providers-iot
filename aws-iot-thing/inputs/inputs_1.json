@@ -1,0 +1,21 @@
+{
+  "CreateInputs": {
+    "ThingName": "{{uuid}}",
+    "AttributePayload": {
+      "Attributes": {
+        "testAttribute1": "testAttributeValue1"
+      }
+    }
+  },
+  "PatchInputs": [
+    {
+      "op": "replace",
+      "path": "/AttributePayload",
+      "value": {
+        "Attributes": {
+          "testAttribute2": "testAttributeValue2"
+        }
+      }
+    }
+  ]
+}
