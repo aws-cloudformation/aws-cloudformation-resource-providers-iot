@@ -67,7 +67,7 @@ public class AbstractTestBase {
             public <RequestT extends AwsRequest, ResponseT extends AwsResponse> ResponseInputStream<ResponseT>
             injectCredentialsAndInvokeV2InputStream(
                     RequestT requestT, Function<RequestT,
-                    ResponseInputStream<ResponseT>> function
+                            ResponseInputStream<ResponseT>> function
             ) {
                 throw new UnsupportedOperationException();
             }
@@ -112,5 +112,14 @@ public class AbstractTestBase {
                 .logicalResourceIdentifier(LOGICAL_ID)
                 .desiredResourceState(model)
                 .previousResourceState(model);
+    }
+
+    protected ResourceHandlerRequest.ResourceHandlerRequestBuilder<ResourceModel> defaultRequestBuilder(
+            ResourceModel previousModel, ResourceModel newModel) {
+        return ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken(REQUEST_TOKEN)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceState(newModel)
+                .previousResourceState(previousModel);
     }
 }

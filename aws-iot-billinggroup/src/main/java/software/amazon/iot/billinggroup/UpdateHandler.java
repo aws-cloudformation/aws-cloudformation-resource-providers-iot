@@ -1,7 +1,6 @@
 package software.amazon.iot.billinggroup;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeBillingGroupResponse;
@@ -17,7 +16,9 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -112,37 +113,55 @@ public class UpdateHandler extends BaseHandlerStd {
         return proxy.initiate(CALL_GRAPH_TAG, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                 .translateToServiceRequest(Translator::translateToReadRequest)
                 .makeServiceCall((getRequest, proxyInvocation) -> {
-                        try {
-                            DescribeBillingGroupResponse describeBillingGroupResponse = proxyInvocation.injectCredentialsAndInvokeV2(getRequest,
-                                    proxyInvocation.client()::describeBillingGroup);
+                    try {
+                        DescribeBillingGroupResponse describeBillingGroupResponse = proxyInvocation.injectCredentialsAndInvokeV2(getRequest,
+                                proxyInvocation.client()::describeBillingGroup);
 
-                            final String resourceArn = describeBillingGroupResponse.billingGroupArn();
-                            final Set<Tag> previousTags = new HashSet<>(listTags(proxyClient, resourceArn));
-                            final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
+                        final String resourceArn = describeBillingGroupResponse.billingGroupArn();
 
-                            final Set<Tag> tagsToRemove = Sets.difference(previousTags, desiredTags);
-                            final Set<Tag> tagsToAdd = Sets.difference(desiredTags, previousTags);
+                        // Desired tags (including user-defined and stack tags)
+                        final Map<String, String> desiredTags = new HashMap<>();
+                        Optional.ofNullable(request.getDesiredResourceTags())
+                                .ifPresent(desiredTags::putAll);
+                        Optional.ofNullable(request.getDesiredResourceState())
+                                .map(ResourceModel::getTags)
+                                .map(Translator::translateTagstoMap)
+                                .ifPresent(desiredTags::putAll);
+                        final Set<Tag> desiredTagSet = Translator.translateTagsToSdk(desiredTags);
 
-                            if (CollectionUtils.isNotEmpty(tagsToRemove)) {
-                                proxyClient.injectCredentialsAndInvokeV2(
-                                        Translator.untagResourceRequest(resourceArn, tagsToRemove),
-                                        proxyClient.client()::untagResource
-                                );
-                                logger.log(String.format("%s [%s] untagResourceRequest successfully completed.",
-                                        ResourceModel.TYPE_NAME, resourceArn));
-                            }
-                            if (CollectionUtils.isNotEmpty(tagsToAdd)) {
-                                proxyClient.injectCredentialsAndInvokeV2(
-                                        Translator.tagResourceRequest(resourceArn, tagsToAdd),
-                                        proxyClient.client()::tagResource
-                                );
-                                logger.log(String.format("%s [%s] tagResourceRequest successfully completed.",
-                                        ResourceModel.TYPE_NAME, resourceArn));
-                            }
-                            return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
-                        } catch (IotException e) {
-                            throw Translator.translateIotExceptionToHandlerException(getRequest.billingGroupName(), OPERATION, e);
+                        // Existing resource State tags (including user-defined and stack tags)
+                        final Map<String, String> existingTags = new HashMap<>();
+                        Optional.ofNullable(request.getPreviousResourceState())
+                                .map(ResourceModel::getTags)
+                                .map(Translator::translateTagstoMap)
+                                .ifPresent(existingTags::putAll);
+                        Optional.ofNullable(request.getPreviousResourceTags())
+                                .ifPresent(existingTags::putAll);
+                        final Set<Tag> existingTagSet = Translator.translateTagsToSdk(existingTags);
+
+                        final Set<Tag> tagsToRemove = Sets.difference(existingTagSet, desiredTagSet);
+                        final Set<Tag> tagsToAdd = Sets.difference(desiredTagSet, existingTagSet);
+
+                        if (!tagsToRemove.isEmpty()) {
+                            proxyClient.injectCredentialsAndInvokeV2(
+                                    Translator.untagResourceRequest(resourceArn, tagsToRemove),
+                                    proxyClient.client()::untagResource
+                            );
+                            logger.log(String.format("%s [%s] untagResourceRequest successfully completed.",
+                                    ResourceModel.TYPE_NAME, resourceArn));
                         }
+                        if (!tagsToAdd.isEmpty()) {
+                            proxyClient.injectCredentialsAndInvokeV2(
+                                    Translator.tagResourceRequest(resourceArn, tagsToAdd),
+                                    proxyClient.client()::tagResource
+                            );
+                            logger.log(String.format("%s [%s] tagResourceRequest successfully completed.",
+                                    ResourceModel.TYPE_NAME, resourceArn));
+                        }
+                        return ProgressEvent.progress(progress.getResourceModel(), progress.getCallbackContext());
+                    } catch (IotException e) {
+                        throw Translator.translateIotExceptionToHandlerException(getRequest.billingGroupName(), OPERATION, e);
+                    }
                 })
                 .progress();
     }

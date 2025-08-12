@@ -2,6 +2,7 @@ package software.amazon.iot.billinggroup;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.CreateBillingGroupRequest;
 import software.amazon.awssdk.services.iot.model.CreateBillingGroupResponse;
@@ -19,6 +20,9 @@ import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
+
+import java.util.Collections;
+import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -90,6 +94,62 @@ public class CreateHandlerTest extends AbstractTestBase {
         final ProgressEvent<ResourceModel, CallbackContext> response =
                 handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
 
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel().getBillingGroupName()).isNotNull();
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleCreate_withResourceAndStackTags() {
+        final ResourceModel model = ResourceModel.builder()
+                .billingGroupName(BG_Name)
+                .id(BG_ID)
+                .billingGroupProperties(software.amazon.iot.billinggroup.BillingGroupProperties.builder()
+                        .billingGroupDescription(BILLING_GROUP_DESCRIPTION)
+                        .build())
+                .tags(new HashSet<>(Collections.singletonList(
+                        Tag.builder().key("resourceKey1").value("resourceValue1").build()
+                )))
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .logicalResourceIdentifier("LRI")
+                .clientRequestToken("client request token")
+                .desiredResourceTags(Collections.singletonMap("stackKey1", "stackValue1"))
+                .build();
+
+        when(iotClient.describeBillingGroup(any(DescribeBillingGroupRequest.class)))
+                .thenThrow(ResourceNotFoundException.class);
+        when(iotClient.createBillingGroup(any(CreateBillingGroupRequest.class)))
+                .thenReturn(CreateBillingGroupResponse.builder()
+                        .billingGroupArn(BG_ARN)
+                        .billingGroupId(BG_ID)
+                        .billingGroupName(BG_Name)
+                        .build());
+
+        // Capture the CreateBillingGroup request to verify parameters
+        ArgumentCaptor<CreateBillingGroupRequest> createRequestCaptor =
+                ArgumentCaptor.forClass(CreateBillingGroupRequest.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        verify(iotClient).createBillingGroup(createRequestCaptor.capture());
+        CreateBillingGroupRequest createRequest = createRequestCaptor.getValue();
+        assertThat(createRequest.billingGroupName()).isEqualTo(BG_Name);
+        assertThat(createRequest.tags()).hasSize(2);
+        assertThat(createRequest.tags()).contains(
+                software.amazon.awssdk.services.iot.model.Tag.builder().key("stackKey1").value("stackValue1").build(),
+                software.amazon.awssdk.services.iot.model.Tag.builder().key("resourceKey1").value("resourceValue1").build()
+        );
+        assertThat(createRequest.billingGroupProperties().billingGroupDescription()).isEqualTo(BILLING_GROUP_DESCRIPTION);
+
+        verify(iotClient).createBillingGroup(any(CreateBillingGroupRequest.class));
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);

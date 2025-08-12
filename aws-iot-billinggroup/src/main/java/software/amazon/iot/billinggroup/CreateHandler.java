@@ -17,7 +17,9 @@ import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.resource.IdentifierUtils;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The handler creates the BILLING-GROUP resource - if the name is not provided, it is auto-generated
@@ -43,7 +45,13 @@ public class CreateHandler extends BaseHandlerStd {
 
         final ResourceModel resourceModel = request.getDesiredResourceState();
 
-        final Map<String,String> tags = request.getDesiredResourceTags();
+        // consolidate all tags
+        final Map<String, String> tags = new HashMap<>();
+        // add user-defined tags in model
+        Optional.ofNullable(resourceModel.getTags())
+                .ifPresent(modelTags -> tags.putAll(Translator.translateTagstoMap(modelTags)));
+        // add stack-level tags
+        Optional.ofNullable(request.getDesiredResourceTags()).ifPresent(tags::putAll);
 
         // create a billing group name if not provided by user
         if (StringUtils.isNullOrEmpty(resourceModel.getBillingGroupName())) {
