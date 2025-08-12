@@ -1,7 +1,6 @@
 package software.amazon.iot.thinggroup;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.iot.IotClient;
 import software.amazon.awssdk.services.iot.model.DescribeThingGroupResponse;
@@ -19,7 +18,9 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -164,13 +165,29 @@ public class UpdateHandler extends BaseHandlerStd {
                                 proxyInvocation.client()::describeThingGroup);
 
                         final String resourceArn = describeThingGroupResponse.thingGroupArn();
-                        final Set<Tag> previousTags = new HashSet<>(listTags(proxyClient, resourceArn));
-                        final Set<Tag> desiredTags = Translator.translateTagsToSdk(request.getDesiredResourceTags());
+                        // Desired tags (including user-defined and stack tags)
+                        final Map<String, String> desiredTags = new HashMap<>();
+                        Optional.ofNullable(request.getDesiredResourceTags())
+                                .ifPresent(desiredTags::putAll);
+                        Optional.ofNullable(request.getDesiredResourceState())
+                                .map(ResourceModel::getTags)
+                                .map(Translator::translateTagstoMap)
+                                .ifPresent(desiredTags::putAll);
+                        final Set<Tag> desiredTagSet = Translator.translateTagsToSdk(desiredTags);
 
-                        final Set<Tag> tagsToRemove = Sets.difference(previousTags, desiredTags);
-                        final Set<Tag> tagsToAdd = Sets.difference(desiredTags, previousTags);
+                        // Existing resource State tags (including user-defined and stack tags)
+                        final Map<String, String> existingTags = new HashMap<>();
+                        Optional.ofNullable(request.getPreviousResourceState())
+                                .map(ResourceModel::getTags)
+                                .map(Translator::translateTagstoMap)
+                                .ifPresent(existingTags::putAll);
+                        Optional.ofNullable(request.getPreviousResourceTags())
+                                .ifPresent(existingTags::putAll);
+                        final Set<Tag> existingTagSet = Translator.translateTagsToSdk(existingTags);
+                        final Set<Tag> tagsToRemove = Sets.difference(existingTagSet, desiredTagSet);
+                        final Set<Tag> tagsToAdd = Sets.difference(desiredTagSet, existingTagSet);
 
-                        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(tagsToRemove)) {
+                        if (!tagsToRemove.isEmpty()) {
                             proxyClient.injectCredentialsAndInvokeV2(
                                     Translator.untagResourceRequest(resourceArn, tagsToRemove),
                                     proxyClient.client()::untagResource
@@ -178,7 +195,7 @@ public class UpdateHandler extends BaseHandlerStd {
                             logger.log(String.format("%s [%s] untagResourceRequest successfully completed.",
                                     ResourceModel.TYPE_NAME, resourceArn));
                         }
-                        if (CollectionUtils.isNotEmpty(tagsToAdd)) {
+                        if (!tagsToAdd.isEmpty()) {
                             proxyClient.injectCredentialsAndInvokeV2(
                                     Translator.tagResourceRequest(resourceArn, tagsToAdd),
                                     proxyClient.client()::tagResource

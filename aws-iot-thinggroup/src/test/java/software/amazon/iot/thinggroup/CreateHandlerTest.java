@@ -2,6 +2,7 @@ package software.amazon.iot.thinggroup;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.iot.model.CreateDynamicThingGroupRequest;
 import software.amazon.awssdk.services.iot.model.CreateDynamicThingGroupResponse;
@@ -29,6 +30,7 @@ import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -174,6 +176,62 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getResourceModel().getTags().size()).isEqualTo(apiResponseTags.size());
+    }
+
+    @Test
+    public void handleCreate_withResourceAndStackTags() {
+        final ResourceModel model = ResourceModel.builder()
+                .thingGroupName(TG_NAME)
+                .id(TG_ID)
+                .thingGroupProperties(software.amazon.iot.thinggroup.ThingGroupProperties.builder()
+                        .thingGroupDescription(TG_DESCRIPTION)
+                        .build())
+                .tags(new HashSet<>(Collections.singletonList(
+                        software.amazon.iot.thinggroup.Tag.builder().key("resourceKey1").value("resourceValue1").build()
+                )))
+                .build();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .logicalResourceIdentifier("LRI")
+                .clientRequestToken("client request token")
+                .desiredResourceTags(Collections.singletonMap("stackKey1", "stackValue1"))
+                .build();
+
+        when(iotClient.describeThingGroup(any(DescribeThingGroupRequest.class)))
+                .thenThrow(ResourceNotFoundException.class);
+        when(iotClient.createThingGroup(any(CreateThingGroupRequest.class)))
+                .thenReturn(CreateThingGroupResponse.builder()
+                        .thingGroupArn(TG_ARN)
+                        .thingGroupId(TG_ID)
+                        .thingGroupName(TG_NAME)
+                        .build());
+
+        // Capture the CreateThingGroup request to verify parameters
+        ArgumentCaptor<CreateThingGroupRequest> createRequestCaptor =
+                ArgumentCaptor.forClass(CreateThingGroupRequest.class);
+
+        final ProgressEvent<ResourceModel, CallbackContext> response =
+                handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, LOGGER);
+
+        verify(iotClient).createThingGroup(createRequestCaptor.capture());
+        CreateThingGroupRequest createRequest = createRequestCaptor.getValue();
+        assertThat(createRequest.thingGroupName()).isEqualTo(TG_NAME);
+        assertThat(createRequest.tags()).hasSize(2);
+        assertThat(createRequest.tags()).contains(
+                software.amazon.awssdk.services.iot.model.Tag.builder().key("stackKey1").value("stackValue1").build(),
+                software.amazon.awssdk.services.iot.model.Tag.builder().key("resourceKey1").value("resourceValue1").build()
+        );
+        assertThat(createRequest.thingGroupProperties().thingGroupDescription()).isEqualTo(TG_DESCRIPTION);
+
+        verify(iotClient).createThingGroup(any(CreateThingGroupRequest.class));
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel().getThingGroupName()).isNotNull();
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
     }
 
     @Test
