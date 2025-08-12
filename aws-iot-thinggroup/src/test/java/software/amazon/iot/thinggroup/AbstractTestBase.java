@@ -115,4 +115,13 @@ public class AbstractTestBase {
                 .desiredResourceState(model)
                 .previousResourceState(model);
     }
+
+    protected ResourceHandlerRequest.ResourceHandlerRequestBuilder<ResourceModel> defaultRequestBuilder(
+            ResourceModel previousModel, ResourceModel newModel) {
+        return ResourceHandlerRequest.<ResourceModel>builder()
+                .clientRequestToken(REQUEST_TOKEN)
+                .logicalResourceIdentifier(LOGICAL_ID)
+                .desiredResourceState(newModel)
+                .previousResourceState(previousModel);
+    }
 }

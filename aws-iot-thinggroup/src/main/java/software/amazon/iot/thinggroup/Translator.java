@@ -44,6 +44,7 @@ import software.amazon.cloudformation.exceptions.CfnThrottlingException;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -216,7 +217,7 @@ public class Translator {
                 .collect(Collectors.toList());
     }
 
-    private static <T> Stream<T> streamOfOrEmpty(final Collection<T> collection) {
+    static <T> Stream<T> streamOfOrEmpty(final Collection<T> collection) {
         return Optional.ofNullable(collection)
                 .map(Collection::stream)
                 .orElseGet(Stream::empty);
@@ -230,11 +231,40 @@ public class Translator {
     }
 
     //Translate tags
+    static Map<String, String> translateTagstoMap(final Set<software.amazon.iot.thinggroup.Tag> tags) {
+        if (tags == null) {
+            return new HashMap<>();
+        }
+
+        return tags.stream()
+                .collect(Collectors.toMap(
+                        software.amazon.iot.thinggroup.Tag::getKey,
+                        software.amazon.iot.thinggroup.Tag::getValue,
+                        (existing, replacement) -> existing,  // In case of duplicate keys, keep existing value
+                        HashMap::new
+                ));
+    }
+
     static Set<Tag> translateTagsToSdk(final Map<String, String> tags) {
-        if (tags == null) return Collections.emptySet();
-        return Optional.of(tags.entrySet()).orElse(Collections.emptySet())
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return tags.entrySet()
                 .stream()
                 .map(tag -> Tag.builder().key(tag.getKey()).value(tag.getValue()).build())
+                .collect(Collectors.toSet());
+    }
+
+    static Set<Tag> translateTagsToSdk(final Set<software.amazon.iot.thinggroup.Tag> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        return tags.stream()
+                .map(tag -> Tag.builder()
+                        .key(tag.getKey())
+                        .value(tag.getValue())
+                        .build())
                 .collect(Collectors.toSet());
     }
 
